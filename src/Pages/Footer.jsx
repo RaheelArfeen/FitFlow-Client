@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { NavLink, Link } from 'react-router'; // Import NavLink
-import { Activity, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Activity, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, User } from 'lucide-react';
+import { AuthContext } from '../Provider/AuthProvider';
 
 const Footer = () => {
-    // Helper function for NavLink active styling
+    const { user } = useContext(AuthContext)
     const getNavLinkClass = ({ isActive }) =>
         `transition-colors duration-200 ${isActive ? 'text-blue-400 font-semibold' : 'text-gray-300 hover:text-white'
         }`;
@@ -55,10 +56,15 @@ const Footer = () => {
                             <li>
                                 <NavLink to="/community" className={getNavLinkClass}>Community</NavLink>
                             </li>
-                            <li>
-                                {/* Dashboard link might only be visible to logged-in users, but NavLink handles it */}
-                                <NavLink to="/dashboard" className={getNavLinkClass}>Dashboard</NavLink>
-                            </li>
+                            {user ?
+                                (
+                                    <li>
+                                        <NavLink to="/dashboard" className={getNavLinkClass}>Dashboard</NavLink>
+                                    </li>
+                                )
+                                :
+                                null
+                            }
                         </ul>
                     </div>
 

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import { Menu, X, Activity, LogOut, User } from 'lucide-react';
 import { AuthContext } from '../Provider/AuthProvider';
 import { toast } from 'sonner';
@@ -10,7 +10,6 @@ const Navbar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const { user, loading, logOut } = useContext(AuthContext);
-    const navigate = useNavigate();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -20,7 +19,6 @@ const Navbar = () => {
         try {
             await logOut();
             toast.success('Successfully logged out.');
-            navigate('/');
         } catch (error) {
             console.error("Logout failed:", error);
             toast.error('Logout failed');
@@ -69,6 +67,13 @@ const Navbar = () => {
         />
     );
 
+    const getUserInitial = (user) => {
+        if (user && (user.displayName || user.name)) {
+            return (user.displayName || user.name).charAt(0).toUpperCase();
+        }
+        return '';
+    };
+
     return (
         <nav className="bg-white/95 backdrop-blur-md shadow-xl sticky top-0 z-50 border-b border-gray-100">
             <div className="lg:container mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,7 +81,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <NavLink to="/" className="flex items-center space-x-3 group">
                         <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300-opacity duration-300"></div>
                             <div className="relative bg-gradient-to-r from-blue-700 to-orange-600 p-2 rounded-xl">
                                 <Activity className="h-8 w-8 text-white" />
                             </div>
@@ -90,14 +95,14 @@ const Navbar = () => {
                     </NavLink>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center space-x-4"> {/* Increased space-x for better skeleton spacing */}
+                    <div className="hidden md:flex items-center space-x-4">
                         {loading ? (
                             <>
                                 <NavLinkSkeleton widthClass="w-16" />
                                 <NavLinkSkeleton widthClass="w-20" />
                                 <NavLinkSkeleton widthClass="w-16" />
                                 <NavLinkSkeleton widthClass="w-24" />
-                                {/* Conditional skeleton for dashboard if user might log in */}
+                                <NavLinkSkeleton widthClass="w-24" />
                                 <NavLinkSkeleton widthClass="w-24" />
                             </>
                         ) : (
@@ -106,7 +111,7 @@ const Navbar = () => {
                                     <NavLink
                                         to="/"
                                         className={({ isActive }) =>
-                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
                                             }`
                                         }
                                     >
@@ -117,7 +122,7 @@ const Navbar = () => {
                                     <NavLink
                                         to="/trainers"
                                         className={({ isActive }) =>
-                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
                                             }`
                                         }
                                     >
@@ -128,7 +133,7 @@ const Navbar = () => {
                                     <NavLink
                                         to="/classes"
                                         className={({ isActive }) =>
-                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
                                             }`
                                         }
                                     >
@@ -139,11 +144,22 @@ const Navbar = () => {
                                     <NavLink
                                         to="/community"
                                         className={({ isActive }) =>
-                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
                                             }`
                                         }
                                     >
                                         Community
+                                    </NavLink>
+                                </motion.div>
+                                <motion.div variants={navItemVariants} initial="hidden" animate="visible" transition={{ delay: 0.4 }}>
+                                    <NavLink
+                                        to="/beATrainer"
+                                        className={({ isActive }) =>
+                                            `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
+                                            }`
+                                        }
+                                    >
+                                        Be A Trainer
                                     </NavLink>
                                 </motion.div>
                                 {user && (
@@ -151,7 +167,7 @@ const Navbar = () => {
                                         <NavLink
                                             to="/dashboard"
                                             className={({ isActive }) =>
-                                                `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                `px-4 py-2 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
                                                 }`
                                             }
                                         >
@@ -180,11 +196,17 @@ const Navbar = () => {
                                     onClick={() => setIsDropdownOpen((prev) => !prev)}
                                     className="flex items-center space-x-3 bg-gray-50 rounded-full pl-1 pr-4 py-1 cursor-pointer hover:shadow"
                                 >
-                                    <img
-                                        src={user.photoURL || user.avatar}
-                                        alt={user.displayName || user.name}
-                                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                                    />
+                                    {user.photoURL ? (
+                                        <img
+                                            src={user.photoURL}
+                                            alt={user.displayName || user.name}
+                                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-sm">
+                                            {getUserInitial(user)}
+                                        </div>
+                                    )}
                                     <div className="text-left">
                                         <div className="text-sm font-semibold text-gray-800">{user.displayName || user.name}</div>
                                         <div className="text-xs text-gray-500 capitalize">{user.role || 'User'}</div>
@@ -205,7 +227,7 @@ const Navbar = () => {
                                                 to="/profile"
                                                 onClick={() => setIsDropdownOpen(false)}
                                                 className={({ isActive }) =>
-                                                    `w-full flex items-center space-x-2 px-4 py-2 font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                    `w-full flex items-center space-x-2 px-4 py-2 font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'
                                                     }`
                                                 }
                                             >
@@ -214,7 +236,7 @@ const Navbar = () => {
                                             </NavLink>
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 font-medium"
+                                                className="w-full flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 font-medium transition duration-300"
                                             >
                                                 <LogOut className="h-4 w-4" />
                                                 <span>Logout</span>
@@ -229,7 +251,7 @@ const Navbar = () => {
                                     <NavLink
                                         to="/login"
                                         className={({ isActive }) =>
-                                            `px-6 py-2 font-medium rounded-full ${isActive ? 'text-blue-700 bg-gray-50' : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
+                                            `px-6 py-2 font-medium rounded-full ${isActive ? 'text-blue-700 bg-gray-50' : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50 transition duration-300'
                                             }`
                                         }
                                     >
@@ -239,7 +261,7 @@ const Navbar = () => {
                                 <motion.div variants={navItemVariants} initial="hidden" animate="visible" transition={{ delay: 0.7 }}>
                                     <NavLink
                                         to="/register"
-                                        className="px-6 py-2 bg-gradient-to-r from-blue-700 to-orange-600 text-white rounded-full hover:from-blue-800 hover:to-orange-700 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                        className="px-6 py-2 bg-gradient-to-r from-blue-700 to-orange-600 text-white rounded-full hover:from-blue-800 hover:to-orange-700 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                                     >
                                         Get Started
                                     </NavLink>
@@ -251,30 +273,22 @@ const Navbar = () => {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={toggleMenu}
-                        className="md:hidden p-2 text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                        className="md:hidden p-2 text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition duration-300"
                         aria-label="Toggle menu"
                     >
                         <AnimatePresence exitBeforeEnter initial={false}>
                             {isMenuOpen ? (
-                                <motion.div
+                                <div
                                     key="close"
-                                    initial={{ rotate: -90, opacity: 0 }}
-                                    animate={{ rotate: 0, opacity: 1 }}
-                                    exit={{ rotate: 90, opacity: 0 }}
-                                    transition={{ duration: 0.25 }}
                                 >
                                     <X className="h-6 w-6" />
-                                </motion.div>
+                                </div>
                             ) : (
-                                <motion.div
+                                <div
                                     key="open"
-                                    initial={{ rotate: 90, opacity: 0 }}
-                                    animate={{ rotate: 0, opacity: 1 }}
-                                    exit={{ rotate: -90, opacity: 0 }}
-                                    transition={{ duration: 0.25 }}
                                 >
                                     <Menu className="h-6 w-6" />
-                                </motion.div>
+                                </div>
                             )}
                         </AnimatePresence>
                     </button>
@@ -311,6 +325,7 @@ const Navbar = () => {
                                         <motion.div variants={navItemVariants}><NavLinkSkeleton widthClass="w-full h-10" /></motion.div>
                                         <motion.div variants={navItemVariants}><NavLinkSkeleton widthClass="w-full h-10" /></motion.div>
                                         <motion.div variants={navItemVariants}><NavLinkSkeleton widthClass="w-full h-10" /></motion.div>
+                                        <motion.div variants={navItemVariants}><NavLinkSkeleton widthClass="w-full h-10" /></motion.div>
                                         <div className="border-t border-gray-200 pt-4 mt-4">
                                             <div className="space-y-2 animate-pulse">
                                                 <div className="flex items-center space-x-3 px-4 py-2">
@@ -330,7 +345,7 @@ const Navbar = () => {
                                                 to="/"
                                                 onClick={() => setIsMenuOpen(false)}
                                                 className={({ isActive }) =>
-                                                    `block px-4 py-3 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                    `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
                                                     }`
                                                 }
                                             >Home</NavLink>
@@ -340,7 +355,7 @@ const Navbar = () => {
                                                 to="/trainers"
                                                 onClick={() => setIsMenuOpen(false)}
                                                 className={({ isActive }) =>
-                                                    `block px-4 py-3 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                    `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
                                                     }`
                                                 }
                                             >Trainers</NavLink>
@@ -350,17 +365,27 @@ const Navbar = () => {
                                                 to="/classes"
                                                 onClick={() => setIsMenuOpen(false)}
                                                 className={({ isActive }) =>
-                                                    `block px-4 py-3 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                    `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
                                                     }`
                                                 }
                                             >Classes</NavLink>
                                         </motion.div>
                                         <motion.div variants={navItemVariants}>
                                             <NavLink
+                                                to="/beATrainer"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className={({ isActive }) =>
+                                                    `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                    }`
+                                                }
+                                            >Be A Trainer</NavLink>
+                                        </motion.div>
+                                        <motion.div variants={navItemVariants}>
+                                            <NavLink
                                                 to="/community"
                                                 onClick={() => setIsMenuOpen(false)}
                                                 className={({ isActive }) =>
-                                                    `block px-4 py-3 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                    `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
                                                     }`
                                                 }
                                             >Community</NavLink>
@@ -371,7 +396,7 @@ const Navbar = () => {
                                                     to="/dashboard"
                                                     onClick={() => setIsMenuOpen(false)}
                                                     className={({ isActive }) =>
-                                                        `block px-4 py-3 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                        `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
                                                         }`
                                                     }
                                                 >Dashboard</NavLink>
@@ -380,21 +405,29 @@ const Navbar = () => {
                                         <div className="border-t border-gray-200 pt-4 mt-4">
                                             {user ? (
                                                 <div className="space-y-2">
-                                                    <div className="flex items-center space-x-3 px-4 py-2">
-                                                        <img
-                                                            src={user.photoURL || user.avatar}
-                                                            alt={user.displayName || user.name}
-                                                            className="w-10 h-10 rounded-full object-cover"
-                                                        />
-                                                        <div>
-                                                            <div className="text-sm font-semibold text-gray-800">{user.displayName || user.name}</div>
-                                                            <div className="text-xs text-gray-500 capitalize">{user.role || 'User'}</div>
+                                                    <Link to={'/profile'}>
+                                                        <div className="flex items-center space-x-3 px-4 py-2">
+                                                            {user.photoURL ? (
+                                                                <img
+                                                                    src={user.photoURL}
+                                                                    alt={user.displayName || user.name}
+                                                                    className="w-10 h-10 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                                                                    {getUserInitial(user)}
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <div className="text-sm font-semibold text-gray-800">{user.displayName || user.name}</div>
+                                                                <div className="text-xs text-gray-500 capitalize">{user.role || 'User'}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </Link>
                                                     <motion.div variants={navItemVariants}>
                                                         <button
                                                             onClick={handleLogout}
-                                                            className="flex items-center space-x-2 px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg w-full font-medium"
+                                                            className="flex items-center justify-center space-x-2 px-4 py-3 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg w-full font-medium transition duration-300"
                                                         >
                                                             <LogOut className="h-4 w-4" />
                                                             <span>Logout</span>
@@ -408,7 +441,7 @@ const Navbar = () => {
                                                             to="/login"
                                                             onClick={() => setIsMenuOpen(false)}
                                                             className={({ isActive }) =>
-                                                                `block px-4 py-3 rounded-lg font-medium ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                                                                `block px-4 py-3 rounded-lg font-medium transition duration-300 ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
                                                                 }`
                                                             }
                                                         >Login</NavLink>
@@ -417,7 +450,7 @@ const Navbar = () => {
                                                         <NavLink
                                                             to="/register"
                                                             onClick={() => setIsMenuOpen(false)}
-                                                            className="block px-4 py-3 bg-gradient-to-r from-blue-700 to-orange-600 text-white rounded-lg hover:from-blue-800 hover:to-orange-700 font-medium text-center mx-4"
+                                                            className="block px-4 py-3 bg-gradient-to-r transition duration-300 from-blue-700 to-orange-600 text-white rounded-lg hover:from-blue-800 hover:to-orange-700 font-medium text-center mx-4"
                                                         >Get Started</NavLink>
                                                     </motion.div>
                                                 </div>
