@@ -56,6 +56,9 @@ const Footer = () => {
                             <li>
                                 <NavLink to="/community" className={getNavLinkClass}>Community</NavLink>
                             </li>
+                            {user?.role === 'member' && (
+                                <Link to="/be-trainer" className={getNavLinkClass}>Become a Trainer</Link>
+                            )}
                             {user ?
                                 (
                                     <li>
@@ -81,9 +84,6 @@ const Footer = () => {
                             <li>
                                 {/* Assuming '/profile' is where a user's profile is, similar to the dropdown */}
                                 <NavLink to="/profile" className={getNavLinkClass}>Profile</NavLink>
-                            </li>
-                            <li>
-                                <Link to="/be-trainer" className="text-gray-300 hover:text-white transition-colors duration-200">Become a Trainer</Link>
                             </li>
                         </ul>
                     </div>
