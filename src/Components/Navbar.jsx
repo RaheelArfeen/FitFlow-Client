@@ -68,7 +68,7 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="bg-white/95 backdrop-blur-md shadow-xl sticky top-0 z-50 border-b border-gray-100">
+        <nav className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-gray-100">
             <div className="lg:container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
                     <motion.div whileHover={{ scale: 1.05 }}>
@@ -105,7 +105,7 @@ const Navbar = () => {
                                         </motion.div>
                                     );
                                 })}
-                                {user?.role === 'admin' && (
+                                {user?.role === 'member' && (
                                     <motion.div whileHover={{ scale: 1.1 }} className="inline-block origin-center">
                                         <NavLink
                                             to="/be-trainer"
@@ -256,7 +256,7 @@ const Navbar = () => {
                                         </motion.div>
                                     );
                                 })}
-                                {user?.role === 'admin' && (
+                                {user?.role === 'member' && (
                                     <motion.div whileHover={{ scale: 1.05 }} className="block">
                                         <NavLink
                                             to="/be-trainer"
