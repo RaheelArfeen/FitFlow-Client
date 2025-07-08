@@ -1,13 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { Star, Calendar, Award, Instagram, Twitter, Linkedin } from 'lucide-react';
-import { AuthContext } from '../Provider/AuthProvider';
-import useAxiosSecure from '../Provider/UseAxiosSecure';
-import Loader from './Loader';
+import { AuthContext } from '../../Provider/AuthProvider';
+import useAxiosSecure from '../../Provider/UseAxiosSecure';
+import Loader from '../Loader';
 
 const Trainers = () => {
     const { user } = useContext(AuthContext);
-    const navigate = useNavigate();
     const axiosSecure = useAxiosSecure();
     const [trainers, setTrainers] = useState([]);
     const [loading, setLoading] = useState(true);
