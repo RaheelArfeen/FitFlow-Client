@@ -66,7 +66,7 @@ const CARD_OPTIONS = {
 };
 
 const PaymentForm = () => {
-    const { trainerId, slotId, packageId } = useParams();
+    const { trainerId, slotId, slotName, packageId } = useParams();
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
     const stripe = useStripe();
@@ -135,9 +135,10 @@ const PaymentForm = () => {
             setIsProcessing(false);
         } else if (paymentIntent.status === "succeeded") {
             const bookingData = {
-                userEmail: user?.email,
+                email: user?.email,
                 trainerId,
                 slotId,
+                slotName: slot.name,
                 packageId,
                 price: selectedPackage.price,
                 transactionId: paymentIntent.id,
@@ -146,7 +147,9 @@ const PaymentForm = () => {
             };
 
             try {
-                await axios.post("http://localhost:3000/bookings", bookingData);
+                await axios.post("http://localhost:3000/bookings", bookingData, {
+                    withCredentials: true,
+                });
                 Swal.fire("Payment Successful", "Your booking is confirmed!", "success");
                 navigate("/dashboard");
             } catch (err) {
