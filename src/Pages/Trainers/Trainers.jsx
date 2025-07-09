@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { Star, Calendar, Award, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { AuthContext } from '../../Provider/AuthProvider';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
@@ -16,7 +17,6 @@ const Trainers = () => {
             .then(res => {
                 setTrainers(res.data);
                 setLoading(false);
-                console.log(res.data);
             })
             .catch(err => {
                 console.error('Error fetching trainers:', err);
@@ -24,10 +24,17 @@ const Trainers = () => {
             });
     }, [axiosSecure]);
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, []);
+
     if (loading) {
         return (
             <div className="min-h-screen flex justify-center items-center">
-                <Loader/>
+                <Loader />
             </div>
         );
     }
@@ -37,19 +44,43 @@ const Trainers = () => {
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
-                <header className="text-center mb-16">
+                <motion.header
+                    className="text-center mb-16"
+                    initial={{ opacity: 0, y: -40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
                     <h1 className="text-4xl font-bold text-gray-800 mb-4">
                         Our Expert Trainers
                     </h1>
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                         Meet our certified fitness professionals who are passionate about helping you achieve your goals.
                     </p>
-                </header>
+                </motion.header>
 
                 {/* Trainers Grid */}
-                <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" aria-label="Trainers List">
-                    {trainers.map((trainer) => (
-                        <article key={trainer._id} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+                <motion.section
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    aria-label="Trainers List"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                        hidden: {},
+                        visible: {
+                            transition: {
+                                staggerChildren: 0.15
+                            }
+                        }
+                    }}
+                >
+                    {trainers.map((trainer, index) => (
+                        <motion.article
+                            key={trainer._id}
+                            className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                        >
                             <div className="relative">
                                 <img
                                     src={trainer.image}
@@ -103,102 +134,110 @@ const Trainers = () => {
                                 </div>
 
                                 <div className="flex items-center justify-between mt-auto">
-                                    {/* Social Links */}
                                     <div className="flex space-x-3">
                                         {/* Instagram */}
-                                        {trainer.social?.instagram ? (
-                                            <a
-                                                href={`https://instagram.com/${trainer.social.instagram.replace('@', '')}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                aria-label={`${trainer.name} Instagram`}
-                                            >
-                                                <Instagram className="h-5 w-5 text-gray-400 hover:text-pink-500 cursor-pointer transition-colors duration-200" />
-                                            </a>
-                                        ) : (
-                                            <Instagram className="h-5 w-5 text-gray-300 cursor-not-allowed" />
-                                        )}
+                                        <motion.div whileHover={{ scale: 1.2 }}>
+                                            {trainer.social?.instagram ? (
+                                                <a
+                                                    href={`https://instagram.com/${trainer.social.instagram.replace('@', '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Instagram className="h-5 w-5 text-gray-400 hover:text-pink-500 transition-colors duration-200" />
+                                                </a>
+                                            ) : (
+                                                <Instagram className="h-5 w-5 text-gray-300 cursor-not-allowed" />
+                                            )}
+                                        </motion.div>
 
                                         {/* Twitter */}
-                                        {trainer.social?.twitter ? (
-                                            <a
-                                                href={`https://twitter.com/${trainer.social.twitter.replace('@', '')}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                aria-label={`${trainer.name} Twitter`}
-                                            >
-                                                <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" />
-                                            </a>
-                                        ) : (
-                                            <Twitter className="h-5 w-5 text-gray-300 cursor-not-allowed" />
-                                        )}
+                                        <motion.div whileHover={{ scale: 1.2 }}>
+                                            {trainer.social?.twitter ? (
+                                                <a
+                                                    href={`https://twitter.com/${trainer.social.twitter.replace('@', '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 transition-colors duration-200" />
+                                                </a>
+                                            ) : (
+                                                <Twitter className="h-5 w-5 text-gray-300 cursor-not-allowed" />
+                                            )}
+                                        </motion.div>
 
                                         {/* LinkedIn */}
-                                        {trainer.social?.linkedin ? (
-                                            <a
-                                                href={`https://linkedin.com/in/${trainer.social.linkedin}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                aria-label={`${trainer.name} LinkedIn`}
-                                            >
-                                                <Linkedin className="h-5 w-5 text-gray-400 hover:text-blue-600 cursor-pointer transition-colors duration-200" />
-                                            </a>
-                                        ) : (
-                                            <Linkedin className="h-5 w-5 text-gray-300 cursor-not-allowed" />
-                                        )}
+                                        <motion.div whileHover={{ scale: 1.2 }}>
+                                            {trainer.social?.linkedin ? (
+                                                <a
+                                                    href={`https://linkedin.com/in/${trainer.social.linkedin}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Linkedin className="h-5 w-5 text-gray-400 hover:text-blue-600 transition-colors duration-200" />
+                                                </a>
+                                            ) : (
+                                                <Linkedin className="h-5 w-5 text-gray-300 cursor-not-allowed" />
+                                            )}
+                                        </motion.div>
                                     </div>
 
-                                    <Link
-                                        to={`/trainer/${trainer._id}`}
-                                        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                                    >
-                                        Know More
-                                    </Link>
+                                    <motion.div whileHover={{ scale: 1.05 }}>
+                                        <Link
+                                            to={`/trainer/${trainer._id}`}
+                                            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                                        >
+                                            Know More
+                                        </Link>
+                                    </motion.div>
                                 </div>
                             </div>
-                        </article>
+                        </motion.article>
                     ))}
-                </section>
+                </motion.section>
 
                 {/* Become a Trainer CTA */}
-                {user?.role === 'member' && (
-                    <section className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center">
+                {(user?.role === 'member' || !user) && (
+                    <motion.section
+                        className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true }}
+                    >
                         <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
                         <p className="text-xl mb-6 text-blue-100">
-                            Join our team of expert trainers and help others achieve their fitness goals while earning extra income.
+                            Join our team of expert trainers and help others achieve their fitness goals
+                            {user?.role === 'member' ? ' while earning extra income.' : '.'}
                         </p>
-                        <Link
-                            to="/be-trainer"
-                            className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
-                        >
-                            Become a Trainer
-                        </Link>
-                    </section>
-                )}
 
-                {!user && (
-                    <section className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center">
-                        <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
-                        <p className="text-xl mb-6 text-blue-100">
-                            Join our team of expert trainers and help others achieve their fitness goals.
-                        </p>
                         <div className="space-x-4">
-                            <Link
-                                to="/register"
-                                className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
-                            >
-                                Sign Up First
-                            </Link>
-                            <Link
-                                to="/login"
-                                className="bg-blue-800 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors duration-200 inline-block border border-white/30"
-                            >
-                                Login
-                            </Link>
+                            {!user && (
+                                <>
+                                    <Link
+                                        to="/register"
+                                        className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
+                                    >
+                                        Sign Up First
+                                    </Link>
+                                    <Link
+                                        to="/login"
+                                        className="bg-blue-800 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors duration-200 inline-block border border-white/30"
+                                    >
+                                        Login
+                                    </Link>
+                                </>
+                            )}
+                            {user?.role === 'member' && (
+                                <Link
+                                    to="/be-trainer"
+                                    className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
+                                >
+                                    Become a Trainer
+                                </Link>
+                            )}
                         </div>
-                    </section>
+                    </motion.section>
                 )}
-
             </div>
         </div>
     );

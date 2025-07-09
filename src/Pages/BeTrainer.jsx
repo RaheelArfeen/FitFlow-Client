@@ -3,21 +3,65 @@ import { useNavigate } from 'react-router';
 import { AuthContext } from '../Provider/AuthProvider';
 import { toast } from 'sonner';
 import Loader from './Loader';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const containerVariants = {
+    hidden: {},
+    visible: {
+        transition: {
+            staggerChildren: 0.12,
+        },
+    },
+};
+
+const childVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+};
 
 const BeTrainer = () => {
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+
     const certificationOptions = [
-        'RYT-200', 'RYT-500', 'Mindfulness Coach', 'CPR Certified', 'Nutrition Coach',
+        'RYT-200',
+        'RYT-500',
+        'Mindfulness Coach',
+        'CPR Certified',
+        'Nutrition Coach',
     ];
 
     const specializationOptions = [
-        'Yoga & Mindfulness', 'Pilates', 'HIIT', 'Strength Training', 'Cardio',
-        'Boxing', 'Dance Fitness', 'Crossfit', 'Meditation', 'Nutrition Coaching',
+        'Yoga & Mindfulness',
+        'Pilates',
+        'HIIT',
+        'Strength Training',
+        'Cardio',
+        'Boxing',
+        'Dance Fitness',
+        'Crossfit',
+        'Meditation',
+        'Nutrition Coaching',
     ];
 
-    const dayOptions = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOptions = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+    ];
 
     const [formData, setFormData] = useState({
         name: '',
@@ -25,7 +69,7 @@ const BeTrainer = () => {
         specialization: '',
         experience: '',
         image: '',
-        rating: 5.0,
+        rating: 0.0,
         age: '',
         sessions: 0,
         certifications: [],
@@ -61,13 +105,6 @@ const BeTrainer = () => {
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (specRef.current && !specRef.current.contains(event.target)) setIsSpecOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
             if (slotDayRef.current && !slotDayRef.current.contains(event.target)) setIsSlotDayOpen(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -132,8 +169,21 @@ const BeTrainer = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.name || !formData.email) {
-            toast.error('Name and email are required.');
+        if (
+            !formData.name.trim() ||
+            !formData.email.trim() ||
+            !formData.specialization.trim() ||
+            !formData.experience.trim() ||
+            !formData.age ||
+            formData.certifications.length === 0 ||
+            !formData.bio.trim() ||
+            formData.availableSlots.length === 0 ||
+            formData.availableDays.length === 0 ||
+            !formData.social.instagram.trim() ||
+            !formData.social.twitter.trim() ||
+            !formData.social.linkedin.trim()
+        ) {
+            toast.error('Please fill in all required fields.');
             return;
         }
 
@@ -183,36 +233,43 @@ const BeTrainer = () => {
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center text-gray-700">
-                <Loader/>
+                <Loader />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen py-12">
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="min-h-screen py-12"
+        >
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-white rounded-xl shadow-lg p-8">
-                    <div className="text-center mb-8">
+                <motion.div variants={childVariants} className="bg-white rounded-xl shadow-lg p-8">
+                    <motion.div variants={childVariants} className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-800 mb-4">Become a Trainer</h1>
                         <p className="text-xl text-gray-600">
                             Join our team of expert trainers and help others achieve their fitness goals.
                         </p>
-                    </div>
+                    </motion.div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Name and Email */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
+                        <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <motion.div variants={childVariants}>
                                 <label className="block text-sm font-medium mb-2">Full Name</label>
-                                <input
+                                <motion.input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                     required
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
-                            </div>
-                            <div>
+                            </motion.div>
+
+                            <motion.div variants={childVariants}>
                                 <label className="block text-sm font-medium mb-2">Email</label>
                                 <input
                                     type="email"
@@ -220,190 +277,220 @@ const BeTrainer = () => {
                                     readOnly
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100"
                                 />
-                            </div>
+                            </motion.div>
 
-                            <div>
+                            <motion.div variants={childVariants}>
                                 <label className="block text-sm font-medium mb-2">Age</label>
-                                <input
-                                    type="text"
+                                <motion.input
+                                    type="number"
                                     value={formData.age}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, age: Number(e.target.value) })
-                                    }
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
                                     placeholder="Your Age"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    required
+                                    min={18}
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
-                            </div>
+                            </motion.div>
 
-                            {/* Sessions input */}
-                            <div>
+                            <motion.div variants={childVariants}>
                                 <label className="block text-sm font-medium mb-2">Sessions Completed</label>
-                                <input
+                                <motion.input
                                     type="number"
                                     value={formData.sessions}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, sessions: Number(e.target.value) })
-                                    }
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    onChange={(e) => setFormData({ ...formData, sessions: Number(e.target.value) })}
                                     placeholder="e.g., 10"
-                                    min="0"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    min={0}
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
-                            </div>
+                            </motion.div>
 
                             {/* Specialization dropdown */}
-                            <div ref={specRef} className="relative">
+                            <motion.div ref={specRef} variants={childVariants} className="relative">
                                 <label className="block text-sm font-medium mb-2">Specialization</label>
-                                <button
+                                <motion.button
                                     type="button"
                                     onClick={() => setIsSpecOpen((open) => !open)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white flex justify-between items-center"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    aria-haspopup="listbox"
+                                    aria-expanded={isSpecOpen}
                                 >
                                     {formData.specialization || 'Select Specialization'}
-                                    <svg className={`w-5 h-5 ml-2 transition-transform ${isSpecOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                    <svg
+                                        className={`w-5 h-5 ml-2 transition-transform ${isSpecOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                     </svg>
-                                </button>
-                                {isSpecOpen && (
-                                    <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg h-fit rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
-                                        {specializationOptions.map((spec) => (
-                                            <li
-                                                key={spec}
-                                                onClick={() => {
-                                                    setFormData((prev) => ({ ...prev, specialization: spec }));
-                                                    setIsSpecOpen(false);
-                                                }}
-                                                className={`cursor-pointer py-2 px-3 hover:bg-blue-100 ${formData.specialization === spec ? 'bg-blue-600 text-white' : ''}`}
-                                            >
-                                                {spec}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
+                                </motion.button>
+                                <AnimatePresence>
+                                    {isSpecOpen && (
+                                        <motion.ul
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
+                                            role="listbox"
+                                        >
+                                            {specializationOptions.map((spec) => (
+                                                <motion.li
+                                                    key={spec}
+                                                    onClick={() => {
+                                                        setFormData((prev) => ({ ...prev, specialization: spec }));
+                                                        setIsSpecOpen(false);
+                                                    }}
+                                                    className={`cursor-pointer select-none relative py-2 px-3 hover:bg-blue-100 ${formData.specialization === spec ? 'bg-blue-600 text-white' : 'text-gray-900'
+                                                        }`}
+                                                    whileHover={{ backgroundColor: '#bfdbfe', scale: 1.02 }}
+                                                    role="option"
+                                                >
+                                                    {spec}
+                                                </motion.li>
+                                            ))}
+                                        </motion.ul>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
 
-                            <div>
+                            <motion.div variants={childVariants}>
                                 <label className="block text-sm font-medium mb-2">Experience</label>
-                                <input
+                                <motion.input
                                     type="text"
                                     value={formData.experience}
                                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                                     placeholder="e.g., 5 years"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                     required
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Profile Image */}
-                        <div>
+                        <motion.div variants={childVariants}>
                             <label className="block text-sm font-medium mb-2">Profile Image URL</label>
-                            <input
+                            <motion.input
                                 type="url"
                                 value={formData.image}
                                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                                 placeholder="https://example.com/image.jpg"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                             />
                             {formData.image && (
-                                <div className="relative mt-3 w-32 h-32 rounded-lg overflow-hidden border">
-                                    <img
-                                        src={formData.image}
-                                        alt="Profile Preview"
-                                        className="object-cover w-full h-full"
-                                    />
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    className="relative mt-3 w-32 h-32 rounded-lg overflow-hidden border"
+                                >
+                                    <img src={formData.image} alt="Profile Preview" className="object-cover w-full h-full" />
                                     <button
                                         type="button"
                                         onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
                                         className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                                        aria-label="Remove image"
                                     >
                                         &times;
                                     </button>
-                                </div>
+                                </motion.div>
                             )}
-                        </div>
+                        </motion.div>
 
                         {/* Bio */}
-                        <div>
+                        <motion.div variants={childVariants}>
                             <label className="block text-sm font-medium mb-2">Bio</label>
-                            <textarea
+                            <motion.textarea
                                 value={formData.bio}
                                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                 rows={4}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                 placeholder="Tell us about yourself"
                                 required
+                                whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                             />
-                        </div>
+                        </motion.div>
 
                         {/* Certifications */}
-                        <div>
+                        <motion.div variants={childVariants}>
                             <label className="block text-sm font-medium mb-2">Certifications</label>
-                            <div className="flex flex-wrap gap-2">
+                            <motion.div className="flex flex-wrap gap-2">
                                 {certificationOptions.map((cert) => {
                                     const selected = formData.certifications.includes(cert);
                                     return (
-                                        <button
+                                        <motion.button
                                             key={cert}
                                             type="button"
                                             onClick={() => toggleCertification(cert)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
                       ${selected ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'}`}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
                                         >
                                             {cert}
-                                        </button>
+                                        </motion.button>
                                     );
                                 })}
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Available Slots */}
-                        <div>
+                        <motion.div variants={childVariants}>
                             <label className="block text-sm font-medium mb-2">Available Slots</label>
-                            <div className="flex gap-4">
-                                {['Morning', 'Evening'].map((slot) => {
+                            <motion.div className="flex gap-4 flex-wrap">
+                                {['Morning', 'Noon', 'After-noon', 'Evening', 'Night'].map((slot) => {
                                     const selected = formData.availableSlots.includes(slot);
                                     return (
-                                        <button
+                                        <motion.button
                                             key={slot}
                                             type="button"
                                             onClick={() => toggleSlot(slot)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
                       ${selected ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'}`}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
                                         >
                                             {slot}
-                                        </button>
+                                        </motion.button>
                                     );
                                 })}
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Available Days */}
-                        <div>
+                        <motion.div variants={childVariants}>
                             <label className="block text-sm font-medium mb-2">Available Days</label>
-                            <div className="flex flex-wrap gap-2">
+                            <motion.div className="flex flex-wrap gap-2">
                                 {dayOptions.map((day) => {
                                     const selected = formData.availableDays.includes(day);
                                     return (
-                                        <button
+                                        <motion.button
                                             key={day}
                                             type="button"
                                             onClick={() => toggleDay(day)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
                       ${selected ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'}`}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
                                         >
                                             {day}
-                                        </button>
+                                        </motion.button>
                                     );
                                 })}
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Social Links */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-sm font-medium mb-2">Instagram</label>
-                                <input
-                                    type="text"
+                                <motion.input
+                                    type="url"
                                     value={formData.social.instagram}
                                     onChange={(e) =>
                                         setFormData((prev) => ({
@@ -411,14 +498,15 @@ const BeTrainer = () => {
                                             social: { ...prev.social, instagram: e.target.value },
                                         }))
                                     }
-                                    placeholder="@instagram_handle"
+                                    placeholder="https://instagram.com/yourprofile"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2">Twitter</label>
-                                <input
-                                    type="text"
+                                <motion.input
+                                    type="url"
                                     value={formData.social.twitter}
                                     onChange={(e) =>
                                         setFormData((prev) => ({
@@ -426,14 +514,15 @@ const BeTrainer = () => {
                                             social: { ...prev.social, twitter: e.target.value },
                                         }))
                                     }
-                                    placeholder="@twitter_handle"
+                                    placeholder="https://twitter.com/yourprofile"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2">LinkedIn</label>
-                                <input
-                                    type="text"
+                                <motion.input
+                                    type="url"
                                     value={formData.social.linkedin}
                                     onChange={(e) =>
                                         setFormData((prev) => ({
@@ -441,120 +530,28 @@ const BeTrainer = () => {
                                             social: { ...prev.social, linkedin: e.target.value },
                                         }))
                                     }
-                                    placeholder="linkedin_username"
+                                    placeholder="https://linkedin.com/in/yourprofile"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
                             </div>
-                        </div>
+                        </motion.div>
 
-                        {/* Add Available Slots Section */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Add Available Slots</label>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                                <input
-                                    type="text"
-                                    placeholder="Slot Name (e.g., Morning Yoga)"
-                                    value={newSlot.name}
-                                    onChange={(e) => setNewSlot({ ...newSlot, name: e.target.value })}
-                                    className="px-4 py-3 border border-gray-300 rounded-lg"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Time (e.g., 7:00 AM - 8:00 AM)"
-                                    value={newSlot.time}
-                                    onChange={(e) => setNewSlot({ ...newSlot, time: e.target.value })}
-                                    className="px-4 py-3 border border-gray-300 rounded-lg"
-                                />
-
-                                {/* Custom day dropdown */}
-                                <div ref={slotDayRef} className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsSlotDayOpen((open) => !open)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white flex justify-between items-center"
-                                        aria-haspopup="listbox"
-                                        aria-expanded={isSlotDayOpen}
-                                    >
-                                        {newSlot.day || 'Select Day'}
-                                        <svg
-                                            className={`w-5 h-5 ml-2 transition-transform ${isSlotDayOpen ? 'rotate-180' : ''}`}
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </button>
-                                    {isSlotDayOpen && (
-                                        <ul
-                                            role="listbox"
-                                            className="absolute z-10 mt-1 w-full bg-white shadow-lg h-fit rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
-                                        >
-                                            {dayOptions.map((day) => (
-                                                <li
-                                                    key={day}
-                                                    role="option"
-                                                    onClick={() => {
-                                                        setNewSlot((prev) => ({ ...prev, day }));
-                                                        setIsSlotDayOpen(false);
-                                                    }}
-                                                    className={`cursor-pointer select-none relative py-2 pl-3 pr-9 ${newSlot.day === day ? 'bg-blue-600 text-white' : 'text-gray-900'
-                                                        } hover:bg-blue-100`}
-                                                >
-                                                    {day}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={addSlot}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold"
-                                >
-                                    Add Slot
-                                </button>
-                            </div>
-
-                            {/* Display slots */}
-                            {formData.slots.length > 0 && (
-                                <ul className="space-y-2">
-                                    {formData.slots.map((slot) => (
-                                        <li
-                                            key={slot.id}
-                                            className="flex justify-between items-center border rounded-lg p-3 bg-gray-50"
-                                        >
-                                            <div>
-                                                <strong>{slot.name}</strong> - {slot.time} on {slot.day}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeSlot(slot.id)}
-                                                className="text-red-600 hover:text-red-800 font-semibold"
-                                            >
-                                                Remove
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-
-                        {/* Submit */}
-                        <div>
-                            <button
+                        {/* Submit Button */}
+                        <motion.div variants={childVariants} className="text-center pt-4">
+                            <motion.button
                                 type="submit"
-                                className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-lg font-semibold transition"
+                                className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-md hover:bg-blue-700"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                             >
                                 Submit Application
-                            </button>
-                        </div>
+                            </motion.button>
+                        </motion.div>
                     </form>
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, Activity, Mail, Lock } from 'lucide-react';
-import { useNavigate, useLocation, Link } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router'; // Changed to react-router-dom
+import { motion } from 'framer-motion'; // Import motion
 import {
     deleteUser,
     GoogleAuthProvider,
-    sendPasswordResetEmail,
+    sendPasswordResetEmail, // Not used in this component, but kept from original
     signInWithEmailAndPassword,
     signInWithPopup,
 } from 'firebase/auth';
@@ -12,7 +13,7 @@ import { auth } from '../Firebase/firebase.init';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const SignIn = ({ onRegister }) => {
+const Login = ({ onRegister }) => { // onRegister prop is not used in this component
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +26,11 @@ const SignIn = ({ onRegister }) => {
     const from = location.state?.from?.pathname || '/';
 
     useEffect(() => {
-        window.scrollTo(0, 0);
+        const timer = setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 300);
+
+        return () => clearTimeout(timer);
     }, []);
 
     const validateForm = () => {
@@ -63,7 +68,9 @@ const SignIn = ({ onRegister }) => {
                 if (res.status === 200 || res.status === 201) return true;
                 throw new Error('Backend rejected user');
             } catch {
-                await deleteUser(user);
+                if (user && typeof deleteUser === 'function') { // Check if deleteUser is available
+                    await deleteUser(user);
+                }
                 throw new Error('Something went wrong while setting up your account. Please try again.');
             }
         }
@@ -130,12 +137,12 @@ const SignIn = ({ onRegister }) => {
             toast.success('Successfully logged in.');
             navigate(from, { replace: true });
         } catch (error) {
-            if (error.code === 'auth/member-not-found') {
+            if (error.code === 'auth/user-not-found') { // Corrected Firebase error code
                 setError('No member found with this email');
                 toast.error('No member found with this email');
-            } else if (error.code === 'auth/wrong-password') {
-                setError('Incorrect password');
-                toast.error('Incorrect password');
+            } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') { // Added invalid-credential for general incorrect password/email
+                setError('Incorrect email or password');
+                toast.error('Incorrect email or password');
             } else {
                 setError(error.message || 'Failed to sign in. Please try again.');
                 toast.error(error.message || 'Failed to sign in. Please try again.');
@@ -145,30 +152,66 @@ const SignIn = ({ onRegister }) => {
         }
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0, y: 50 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.5,
+                ease: "easeOut",
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
+
     return (
-        <div className="bg-gradient-to-br  from-blue-700 via-blue-600 to-orange-600 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-orange-600 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-screen">
+            <motion.div
+                className="max-w-md w-full space-y-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                <motion.div className="bg-white rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="flex items-center justify-center space-x-2 mb-4">
+                        <motion.div
+                            className="flex items-center justify-center space-x-2 mb-4"
+                            variants={itemVariants}
+                        >
                             <Activity className="h-10 w-10 text-blue-700" />
                             <span className="text-3xl font-bold text-gray-800">FitFlow</span>
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
-                        <p className="text-gray-600 mt-2">Sign in to continue your fitness journey</p>
+                        </motion.div>
+                        <motion.h2 className="text-2xl font-bold text-gray-800" variants={itemVariants}>
+                            Welcome Back
+                        </motion.h2>
+                        <motion.p className="text-gray-600 mt-2" variants={itemVariants}>
+                            Sign in to continue your fitness journey
+                        </motion.p>
                     </div>
 
                     {/* Error Message */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                        <motion.div
+                            className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                        >
                             <p className="text-red-700 text-sm">{error}</p>
-                        </div>
+                        </motion.div>
                     )}
 
                     {/* Login Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
+                        <motion.div variants={itemVariants}>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                 Email Address
                             </label>
@@ -184,9 +227,9 @@ const SignIn = ({ onRegister }) => {
                                     required
                                 />
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div>
+                        <motion.div variants={itemVariants}>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                 Password
                             </label>
@@ -209,19 +252,22 @@ const SignIn = ({ onRegister }) => {
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <button
+                        <motion.button
                             type="submit"
                             disabled={isLoading}
                             className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            variants={itemVariants}
                         >
                             {isLoading ? 'Signing In...' : 'Sign In'}
-                        </button>
+                        </motion.button>
                     </form>
 
                     {/* Social Login */}
-                    <div className="mt-6">
+                    <motion.div className="mt-6" variants={itemVariants}>
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-gray-300" />
@@ -232,9 +278,11 @@ const SignIn = ({ onRegister }) => {
                         </div>
 
                         <div className="mt-6">
-                            <button
+                            <motion.button
                                 onClick={() => handleSocialLogin('google')}
                                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path fill="#1C71FF" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -243,23 +291,23 @@ const SignIn = ({ onRegister }) => {
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                 </svg>
                                 <span className="ml-2">Google</span>
-                            </button>
+                            </motion.button>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Register Link */}
-                    <div className="mt-6 text-center">
+                    <motion.div className="mt-6 text-center" variants={itemVariants}>
                         <p className="text-sm text-gray-600">
                             Don't have an account?{' '}
                             <Link to="/register" className="font-medium text-blue-700 hover:text-blue-800">
                                 Sign up here
                             </Link>
                         </p>
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
         </div>
     );
 };
 
-export default SignIn;
+export default Login;

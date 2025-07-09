@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import { motion } from 'framer-motion'; 
 import { Check } from 'lucide-react';
 import Loader from '../Loader';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { AuthContext } from '../../Provider/AuthProvider';
+import { toast } from 'sonner';
 
 const membershipPackages = [
     {
@@ -60,6 +62,13 @@ const BookTrainerPage = () => {
             });
     }, [trainerId, axiosSecure]);
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, []);
+
     if (loading) {
         return (
             <div className="min-h-screen flex justify-center items-center">
@@ -72,92 +81,146 @@ const BookTrainerPage = () => {
 
     if (!trainer || !slot) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <motion.div
+                className="min-h-screen bg-gray-50 flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Booking Not Found</h2>
-                    <button onClick={() => navigate('/trainers')} className="text-blue-700 hover:text-blue-800">
+                    <motion.h2
+                        className="text-2xl font-bold text-gray-800 mb-4"
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        Booking Not Found
+                    </motion.h2>
+                    <motion.button
+                        onClick={() => navigate('/trainers')}
+                        className="text-blue-700 hover:text-blue-800"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                    >
                         Back to Trainers
-                    </button>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
     const handleJoinNow = () => {
         if (!selectedPackage) {
-            alert('Please select a membership package');
+            toast('Please select a membership package');
             return;
         }
         navigate(`/payment/${trainerId}/${slotId}/${selectedPackage}`);
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+            },
+        },
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: { y: 0, opacity: 1 },
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <motion.div
+            className="min-h-screen bg-gray-50 py-12"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+        >
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <motion.div
+                    className="bg-white rounded-xl shadow-lg overflow-hidden"
+                    variants={itemVariants}
+                >
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-700 to-orange-600 text-white p-8">
+                    <motion.div
+                        className="bg-gradient-to-r from-blue-700 to-orange-600 text-white p-8"
+                        initial={{ y: -50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                    >
                         <h1 className="text-3xl font-bold mb-2">Book Your Training Session</h1>
                         <p className="text-blue-100">Complete your booking with {trainer.name}</p>
-                    </div>
+                    </motion.div>
 
                     <div className="p-8">
                         {/* Booking Details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                            <div>
+                            <motion.div variants={itemVariants}>
                                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Session Details</h2>
                                 <div className="space-y-3">
-                                    <div className="flex gap-2">
+                                    <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Trainer:</span>
                                         <span className="font-medium">{trainer.name}</span>
-                                    </div>
-                                    <div className="flex gap-2">
+                                    </motion.div>
+                                    <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Specialization:</span>
                                         <span className="font-medium">{trainer.specialization}</span>
-                                    </div>
-                                    <div className="flex gap-2">
+                                    </motion.div>
+                                    <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Selected Slot:</span>
                                         <span className="font-medium">{slot.name}</span>
-                                    </div>
-                                    <div className="flex gap-2">
+                                    </motion.div>
+                                    <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Time:</span>
                                         <span className="font-medium">{slot.time}</span>
-                                    </div>
-                                    <div className="flex gap-2">
+                                    </motion.div>
+                                    <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Day:</span>
                                         <span className="font-medium">{slot.day}</span>
-                                    </div>
+                                    </motion.div>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            <div>
+                            <motion.div variants={itemVariants}>
                                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Classes Included</h2>
                                 <div className="space-y-2">
-                                    <div className="bg-blue-50 p-3 rounded-lg">
+                                    <motion.div className="bg-blue-50 p-3 rounded-lg" whileHover={{ scale: 1.03 }}>
                                         <span className="font-medium text-blue-800">{trainer.specialization}</span>
-                                    </div>
-                                    <div className="bg-green-50 p-3 rounded-lg">
+                                    </motion.div>
+                                    <motion.div className="bg-green-50 p-3 rounded-lg" whileHover={{ scale: 1.03 }}>
                                         <span className="font-medium text-green-800">Personal Training</span>
-                                    </div>
-                                    <div className="bg-orange-50 p-3 rounded-lg">
+                                    </motion.div>
+                                    <motion.div className="bg-orange-50 p-3 rounded-lg" whileHover={{ scale: 1.03 }}>
                                         <span className="font-medium text-orange-800">Progress Tracking</span>
-                                    </div>
+                                    </motion.div>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
 
                         {/* Membership Packages */}
                         <div className="mb-8">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-6">Choose Your Membership Package</h2>
+                            <motion.h2
+                                className="text-xl font-semibold text-gray-800 mb-6"
+                                variants={itemVariants}
+                            >
+                                Choose Your Membership Package
+                            </motion.h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {membershipPackages.map((pkg) => (
-                                    <div
+                                    <motion.div
                                         key={pkg.id}
                                         className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 ${selectedPackage === pkg.id
                                             ? 'border-blue-500 bg-blue-50'
                                             : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                         onClick={() => setSelectedPackage(pkg.id)}
+                                        whileHover={{ scale: 1.05, boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.1)' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        variants={itemVariants}
                                     >
                                         <div className="text-center mb-4">
                                             <h3 className="text-lg font-semibold text-gray-800 mb-2">{pkg.name}</h3>
@@ -175,31 +238,37 @@ const BookTrainerPage = () => {
                                         </ul>
 
                                         {selectedPackage === pkg.id && (
-                                            <div className="mt-4 text-center">
+                                            <motion.div
+                                                className="mt-4 text-center"
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                            >
                                                 <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
                                                     Selected
                                                 </span>
-                                            </div>
+                                            </motion.div>
                                         )}
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
 
                         {/* Action Button */}
-                        <div className="text-center">
-                            <button
+                        <motion.div className="text-center" variants={itemVariants}>
+                            <motion.button
                                 onClick={handleJoinNow}
                                 disabled={!selectedPackage}
                                 className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                             >
                                 Join Now
-                            </button>
-                        </div>
+                            </motion.button>
+                        </motion.div>
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

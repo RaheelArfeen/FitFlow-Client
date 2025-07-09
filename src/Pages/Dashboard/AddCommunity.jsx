@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
     Plus,
     FileText,
@@ -85,18 +86,57 @@ const AddCommunity = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+
+    // Framer Motion Variants - ADJUSTED FOR SPEED
+    const containerVariants = {
+        hidden: { opacity: 0, y: 10 }, // Slightly less initial y offset
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: 'spring',
+                stiffness: 120, // Increased stiffness for faster snap
+                damping: 18,    // Adjusted damping for less bounce, faster settlement
+                when: "beforeChildren",
+                staggerChildren: 0.05, // Reduced stagger duration
+                delayChildren: 0.1 // Reduced initial delay for children
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 }, // Slightly less initial y offset
+        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 150, damping: 20 } } // Faster spring
+    };
+
+    const inputVariants = {
+        hidden: { opacity: 0, x: -15 }, // Slightly less initial x offset
+        visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 150, damping: 20 } } // Faster spring
+    };
+
+    const dropdownItemVariants = {
+        hidden: { opacity: 0, y: -5 }, // Smaller y offset
+        visible: { opacity: 1, y: 0, transition: { duration: 0.08 } } // Shorter duration
+    };
+
+
     return (
-        <div>
+        <motion.div
+            className="pb-10"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
             {/* Header */}
-            <div className="mb-8">
+            <motion.div className="mb-8" variants={itemVariants}>
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Add New Forum Post</h1>
                 <p className="text-gray-600">Share knowledge and engage with the community.</p>
-            </div>
+            </motion.div>
 
-            <div className="bg-white rounded-xl shadow-lg p-8">
+            <motion.div className="bg-white rounded-xl shadow-lg p-8" variants={itemVariants}>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Title */}
-                    <div>
+                    <motion.div variants={inputVariants}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Post Title *</label>
                         <input
                             type="text"
@@ -107,43 +147,55 @@ const AddCommunity = () => {
                             placeholder="Enter an engaging title for your post..."
                             required
                         />
-                    </div>
+                    </motion.div>
 
                     {/* Category & Tags */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Custom Dropdown */}
-                        <div ref={dropdownRef} className="relative">
+                        <motion.div ref={dropdownRef} className="relative" variants={inputVariants}>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                            <button
+                            <motion.button
                                 type="button"
                                 onClick={() => setCategoryOpen(!categoryOpen)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500"
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.99 }}
                             >
                                 <span>{formData.category || 'Select a category'}</span>
-                                <svg
-                                    className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`}
+                                <motion.svg
+                                    className={`h-5 w-5 text-gray-500`}
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                     fill="currentColor"
+                                    animate={{ rotate: categoryOpen ? 180 : 0 }}
+                                    transition={{ duration: 0.15 }}
                                 >
                                     <path
                                         fillRule="evenodd"
                                         d="M10 12a1 1 0 01-.707-.293l-4-4a1 1 0 111.414-1.414L10 9.586l3.293-3.293a1 1 0 111.414 1.414l-4 4A1 1 0 0110 12z"
                                         clipRule="evenodd"
                                     />
-                                </svg>
-                            </button>
+                                </motion.svg>
+                            </motion.button>
 
                             {categoryOpen && (
-                                <ul className="absolute z-10 mt-1 h-fit w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5">
+                                <motion.ul
+                                    className="absolute z-10 mt-1 h-fit w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 max-h-60"
+                                    initial={{ opacity: 0, y: -5 }} // Smaller initial y offset
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    transition={{ duration: 0.15 }} // Faster fade/slide
+                                >
                                     {categories.map((category) => (
-                                        <li
+                                        <motion.li
                                             key={category}
                                             onClick={() => {
                                                 setFormData({ ...formData, category });
                                                 setCategoryOpen(false);
                                             }}
                                             className={`cursor-pointer select-none py-2 pl-10 pr-4 hover:bg-blue-100 ${formData.category === category ? 'font-semibold text-blue-600' : 'text-gray-900'}`}
+                                            variants={dropdownItemVariants}
+                                            whileHover={{ x: 5 }}
                                         >
                                             {category}
                                             {formData.category === category && (
@@ -151,14 +203,14 @@ const AddCommunity = () => {
                                                     ✓
                                                 </span>
                                             )}
-                                        </li>
+                                        </motion.li>
                                     ))}
-                                </ul>
+                                </motion.ul>
                             )}
-                        </div>
+                        </motion.div>
 
                         {/* Tags */}
-                        <div>
+                        <motion.div variants={inputVariants}>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Tags (comma separated)</label>
                             <div className="relative">
                                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -171,11 +223,11 @@ const AddCommunity = () => {
                                     placeholder="fitness, motivation, tips"
                                 />
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
 
                     {/* Content */}
-                    <div>
+                    <motion.div variants={inputVariants}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Post Content *</label>
                         <div className="relative">
                             <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -190,27 +242,34 @@ const AddCommunity = () => {
                             />
                         </div>
                         <div className="mt-2 text-sm text-gray-500">Minimum 50 characters. Markdown supported.</div>
-                    </div>
+                    </motion.div>
 
                     {/* Author Info */}
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <motion.div className="bg-gray-50 rounded-lg p-4" variants={itemVariants}>
                         <h3 className="text-sm font-medium text-gray-700 mb-2">Author Information</h3>
                         <div className="flex items-center space-x-3">
-                            <img src={user?.photoURL} alt={user?.displayName} className="w-10 h-10 rounded-full object-cover" />
+                            <motion.img
+                                src={user?.photoURL}
+                                alt={user?.displayName}
+                                className="w-10 h-10 rounded-full object-cover"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 250, damping: 18 }} // Faster pop-in
+                            />
                             <div>
-                                <div className="font-medium text-gray-800">{user?.displayName}</div>
-                                <div className="text-sm text-gray-500 capitalize flex items-center space-x-1">
+                                <motion.div className="font-medium text-gray-800" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05, duration: 0.2 }}>{user?.displayName}</motion.div> {/* Reduced delay and duration */}
+                                <motion.div className="text-sm text-gray-500 capitalize flex items-center space-x-1" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1, duration: 0.2 }}> {/* Reduced delay and duration */}
                                     <span>{user?.role}</span>
                                     {user?.role === 'admin' && <Crown size={15} className="text-yellow-500" />}
                                     {user?.role === 'trainer' && <Trophy size={15} className="text-blue-500" />}
-                                </div>
+                                </motion.div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Buttons */}
-                    <div className="flex justify-end space-x-4">
-                        <button
+                    <motion.div className="flex justify-end space-x-4" variants={itemVariants}>
+                        <motion.button
                             type="button"
                             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                             onClick={() =>
@@ -221,20 +280,24 @@ const AddCommunity = () => {
                                     tags: '',
                                 })
                             }
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             Reset
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             type="submit"
                             className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg transition"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             <Plus className="h-5 w-5" />
                             <span>Publish Post</span>
-                        </button>
-                    </div>
+                        </motion.button>
+                    </motion.div>
                 </form>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
 
