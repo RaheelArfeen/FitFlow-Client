@@ -16,7 +16,7 @@ import DashboardLayout from "../Root/DashboardLayout";
 import { ProtectedRoute } from "../Provider/ProtectedRoute";
 import AdminRoute from "../Provider/AdminRoute";
 import Subscribers from "../Pages/Dashboard/Admin/Subscribers";
-import DashboardOverview from "../Pages/Dashboard/Admin/DashboardOverview";
+import DashboardOverview from "../Pages/Dashboard/DashboardOverview";
 import AddCommunity from "../Pages/Dashboard/AddCommunity";
 import forbidden from "../Pages/Dashboard/forbidden";
 import Community from "../Pages/Community/Community";

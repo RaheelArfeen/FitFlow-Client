@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Link, NavLink } from 'react-router'; 
+import { Link, NavLink } from 'react-router';
 import { Menu, X, Activity, LogOut, User } from 'lucide-react';
 import { AuthContext } from '../Provider/AuthProvider';
 import { toast } from 'sonner';
@@ -103,20 +103,29 @@ const Navbar = () => {
                             Array(6).fill(0).map((_, i) => <NavLinkSkeleton key={i} widthClass="w-20" />)
                         ) : (
                             <>
-                                {['/', '/trainers', '/classes', '/community'].map((path) => {
-                                    const label = path === '/' ? 'Home' :
-                                        path.replace('/', '').charAt(0).toUpperCase() + path.slice(1); // Fix for path.slice(2)
-                                    return (
-                                        <motion.div key={path} whileHover={{ scale: 1.1 }} className="inline-block origin-center">
-                                            <NavLink
-                                                to={path}
-                                                className={({ isActive }) => getNavLinkClass(isActive)}
-                                            >
-                                                {label}
-                                            </NavLink>
-                                        </motion.div>
-                                    );
-                                })}
+                                <motion.div whileHover={{ scale: 1.1 }} className="inline-block origin-center">
+                                    <NavLink to="/" className={({ isActive }) => getNavLinkClass(isActive)}>
+                                        Home
+                                    </NavLink>
+                                </motion.div>
+
+                                <motion.div whileHover={{ scale: 1.1 }} className="inline-block origin-center">
+                                    <NavLink to="/trainers" className={({ isActive }) => getNavLinkClass(isActive)}>
+                                        Trainers
+                                    </NavLink>
+                                </motion.div>
+
+                                <motion.div whileHover={{ scale: 1.1 }} className="inline-block origin-center">
+                                    <NavLink to="/classes" className={({ isActive }) => getNavLinkClass(isActive)}>
+                                        Classes
+                                    </NavLink>
+                                </motion.div>
+
+                                <motion.div whileHover={{ scale: 1.1 }} className="inline-block origin-center">
+                                    <NavLink to="/community" className={({ isActive }) => getNavLinkClass(isActive)}>
+                                        Community
+                                    </NavLink>
+                                </motion.div>
                                 {user?.role === 'member' && (
                                     <motion.div whileHover={{ scale: 1.1 }} className="inline-block origin-center">
                                         <NavLink
