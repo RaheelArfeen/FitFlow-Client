@@ -1,31 +1,96 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { Star, Calendar, Award, Instagram, Twitter, Linkedin, Clock, MapPin } from 'lucide-react';
+import {
+    Star as StarIcon,
+    Calendar,
+    Award,
+    Instagram,
+    Twitter,
+    Linkedin,
+    Clock,
+    MapPin,
+} from 'lucide-react';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
+import Swal from 'sweetalert2';
 import { AuthContext } from '../../Provider/AuthProvider';
 
 const TrainerDetail = () => {
     const { id } = useParams();
     const axiosSecure = useAxiosSecure();
+    const { user } = useContext(AuthContext);
+
     const [trainer, setTrainer] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [userRating, setUserRating] = useState(0);
+    const [submittingRating, setSubmittingRating] = useState(false);
 
     useEffect(() => {
-        axiosSecure.get(`/trainers/${id}`)
-            .then(res => {
-                setTrainer(res.data);
+        setLoading(true);
+
+        const fetchAllData = async () => {
+            try {
+                // Fetch trainer details
+                const trainerRes = await axiosSecure.get(`/trainers/${id}`);
+                setTrainer(trainerRes.data);
+
+                // Fetch user rating only if logged in
+                if (user?.email) {
+                    const ratingRes = await axiosSecure.get(`/trainers/rating/${id}`, { withCredentials: true });
+                    setUserRating(ratingRes.data?.userRating || 0);
+                } else {
+                    setUserRating(0);
+                }
+            } catch (err) {
+                console.error("Failed to fetch trainer or rating data:", err);
+                setTrainer(null);
+                setUserRating(0);
+            }
+        };
+
+        fetchAllData().finally(() => {
+            // Keep loader visible for 2 seconds minimum
+            setTimeout(() => {
                 setLoading(false);
-            })
-            .catch(err => {
-                console.error("Failed to fetch trainer details:", err);
-                setLoading(false);
-            });
-    }, [id, axiosSecure]);
+            }, 1500);
+        });
+    }, [id, axiosSecure, user]);
+
+    const handleRatingSubmit = async (ratingValue) => {
+        if (!user) {
+            return Swal.fire("Login Required", "Please log in to rate the trainer.", "warning");
+        }
+
+        try {
+            setSubmittingRating(true);
+
+            const res = await axiosSecure.post(
+                `/trainers/rating/${trainer._id}`,
+                { rating: ratingValue },
+                { withCredentials: true }
+            );
+
+            if (res.data?.success) {
+                Swal.fire("Thank you!", "Your rating has been submitted.", "success");
+                setUserRating(ratingValue);
+
+                // Refresh trainer data to get updated average rating
+                const refreshed = await axiosSecure.get(`/trainers/${trainer._id}`);
+                setTrainer(refreshed.data);
+            } else {
+                Swal.fire("Notice", res.data?.message || "Rating already submitted.", "info");
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire("Error", "Failed to submit rating.", "error");
+        } finally {
+            setSubmittingRating(false);
+        }
+    };
 
     if (loading) {
         return (
-            <div className="min-h-screen flex justify-center items-center">
+            <div>
                 <Loader />
             </div>
         );
@@ -58,11 +123,29 @@ const TrainerDetail = () => {
                             />
                             <h1 className="text-3xl font-bold text-gray-800 mb-2">{trainer.name}</h1>
                             <p className="text-xl text-orange-600 font-medium mb-4">{trainer.specialization}</p>
-                            <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+                            <div className="flex flex-col items-center space-y-2">
                                 <div className="flex items-center space-x-1">
-                                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                    <span>{trainer.rating?.toFixed(1) || 'N/A'} Rating</span>
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <StarIcon
+                                            key={star}
+                                            className={`h-6 w-6 cursor-pointer transition-colors duration-200 ${star <= userRating
+                                                ? 'text-yellow-400 fill-yellow-400'
+                                                : 'text-gray-300'
+                                                }`}
+                                            onClick={() => !submittingRating && handleRatingSubmit(star)}
+                                            title={`${star} star${star > 1 ? 's' : ''}`}
+                                        />
+                                    ))}
                                 </div>
+                                <p className="text-sm text-gray-600">
+                                    Average Rating:{' '}
+                                    <span className="font-semibold text-yellow-600">
+                                        {trainer.rating?.toFixed(1) || 'N/A'}
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-center space-x-4 text-sm text-gray-600 mt-4">
                                 <div className="flex items-center space-x-1">
                                     <Calendar className="h-4 w-4" />
                                     <span>{trainer.experience || 'N/A'}</span>
@@ -74,7 +157,7 @@ const TrainerDetail = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-6 mt-8">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">About</h3>
                                 <p className="text-gray-600 leading-relaxed">{trainer.bio || 'No bio available.'}</p>

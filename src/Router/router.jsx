@@ -12,6 +12,13 @@ import Trainers from "../Pages/Trainers/Trainers";
 import TrainerDetail from "../Pages/Trainers/TrainerDetail";
 import BookTrainerPage from "../Pages/Trainers/BookTrainer";
 import Payment from "../Pages/Trainers/Payment";
+import DashboardLayout from "../Root/DashboardLayout";
+import { ProtectedRoute } from "../Provider/ProtectedRoute";
+import AdminRoute from "../Provider/AdminRoute";
+import Subscribers from "../Pages/Dashboard/Admin/Subscribers";
+import DashboardOverview from "../Pages/Dashboard/Admin/DashboardOverview";
+import AddCommunity from "../Pages/Dashboard/AddCommunity";
+import forbidden from "../Pages/Dashboard/forbidden";
 
 
 export const router = createBrowserRouter([
@@ -30,4 +37,15 @@ export const router = createBrowserRouter([
             { path: '/register', Component: Register },
         ]
     },
+
+    {
+        path: "/dashboard",
+        element: <ProtectedRoute> <DashboardLayout /> </ProtectedRoute>,
+        children: [
+            { index: true, path: '/dashboard', Component: DashboardOverview },
+            { path: 'subscribers', element: (<AdminRoute><Subscribers /></AdminRoute>) },
+            { path: 'add-community', Component: AddCommunity },
+            { path: 'forbidden', Component: forbidden },
+        ]
+    }
 ]);

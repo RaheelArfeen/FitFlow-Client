@@ -15,7 +15,7 @@ const Loader = ({ message = 'Loading...', size = 'medium' }) => {
     };
 
     return (
-        <div className={`flex flex-col items-center justify-center ${containerClasses[size]}`}>
+        <div className={`min-h-screen flex flex-col items-center justify-center bg-[#f9fafb] absolute inset-0 top-0 z-50 ${containerClasses[size]}`}>
             {/* Animated Logo */}
             <div className="relative mb-6">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
