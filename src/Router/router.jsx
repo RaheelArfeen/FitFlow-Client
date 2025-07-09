@@ -19,6 +19,9 @@ import Subscribers from "../Pages/Dashboard/Admin/Subscribers";
 import DashboardOverview from "../Pages/Dashboard/Admin/DashboardOverview";
 import AddCommunity from "../Pages/Dashboard/AddCommunity";
 import forbidden from "../Pages/Dashboard/forbidden";
+import Community from "../Pages/Community/Community";
+import CommunityDetail from "../Pages/Community/CommunityDetails";
+import Classes from "../Pages/Classes";
 
 
 export const router = createBrowserRouter([
@@ -29,10 +32,13 @@ export const router = createBrowserRouter([
         children: [
             { index: true, path: '/', Component: Home },
             { path: '/be-trainer', Component: BeTrainer },
+            { path: '/classes', Component: Classes },
             { path: '/trainers', Component: Trainers },
             { path: '/trainer/:id', Component: TrainerDetail },
             { path: '/book-trainer/:trainerId/:slotId', Component: BookTrainerPage },
             { path: '/payment/:trainerId/:slotId/:packageId', Component: Payment },
+            { path: '/community', Component: Community },
+            { path: '/community/:id', Component: CommunityDetail},
             { path: '/login', Component: Login },
             { path: '/register', Component: Register },
         ]
