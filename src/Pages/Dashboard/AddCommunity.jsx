@@ -55,7 +55,6 @@ const AddCommunity = () => {
             createdAt: new Date().toISOString(),
             likes: 0,
             dislikes: 0,
-            views: 0,
             comments: [],
         };
 

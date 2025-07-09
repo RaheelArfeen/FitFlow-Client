@@ -24,16 +24,12 @@ const CommunityDetails = () => {
     const [post, setPost] = useState(null);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
-    const [postLikes, setPostLikes] = useState(0);
-    const [postDislikes, setPostDislikes] = useState(0);
-    const [hasLiked, setHasLiked] = useState(false);
-    const [hasDisliked, setHasDisliked] = useState(false);
+    const [userVote, setUserVote] = useState(null); // 'like', 'dislike', or null
     const [updateTimer, setUpdateTimer] = useState(0);
 
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchPost();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     useEffect(() => {
@@ -48,40 +44,33 @@ const CommunityDetails = () => {
             const res = await axios.get(`http://localhost:3000/community/${id}`);
             const fetchedPost = res.data;
             setPost(fetchedPost);
-            setPostLikes(fetchedPost.likes || 0);
-            setPostDislikes(fetchedPost.dislikes || 0);
             setComments(fetchedPost.comments || []);
+
+            if (user && Array.isArray(fetchedPost.votes)) {
+                const vote = fetchedPost.votes.find((v) => v.email === user.email);
+                setUserVote(vote?.type || null);
+            } else {
+                setUserVote(null);
+            }
         } catch (error) {
             console.error('Failed to fetch post:', error);
         }
     };
 
-    const handleVote = (type) => {
+    const handleVote = async (type) => {
         if (!user) return alert('Please login to vote');
-        if (type === 'like') {
-            if (hasLiked) {
-                setPostLikes((p) => p - 1);
-                setHasLiked(false);
-            } else {
-                setPostLikes((p) => p + 1);
-                setHasLiked(true);
-                if (hasDisliked) {
-                    setPostDislikes((p) => p - 1);
-                    setHasDisliked(false);
-                }
-            }
-        } else {
-            if (hasDisliked) {
-                setPostDislikes((p) => p - 1);
-                setHasDisliked(false);
-            } else {
-                setPostDislikes((p) => p + 1);
-                setHasDisliked(true);
-                if (hasLiked) {
-                    setPostLikes((p) => p - 1);
-                    setHasLiked(false);
-                }
-            }
+
+        const newVoteType = userVote === type ? null : type;
+
+        try {
+            await axios.post(
+                'http://localhost:3000/community/vote',
+                { postId: id, voteType: newVoteType },
+                { withCredentials: true }
+            );
+            await fetchPost();
+        } catch (error) {
+            console.error('Vote failed:', error.response?.data?.message || error.message);
         }
     };
 
@@ -133,24 +122,19 @@ const CommunityDetails = () => {
     const isAuthor =
         user && post && (user.uid === post.authorId || user.displayName === post.author);
 
-    if (!post) {
-        return <Loader />;
-    }
+    if (!post) return <Loader />;
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="md:container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Back Button */}
                 <button
                     onClick={() => navigate('/community')}
                     className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-                    aria-label="Back to Community"
                 >
                     <ArrowLeft className="h-5 w-5" />
                     <span className="text-base sm:text-lg font-medium">Back to Community</span>
                 </button>
 
-                {/* Post Card */}
                 <article className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex flex-col sm:flex-row sm:items-center mb-4 space-y-3 sm:space-y-0 sm:space-x-4">
@@ -158,7 +142,6 @@ const CommunityDetails = () => {
                                 src={post.authorPhoto}
                                 alt={post.author}
                                 className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                                loading="lazy"
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-800">
@@ -184,16 +167,12 @@ const CommunityDetails = () => {
                             <div className="flex items-center space-x-2 mt-3 sm:mt-0">
                                 <button
                                     onClick={handleShare}
-                                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                                    aria-label="Share post"
-                                    type="button"
+                                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                                 >
                                     <Share2 className="h-5 w-5" />
                                 </button>
                                 <button
-                                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                                    aria-label="Report post"
-                                    type="button"
+                                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
                                 >
                                     <Flag className="h-5 w-5" />
                                 </button>
@@ -210,20 +189,13 @@ const CommunityDetails = () => {
                             {post.content.split('\n').map((paragraph, index) => {
                                 if (paragraph.startsWith('## ')) {
                                     return (
-                                        <h2
-                                            key={index}
-                                            className="text-xl font-semibold text-gray-800 mt-6 mb-3"
-                                        >
+                                        <h2 key={index} className="text-xl font-semibold mt-6 mb-3">
                                             {paragraph.replace('## ', '')}
                                         </h2>
                                     );
                                 }
                                 if (paragraph.trim() === '') return <br key={index} />;
-                                return (
-                                    <p key={index} className="mb-4">
-                                        {paragraph}
-                                    </p>
-                                );
+                                return <p key={index} className="mb-4">{paragraph}</p>;
                             })}
                         </div>
                     </div>
@@ -232,24 +204,22 @@ const CommunityDetails = () => {
                         <div className="flex flex-wrap items-center space-x-6">
                             <button
                                 onClick={() => handleVote('like')}
-                                className={`flex items-center space-x-2 ${hasLiked ? 'text-green-600' : 'text-gray-500 hover:text-green-600'
-                                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded`}
-                                aria-label="Like post"
-                                type="button"
+                                className={`flex items-center space-x-2 ${userVote === 'like' ? 'text-green-600 ring-green-400' : 'text-gray-500 hover:text-green-600'
+                                    } focus:outline-none focus-visible:ring-2 rounded`}
                             >
                                 <ThumbsUp className="h-5 w-5" />
-                                <span>{postLikes}</span>
+                                <span>{post.likes || 0}</span>
                             </button>
+
                             <button
                                 onClick={() => handleVote('dislike')}
-                                className={`flex items-center space-x-2 ${hasDisliked ? 'text-red-600' : 'text-gray-500 hover:text-red-600'
-                                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 rounded`}
-                                aria-label="Dislike post"
-                                type="button"
+                                className={`flex items-center space-x-2 ${userVote === 'dislike' ? 'text-red-600 ring-red-400' : 'text-gray-500 hover:text-red-600'
+                                    } focus:outline-none focus-visible:ring-2 rounded`}
                             >
                                 <ThumbsDown className="h-5 w-5" />
-                                <span>{postDislikes}</span>
+                                <span>{post.dislikes || 0}</span>
                             </button>
+
                             <div className="flex items-center space-x-2 text-gray-500 select-none">
                                 <MessageSquare className="h-5 w-5" />
                                 <span>{comments.length}</span>
@@ -274,7 +244,6 @@ const CommunityDetails = () => {
                                         src={user.photoURL}
                                         alt={user.displayName}
                                         className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                                        loading="lazy"
                                     />
                                     <div className="flex-1">
                                         <textarea
@@ -288,7 +257,7 @@ const CommunityDetails = () => {
                                             <button
                                                 type="submit"
                                                 disabled={!newComment.trim()}
-                                                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                                                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
                                             >
                                                 <Send className="h-4 w-4" />
                                                 <span>Post Comment</span>
@@ -302,16 +271,10 @@ const CommunityDetails = () => {
                         <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
                             <p className="text-blue-800 mb-3">Join the conversation!</p>
                             <div className="space-x-3 flex justify-center">
-                                <Link
-                                    to="/login"
-                                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
-                                >
+                                <Link to="/login" className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg">
                                     Login
                                 </Link>
-                                <Link
-                                    to="/register"
-                                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
-                                >
+                                <Link to="/register" className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
                                     Sign Up
                                 </Link>
                             </div>
@@ -320,22 +283,18 @@ const CommunityDetails = () => {
 
                     <div className="space-y-6">
                         {comments.map((comment) => (
-                            <div
-                                key={comment._id || comment.id}
-                                className="border-b border-gray-200 pb-6"
-                            >
+                            <div key={comment._id || comment.id} className="border-b border-gray-200 pb-6">
                                 <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
                                     <img
                                         src={comment.authorPhoto || comment.avatar}
                                         alt={comment.author}
-                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                                        loading="lazy"
+                                        className="w-10 h-10 rounded-full object-cover"
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2 text-gray-800">
                                             <h4 className="font-semibold truncate">{comment.author}</h4>
                                             {comment.authorRole !== 'member' && (
-                                                <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium text-gray-700 select-none">
+                                                <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium text-gray-700">
                                                     {getBadgeIcon(comment.authorRole)}
                                                     <span>{getBadgeText(comment.authorRole)}</span>
                                                 </div>
@@ -343,9 +302,7 @@ const CommunityDetails = () => {
                                             <span className="text-sm text-gray-500">•</span>
                                             <span className="text-sm text-gray-500 whitespace-nowrap">
                                                 {comment.createdAt
-                                                    ? formatDistanceToNowStrict(new Date(comment.createdAt), {
-                                                        addSuffix: true,
-                                                    })
+                                                    ? formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })
                                                     : 'just now'}
                                             </span>
                                         </div>
