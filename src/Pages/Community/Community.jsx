@@ -17,7 +17,7 @@ const CommunityPage = () => {
     const { user } = useContext(AuthContext);
     const [currentPage, setCurrentPage] = useState(1);
     const [posts, setPosts] = useState([]);
-    const [updateTimer, setUpdateTimer] = useState(0); // triggers re-render every minute
+    const [updateTimer, setUpdateTimer] = useState(0); 
 
     useEffect(() => {
         window.scrollTo(0, 0);
