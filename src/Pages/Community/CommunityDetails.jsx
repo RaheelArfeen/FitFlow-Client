@@ -28,19 +28,18 @@ const CommunityDetails = () => {
     const [postDislikes, setPostDislikes] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
     const [hasDisliked, setHasDisliked] = useState(false);
-
     const [updateTimer, setUpdateTimer] = useState(0);
 
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchPost();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setUpdateTimer((prev) => prev + 1);
         }, 60000);
-
         return () => clearInterval(interval);
     }, []);
 
@@ -131,71 +130,79 @@ const CommunityDetails = () => {
         }
     };
 
-    // Prevent post author from commenting
-    // Adjust property names if you use different field names for author and user ID
-    const isAuthor = user && post && (user.uid === post.authorId || user.displayName === post.author);
+    const isAuthor =
+        user && post && (user.uid === post.authorId || user.displayName === post.author);
 
-    // Loading Spinner while fetching post or user not ready
-    if (!post || !user) {
+    if (!post) {
         return <Loader />;
     }
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
-            <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="md:container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Back Button */}
                 <button
                     onClick={() => navigate('/community')}
-                    className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 mb-6"
+                    className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                    aria-label="Back to Community"
                 >
                     <ArrowLeft className="h-5 w-5" />
-                    <span>Back to Community</span>
+                    <span className="text-base sm:text-lg font-medium">Back to Community</span>
                 </button>
 
                 {/* Post Card */}
                 <article className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
                     <div className="p-6 border-b border-gray-200">
-                        <div className="flex items-center mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center mb-4 space-y-3 sm:space-y-0 sm:space-x-4">
                             <img
                                 src={post.authorPhoto}
                                 alt={post.author}
-                                className="w-12 h-12 rounded-full object-cover mr-4"
+                                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                loading="lazy"
                             />
-                            <div className="flex-1">
-                                <div className="flex items-center space-x-2">
-                                    <h4 className="font-semibold text-gray-800">{post.author}</h4>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-800">
+                                    <h4 className="font-semibold text-lg truncate">{post.author}</h4>
                                     {post.authorRole !== 'member' && (
-                                        <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full">
+                                        <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium text-gray-700 select-none">
                                             {getBadgeIcon(post.authorRole)}
-                                            <span className="text-xs font-medium text-gray-700">
-                                                {getBadgeText(post.authorRole)}
-                                            </span>
+                                            <span>{getBadgeText(post.authorRole)}</span>
                                         </div>
                                     )}
                                     <span className="text-sm text-gray-500">•</span>
-                                    <span className="text-sm text-gray-500">
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">
                                         {post.createdAt
                                             ? formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: true })
                                             : 'just now'}
                                     </span>
                                 </div>
-                                <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm mt-1">
+                                <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm mt-1 select-none">
                                     {post.category}
                                 </span>
                             </div>
-                            <div className="flex items-center space-x-2">
+
+                            <div className="flex items-center space-x-2 mt-3 sm:mt-0">
                                 <button
                                     onClick={handleShare}
-                                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                                    aria-label="Share post"
+                                    type="button"
                                 >
                                     <Share2 className="h-5 w-5" />
                                 </button>
-                                <button className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                                <button
+                                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                                    aria-label="Report post"
+                                    type="button"
+                                >
                                     <Flag className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
 
-                        <h1 className="text-2xl font-bold text-gray-800 mb-4">{post.title}</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 break-words">
+                            {post.title}
+                        </h1>
                     </div>
 
                     <div className="p-6">
@@ -203,7 +210,10 @@ const CommunityDetails = () => {
                             {post.content.split('\n').map((paragraph, index) => {
                                 if (paragraph.startsWith('## ')) {
                                     return (
-                                        <h2 key={index} className="text-xl font-semibold text-gray-800 mt-6 mb-3">
+                                        <h2
+                                            key={index}
+                                            className="text-xl font-semibold text-gray-800 mt-6 mb-3"
+                                        >
                                             {paragraph.replace('## ', '')}
                                         </h2>
                                     );
@@ -219,11 +229,13 @@ const CommunityDetails = () => {
                     </div>
 
                     <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                        <div className="flex items-center space-x-6">
+                        <div className="flex flex-wrap items-center space-x-6">
                             <button
                                 onClick={() => handleVote('like')}
                                 className={`flex items-center space-x-2 ${hasLiked ? 'text-green-600' : 'text-gray-500 hover:text-green-600'
-                                    }`}
+                                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded`}
+                                aria-label="Like post"
+                                type="button"
                             >
                                 <ThumbsUp className="h-5 w-5" />
                                 <span>{postLikes}</span>
@@ -231,12 +243,14 @@ const CommunityDetails = () => {
                             <button
                                 onClick={() => handleVote('dislike')}
                                 className={`flex items-center space-x-2 ${hasDisliked ? 'text-red-600' : 'text-gray-500 hover:text-red-600'
-                                    }`}
+                                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 rounded`}
+                                aria-label="Dislike post"
+                                type="button"
                             >
                                 <ThumbsDown className="h-5 w-5" />
                                 <span>{postDislikes}</span>
                             </button>
-                            <div className="flex items-center space-x-2 text-gray-500">
+                            <div className="flex items-center space-x-2 text-gray-500 select-none">
                                 <MessageSquare className="h-5 w-5" />
                                 <span>{comments.length}</span>
                             </div>
@@ -245,7 +259,7 @@ const CommunityDetails = () => {
                 </article>
 
                 {/* Comments Section */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
+                <section className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Comments</h2>
 
                     {user ? (
@@ -255,11 +269,12 @@ const CommunityDetails = () => {
                             </div>
                         ) : (
                             <form onSubmit={handleCommentSubmit} className="mb-8">
-                                <div className="flex items-start space-x-4">
+                                <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
                                     <img
                                         src={user.photoURL}
                                         alt={user.displayName}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                        loading="lazy"
                                     />
                                     <div className="flex-1">
                                         <textarea
@@ -273,7 +288,7 @@ const CommunityDetails = () => {
                                             <button
                                                 type="submit"
                                                 disabled={!newComment.trim()}
-                                                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
+                                                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                                             >
                                                 <Send className="h-4 w-4" />
                                                 <span>Post Comment</span>
@@ -286,7 +301,7 @@ const CommunityDetails = () => {
                     ) : (
                         <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
                             <p className="text-blue-800 mb-3">Join the conversation!</p>
-                            <div className="space-x-3">
+                            <div className="space-x-3 flex justify-center">
                                 <Link
                                     to="/login"
                                     className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
@@ -305,38 +320,44 @@ const CommunityDetails = () => {
 
                     <div className="space-y-6">
                         {comments.map((comment) => (
-                            <div key={comment._id || comment.id} className="border-b border-gray-200 pb-6">
-                                <div className="flex items-start space-x-4">
+                            <div
+                                key={comment._id || comment.id}
+                                className="border-b border-gray-200 pb-6"
+                            >
+                                <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
                                     <img
                                         src={comment.authorPhoto || comment.avatar}
                                         alt={comment.author}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                        loading="lazy"
                                     />
-                                    <div className="flex-1">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <h4 className="font-semibold text-gray-800">{comment.author}</h4>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2 text-gray-800">
+                                            <h4 className="font-semibold truncate">{comment.author}</h4>
                                             {comment.authorRole !== 'member' && (
-                                                <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full">
+                                                <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium text-gray-700 select-none">
                                                     {getBadgeIcon(comment.authorRole)}
-                                                    <span className="text-xs font-medium text-gray-700">
-                                                        {getBadgeText(comment.authorRole)}
-                                                    </span>
+                                                    <span>{getBadgeText(comment.authorRole)}</span>
                                                 </div>
                                             )}
                                             <span className="text-sm text-gray-500">•</span>
-                                            <span className="text-sm text-gray-500">
+                                            <span className="text-sm text-gray-500 whitespace-nowrap">
                                                 {comment.createdAt
-                                                    ? formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })
+                                                    ? formatDistanceToNowStrict(new Date(comment.createdAt), {
+                                                        addSuffix: true,
+                                                    })
                                                     : 'just now'}
                                             </span>
                                         </div>
-                                        <p className="text-gray-700 mb-3">{comment.text || comment.content}</p>
+                                        <p className="text-gray-700 whitespace-pre-line">
+                                            {comment.text || comment.content}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     );

@@ -215,52 +215,65 @@ const TrainerDetail = () => {
                     </div>
 
                     {/* Right Column: Slots */}
-                    <div className="bg-white rounded-xl shadow-lg p-8">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Available Slots</h2>
+                    <section className="bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-4xl w-full mx-auto">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 text-center sm:text-left">
+                            Available Slots
+                        </h2>
+
                         <div className="space-y-4">
                             {trainer.slots && trainer.slots.length > 0 ? (
                                 trainer.slots.map((slot, index) => (
                                     <div
                                         key={index}
-                                        className={`border rounded-lg p-4 ${slot.isBooked ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer'} transition-colors duration-200`}
+                                        className={`border rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between transition-colors duration-200 ${slot.isBooked
+                                                ? 'bg-gray-50 border-gray-200'
+                                                : 'bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer'
+                                            }`}
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h3 className="font-semibold text-gray-800">{slot.name}</h3>
-                                                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                                    <div className="flex items-center space-x-1">
-                                                        <Clock className="h-4 w-4" />
-                                                        <span>{slot.time}</span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-1">
-                                                        <MapPin className="h-4 w-4" />
-                                                        <span>{slot.day}</span>
-                                                    </div>
+                                        <div className="flex flex-col flex-1">
+                                            <h3 className="font-semibold text-gray-800 text-lg sm:text-xl mb-2 sm:mb-0">
+                                                {slot.name}
+                                            </h3>
+
+                                            <div className="flex flex-wrap gap-4 text-gray-600 text-sm sm:text-base">
+                                                <div className="flex items-center space-x-1">
+                                                    <Clock className="h-5 w-5 text-gray-500" />
+                                                    <span>{slot.time}</span>
+                                                </div>
+
+                                                <div className="flex items-center space-x-1">
+                                                    <MapPin className="h-5 w-5 text-gray-500" />
+                                                    <span>{slot.day}</span>
                                                 </div>
                                             </div>
-                                            <div>
-                                                {slot.isBooked ? (
-                                                    <span className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm">Booked</span>
-                                                ) : (
-                                                    <Link
-                                                        to={`/book-trainer/${trainer._id}/${slot.id}`}
-                                                        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                                                    >
-                                                        Book Now
-                                                    </Link>
-                                                )}
-                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 sm:mt-0">
+                                            {slot.isBooked ? (
+                                                <span className="bg-gray-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
+                                                    Booked
+                                                </span>
+                                            ) : (
+                                                <Link
+                                                    to={`/book-trainer/${trainer._id}/${slot.id}`}
+                                                    className="inline-block bg-blue-700 hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 text-white px-5 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-200 min-w-[96px] text-center"
+                                                    tabIndex={0}
+                                                    aria-label={`Book slot ${slot.name} at ${slot.time} on ${slot.day}`}
+                                                >
+                                                    Book Now
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-sm text-gray-400 italic">No slots available</p>
+                                <p className="text-center text-sm text-gray-400 italic">No slots available</p>
                             )}
                         </div>
-                    </div>
+                    </section>
                 </div>
 
-                <div className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center">
+                <div className="mt-12 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center">
                     <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
                     <p className="text-xl mb-6 text-blue-100">
                         Join our team of expert trainers and help others achieve their fitness goals.
