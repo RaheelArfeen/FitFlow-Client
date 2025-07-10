@@ -15,13 +15,23 @@ import Payment from "../Pages/Trainers/Payment";
 import DashboardLayout from "../Root/DashboardLayout";
 import { ProtectedRoute } from "../Provider/ProtectedRoute";
 import AdminRoute from "../Provider/AdminRoute";
+import TrainersRoute from "../Provider/TrainersRoute";
+import MemberRoute from "../Provider/MemberRoute";
+import ActiveLog from "../Pages/Dashboard/Member/ActiveLog";
+import BookedTrainers from "../Pages/Dashboard/Member/BookedTrainers";
 import Subscribers from "../Pages/Dashboard/Admin/Subscribers";
+import AllTrainers from "../Pages/Dashboard/Admin/AllTrainers";
+import AppliedTrainers from "../Pages/Dashboard/Admin/AppliedTrainers";
+import Balance from "../Pages/Dashboard/Admin/Balance";
 import DashboardOverview from "../Pages/Dashboard/DashboardOverview";
 import AddCommunity from "../Pages/Dashboard/AddCommunity";
 import forbidden from "../Pages/Dashboard/forbidden";
 import Community from "../Pages/Community/Community";
-import CommunityDetail from "../Pages/Community/CommunityDetails";
 import Classes from "../Pages/Classes";
+import CommunityDetails from "../Pages/Community/CommunityDetails";
+import AddClass from "../Pages/Dashboard/Trainer/AddClass";
+import AddSlot from "../Pages/Dashboard/Trainer/AddSlot";
+import ManageSlot from "../Pages/Dashboard/Trainer/ManageSlots";
 
 
 export const router = createBrowserRouter([
@@ -31,14 +41,14 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage></ErrorPage>,
         children: [
             { index: true, path: '/', Component: Home },
-            { path: '/be-trainer', Component: BeTrainer },
+            { path: '/be-trainer', element: <ProtectedRoute><BeTrainer /></ProtectedRoute> },
             { path: '/classes', Component: Classes },
             { path: '/trainers', Component: Trainers },
-            { path: '/trainer/:id', Component: TrainerDetail },
-            { path: '/book-trainer/:trainerId/:slotId', Component: BookTrainerPage },
-            { path: '/payment/:trainerId/:slotId/:packageId', Component: Payment },
+            { path: '/trainer/:id', element: <ProtectedRoute><TrainerDetail /></ProtectedRoute> },
+            { path: '/book-trainer/:trainerId/:slotId', element: <ProtectedRoute><BookTrainerPage /></ProtectedRoute> },
+            { path: '/payment/:trainerId/:slotId/:packageId', element: <ProtectedRoute><Payment /></ProtectedRoute> },
             { path: '/community', Component: Community },
-            { path: '/community/:id', Component: CommunityDetail},
+            { path: '/community/:id', element: <ProtectedRoute><CommunityDetails /></ProtectedRoute> },
             { path: '/login', Component: Login },
             { path: '/register', Component: Register },
         ]
@@ -49,8 +59,19 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute> <DashboardLayout /> </ProtectedRoute>,
         children: [
             { index: true, path: '/dashboard', Component: DashboardOverview },
-            { path: 'subscribers', element: (<AdminRoute><Subscribers /></AdminRoute>) },
-            { path: 'add-community', Component: AddCommunity },
+            { path: 'add-community', element: <ProtectedRoute> <AddCommunity /> </ProtectedRoute> },
+            // member routes
+            { path: 'activity-log', element: <MemberRoute><ActiveLog /></MemberRoute> },
+            { path: 'booked-trainers', element: <MemberRoute><BookedTrainers /></MemberRoute> },
+            // admin routes
+            { path: 'subscribers', element: <AdminRoute><Subscribers /></AdminRoute> },
+            { path: 'trainers', element: <AdminRoute><AllTrainers /></AdminRoute> },
+            { path: 'applied-trainers', element: <AdminRoute><AppliedTrainers /></AdminRoute> },
+            { path: 'balance', element: <AdminRoute><Balance /></AdminRoute> },
+            // trainer routes
+            { path: 'add-class', element: <TrainersRoute><AddClass /></TrainersRoute> },
+            { path: 'add-slot', element: <TrainersRoute><AddSlot /></TrainersRoute> },
+            { path: 'manage-slots', element: <TrainersRoute><ManageSlot /></TrainersRoute> },
             { path: 'forbidden', Component: forbidden },
         ]
     }

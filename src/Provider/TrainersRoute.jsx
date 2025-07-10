@@ -2,13 +2,14 @@ import React, { useContext } from 'react';
 import useUserRole from '../hooks/useUserRole';
 import { AuthContext } from './AuthProvider';
 import { Navigate } from 'react-router';
+import Loader from '../Pages/Loader';
 
 const TrainersRoute = ({ children }) => {
     const { user, loading } = useContext(AuthContext);
     const { role, roleLoading } = useUserRole();
 
     if (loading || roleLoading) {
-        return <span className="loading loading-spinner loading-xl"></span>
+        return <Loader/>
     }
 
     if (!user || role !== 'trainer') {

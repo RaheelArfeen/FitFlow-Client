@@ -139,7 +139,7 @@ const Trainers = () => {
                                         <motion.div whileHover={{ scale: 1.2 }}>
                                             {trainer.social?.instagram ? (
                                                 <a
-                                                    href={`https://instagram.com/${trainer.social.instagram.replace('@', '')}`}
+                                                    href={`${trainer.social.instagram.replace('@', '')}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
@@ -154,7 +154,7 @@ const Trainers = () => {
                                         <motion.div whileHover={{ scale: 1.2 }}>
                                             {trainer.social?.twitter ? (
                                                 <a
-                                                    href={`https://twitter.com/${trainer.social.twitter.replace('@', '')}`}
+                                                    href={`${trainer.social.twitter.replace('@', '')}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
@@ -169,7 +169,7 @@ const Trainers = () => {
                                         <motion.div whileHover={{ scale: 1.2 }}>
                                             {trainer.social?.linkedin ? (
                                                 <a
-                                                    href={`https://linkedin.com/in/${trainer.social.linkedin}`}
+                                                    href={`${trainer.social.linkedin}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >

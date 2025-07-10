@@ -86,39 +86,35 @@ const AddCommunity = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-
-    // Framer Motion Variants - ADJUSTED FOR SPEED
     const containerVariants = {
-        hidden: { opacity: 0, y: 10 }, // Slightly less initial y offset
+        hidden: { opacity: 0, y: 10 },
         visible: {
             opacity: 1,
             y: 0,
             transition: {
                 type: 'spring',
-                stiffness: 120, // Increased stiffness for faster snap
-                damping: 18,    // Adjusted damping for less bounce, faster settlement
+                stiffness: 120,
+                damping: 18,
                 when: "beforeChildren",
-                staggerChildren: 0.05, // Reduced stagger duration
-                delayChildren: 0.1 // Reduced initial delay for children
+                staggerChildren: 0.05
             }
         }
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 15 }, // Slightly less initial y offset
-        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 150, damping: 20 } } // Faster spring
+        hidden: { opacity: 0, y: 15 },
+        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 150, damping: 20 } }
     };
 
     const inputVariants = {
-        hidden: { opacity: 0, x: -15 }, // Slightly less initial x offset
-        visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 150, damping: 20 } } // Faster spring
+        hidden: { opacity: 0, x: -15 },
+        visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 150, damping: 20 } }
     };
 
     const dropdownItemVariants = {
-        hidden: { opacity: 0, y: -5 }, // Smaller y offset
-        visible: { opacity: 1, y: 0, transition: { duration: 0.08 } } // Shorter duration
+        hidden: { opacity: 0, y: -5 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.08 } }
     };
-
 
     return (
         <motion.div
@@ -127,7 +123,6 @@ const AddCommunity = () => {
             initial="hidden"
             animate="visible"
         >
-            {/* Header */}
             <motion.div className="mb-8" variants={itemVariants}>
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Add New Forum Post</h1>
                 <p className="text-gray-600">Share knowledge and engage with the community.</p>
@@ -135,7 +130,6 @@ const AddCommunity = () => {
 
             <motion.div className="bg-white rounded-xl shadow-lg p-8" variants={itemVariants}>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Title */}
                     <motion.div variants={inputVariants}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Post Title *</label>
                         <input
@@ -149,9 +143,7 @@ const AddCommunity = () => {
                         />
                     </motion.div>
 
-                    {/* Category & Tags */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Custom Dropdown */}
                         <motion.div ref={dropdownRef} className="relative" variants={inputVariants}>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                             <motion.button
@@ -163,7 +155,7 @@ const AddCommunity = () => {
                             >
                                 <span>{formData.category || 'Select a category'}</span>
                                 <motion.svg
-                                    className={`h-5 w-5 text-gray-500`}
+                                    className="h-5 w-5 text-gray-500"
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                     fill="currentColor"
@@ -180,11 +172,11 @@ const AddCommunity = () => {
 
                             {categoryOpen && (
                                 <motion.ul
-                                    className="absolute z-10 mt-1 h-fit w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 max-h-60"
-                                    initial={{ opacity: 0, y: -5 }} // Smaller initial y offset
+                                    className="absolute z-10 mt-1 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 max-h-60"
+                                    initial={{ opacity: 0, y: -5 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -5 }}
-                                    transition={{ duration: 0.15 }} // Faster fade/slide
+                                    transition={{ duration: 0.15 }}
                                 >
                                     {categories.map((category) => (
                                         <motion.li
@@ -209,7 +201,6 @@ const AddCommunity = () => {
                             )}
                         </motion.div>
 
-                        {/* Tags */}
                         <motion.div variants={inputVariants}>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Tags (comma separated)</label>
                             <div className="relative">
@@ -226,7 +217,6 @@ const AddCommunity = () => {
                         </motion.div>
                     </div>
 
-                    {/* Content */}
                     <motion.div variants={inputVariants}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Post Content *</label>
                         <div className="relative">
@@ -244,7 +234,6 @@ const AddCommunity = () => {
                         <div className="mt-2 text-sm text-gray-500">Minimum 50 characters. Markdown supported.</div>
                     </motion.div>
 
-                    {/* Author Info */}
                     <motion.div className="bg-gray-50 rounded-lg p-4" variants={itemVariants}>
                         <h3 className="text-sm font-medium text-gray-700 mb-2">Author Information</h3>
                         <div className="flex items-center space-x-3">
@@ -254,20 +243,21 @@ const AddCommunity = () => {
                                 className="w-10 h-10 rounded-full object-cover"
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                transition={{ type: 'spring', stiffness: 250, damping: 18 }} // Faster pop-in
+                                transition={{ type: 'spring', stiffness: 250, damping: 18 }}
                             />
                             <div>
-                                <motion.div className="font-medium text-gray-800" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05, duration: 0.2 }}>{user?.displayName}</motion.div> {/* Reduced delay and duration */}
-                                <motion.div className="text-sm text-gray-500 capitalize flex items-center space-x-1" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1, duration: 0.2 }}> {/* Reduced delay and duration */}
+                                <motion.div className="font-medium text-gray-800" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                                    {user?.displayName}
+                                </motion.div>
+                                <motion.div className="text-sm text-gray-500 capitalize flex items-center space-x-1" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
                                     <span>{user?.role}</span>
-                                    {user?.role === 'admin' && <Crown size={15} className="text-yellow-500" />}
-                                    {user?.role === 'trainer' && <Trophy size={15} className="text-blue-500" />}
+                                    {user?.role === 'admin' && <Crown size={15} />}
+                                    {user?.role === 'trainer' && <Trophy size={15} />}
                                 </motion.div>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Buttons */}
                     <motion.div className="flex justify-end space-x-4" variants={itemVariants}>
                         <motion.button
                             type="button"

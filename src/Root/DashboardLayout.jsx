@@ -3,7 +3,8 @@ import { Link, Outlet, useLocation } from 'react-router'; // Changed to react-ro
 import { motion, AnimatePresence } from 'framer-motion'; // Import motion and AnimatePresence
 import {
     Activity, Users, Calendar, BarChart3, MessageSquare, Plus, User, BookOpen,
-    Mail, UserCheck, DollarSign, Clock, Home, Crown, Trophy, Menu, X
+    Mail, UserCheck, DollarSign, Clock, Home, Crown, Trophy, Menu, X,
+    CalendarPlus
 } from 'lucide-react';
 import { AuthContext } from '../Provider/AuthProvider';
 
@@ -33,7 +34,6 @@ const DashboardLayout = () => {
                 { icon: Users, label: 'All Trainers', path: '/dashboard/trainers' },
                 { icon: UserCheck, label: 'Applied Trainers', path: '/dashboard/applied-trainers' },
                 { icon: DollarSign, label: 'Balance', path: '/dashboard/balance' },
-                { icon: Plus, label: 'Add New Class', path: '/dashboard/add-class' },
                 { icon: MessageSquare, label: 'Add New Community', path: '/dashboard/add-Community' },
             ];
         }
@@ -42,8 +42,9 @@ const DashboardLayout = () => {
             return [
                 ...baseItems,
                 { icon: Clock, label: 'Manage Slots', path: '/dashboard/manage-slots' },
-                { icon: Plus, label: 'Add New Slot', path: '/dashboard/add-slot' },
-                { icon: MessageSquare, label: 'Add New Community', path: '/dashboard/add-Community' },
+                { icon: CalendarPlus, label: 'Add New Slot', path: '/dashboard/add-slot' },
+                { icon: BookOpen, label: 'Add New Class', path: '/dashboard/add-class' },
+                { icon: Users, label: 'Add New Community', path: '/dashboard/add-community' },
             ];
         }
 

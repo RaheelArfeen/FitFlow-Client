@@ -4,19 +4,19 @@ import { Navigate } from 'react-router';
 import { AuthContext } from './AuthProvider';
 import Loader from '../Pages/Loader';
 
-const AdminRoute = ({ children }) => {
+const MemberRoute = ({ children }) => {
     const { user, loading } = useContext(AuthContext);
     const { role, roleLoading } = useUserRole();
 
     if (loading || roleLoading) {
-        return <Loader/>
+        return <Loader />
     }
 
-    if (!user || role !== 'admin') {
+    if (!user || role !== 'member') {
         return <Navigate state={{ from: location.pathname }} to="/dashboard/forbidden"></Navigate>
     }
 
     return children;
 };
 
-export default AdminRoute;
+export default MemberRoute;
