@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { motion } from 'framer-motion'; 
+import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import Loader from '../Loader';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { AuthContext } from '../../Provider/AuthProvider';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query'; // Import useQuery
 
 const membershipPackages = [
     {
@@ -43,33 +44,37 @@ const membershipPackages = [
 const BookTrainerPage = () => {
     const { trainerId, slotId } = useParams();
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext);
+    const { user } = useContext(AuthContext); // user is not directly used in this component's logic, but kept for context
+
     const axiosSecure = useAxiosSecure();
 
-    const [trainer, setTrainer] = useState(null);
     const [selectedPackage, setSelectedPackage] = useState('');
-    const [loading, setLoading] = useState(true);
+
+    // --- TanStack Query for fetching trainer data ---
+    const { data: trainer, isLoading, isError, error } = useQuery({
+        queryKey: ['trainerDetails', trainerId], // Unique key for this trainer's details
+        queryFn: async () => {
+            const res = await axiosSecure.get(`/trainers/${trainerId}`);
+            return res.data;
+        },
+        enabled: !!trainerId, // Only run the query if trainerId is available
+        staleTime: 1000 * 60 * 5, // Data considered fresh for 5 minutes
+        onError: (err) => {
+            console.error('Error fetching trainer:', err);
+            toast.error('Failed to load trainer details.'); // Using toast for error notification
+        }
+    });
 
     useEffect(() => {
-        axiosSecure.get(`/trainers/${trainerId}`)
-            .then(res => {
-                setTrainer(res.data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Error fetching trainer:', err);
-                setLoading(false);
-            });
-    }, [trainerId, axiosSecure]);
-
-    useEffect(() => {
+        // Scroll to top on component mount
         const timer = setTimeout(() => {
             window.scrollTo(0, 0);
         }, 300);
         return () => clearTimeout(timer);
     }, []);
 
-    if (loading) {
+    // Loader based on TanStack Query's isLoading
+    if (isLoading) {
         return (
             <div className="min-h-screen flex justify-center items-center">
                 <Loader />
@@ -77,8 +82,43 @@ const BookTrainerPage = () => {
         );
     }
 
+    // Error state when data fetching fails
+    if (isError) {
+        return (
+            <motion.div
+                className="min-h-screen bg-gray-50 flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="text-center">
+                    <motion.h2
+                        className="text-2xl font-bold text-red-600 mb-4"
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        Error Loading Trainer Details
+                    </motion.h2>
+                    <p className="text-gray-600 mb-4">{error?.message || 'An unexpected error occurred.'}</p>
+                    <motion.button
+                        onClick={() => navigate('/trainers')}
+                        className="text-blue-700 hover:text-blue-800"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                    >
+                        Back to Trainers
+                    </motion.button>
+                </div>
+            </motion.div>
+        );
+    }
+
+    // Find the slot after trainer data is loaded
     const slot = trainer?.slots?.find(s => s.id === slotId);
 
+    // Case where trainer or slot is not found (after successful fetch)
     if (!trainer || !slot) {
         return (
             <motion.div
@@ -112,7 +152,7 @@ const BookTrainerPage = () => {
 
     const handleJoinNow = () => {
         if (!selectedPackage) {
-            toast('Please select a membership package');
+            toast.error('Please select a membership package'); // Using toast for validation error
             return;
         }
         navigate(`/payment/${trainerId}/${slotId}/${selectedPackage}`);

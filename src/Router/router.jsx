@@ -32,6 +32,7 @@ import CommunityDetails from "../Pages/Community/CommunityDetails";
 import AddClass from "../Pages/Dashboard/Trainer/AddClass";
 import AddSlot from "../Pages/Dashboard/Trainer/AddSlot";
 import ManageSlot from "../Pages/Dashboard/Trainer/ManageSlots";
+import Profile from "../Pages/Dashboard/Member/Profile";
 
 
 export const router = createBrowserRouter([
@@ -44,11 +45,11 @@ export const router = createBrowserRouter([
             { path: '/be-trainer', element: <ProtectedRoute><BeTrainer /></ProtectedRoute> },
             { path: '/classes', Component: Classes },
             { path: '/trainers', Component: Trainers },
-            { path: '/trainer/:id', element: <ProtectedRoute><TrainerDetail /></ProtectedRoute> },
+            { path: '/trainer/:id', Component: TrainerDetail },
             { path: '/book-trainer/:trainerId/:slotId', element: <ProtectedRoute><BookTrainerPage /></ProtectedRoute> },
             { path: '/payment/:trainerId/:slotId/:packageId', element: <ProtectedRoute><Payment /></ProtectedRoute> },
             { path: '/community', Component: Community },
-            { path: '/community/:id', element: <ProtectedRoute><CommunityDetails /></ProtectedRoute> },
+            { path: '/community/:id', element: <CommunityDetails /> },
             { path: '/login', Component: Login },
             { path: '/register', Component: Register },
         ]
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
             { path: 'add-community', element: <ProtectedRoute> <AddCommunity /> </ProtectedRoute> },
             // member routes
             { path: 'activity-log', element: <MemberRoute><ActiveLog /></MemberRoute> },
+            { path: 'profile', element: <MemberRoute><Profile /></MemberRoute> },
             { path: 'booked-trainers', element: <MemberRoute><BookedTrainers /></MemberRoute> },
             // admin routes
             { path: 'subscribers', element: <AdminRoute><Subscribers /></AdminRoute> },
@@ -69,7 +71,7 @@ export const router = createBrowserRouter([
             { path: 'applied-trainers', element: <AdminRoute><AppliedTrainers /></AdminRoute> },
             { path: 'balance', element: <AdminRoute><Balance /></AdminRoute> },
             // trainer routes
-            { path: 'add-class', element: <TrainersRoute><AddClass /></TrainersRoute> },
+            { path: 'add-class', element: <AddClass /> },
             { path: 'add-slot', element: <TrainersRoute><AddSlot /></TrainersRoute> },
             { path: 'manage-slots', element: <TrainersRoute><ManageSlot /></TrainersRoute> },
             { path: 'forbidden', Component: forbidden },

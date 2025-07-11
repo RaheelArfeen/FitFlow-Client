@@ -7,19 +7,21 @@ import {
     Award,
     Shield,
 } from 'lucide-react';
-import axios from 'axios';
+import { motion } from 'framer-motion';
 import { AuthContext } from '../../Provider/AuthProvider';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import useAxiosSecure from '../../Provider/UseAxiosSecure';
+import { useQuery } from '@tanstack/react-query'; // Import useQuery
 
 const postsPerPage = 6;
 
 const Community = () => {
     const { user } = useContext(AuthContext);
+    const axiosSecure = useAxiosSecure();
+
     const [currentPage, setCurrentPage] = useState(1);
-    const [posts, setPosts] = useState([]);
-    const [updateTimer, setUpdateTimer] = useState(0);
+    const [updateTimer, setUpdateTimer] = useState(0); // Still needed for timestamp updates
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -29,21 +31,22 @@ const Community = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    // Fetch posts including votes info
-    const fetchPosts = async () => {
-        try {
-            const res = await axios.get('http://localhost:3000/community');
-            setPosts(res.data);
-        } catch (err) {
-            console.error('Failed to fetch posts:', err);
+    // Use Tanstack Query to fetch posts
+    const { data: posts = [], isLoading, isError, error, refetch } = useQuery({
+        queryKey: ['communityPosts'], // Unique key for this query
+        queryFn: async () => {
+            const res = await axiosSecure.get('/community');
+            return res.data;
+        },
+        // Optional: Configure refetching behavior if needed, e.g., staleTime, refetchOnWindowFocus
+        staleTime: 1000 * 60 * 5, // Data is considered fresh for 5 minutes
+        onError: (err) => {
+            console.error('Failed to fetch posts with Tanstack Query:', err);
+            toast.error('Failed to fetch posts.');
         }
-    };
+    });
 
-    useEffect(() => {
-        fetchPosts();
-    }, []);
-
-    // Timer to update timestamps every minute
+    // Timer to update timestamps every minute (still relevant as useQuery doesn't handle this specific UI update)
     useEffect(() => {
         const interval = setInterval(() => {
             setUpdateTimer((prev) => prev + 1);
@@ -62,28 +65,31 @@ const Community = () => {
     // Toggle like/dislike vote or remove vote
     const handleVote = async (postId, voteType) => {
         if (!user) {
-            toast('Please login to vote');
+            toast.warning("Please login to vote.");
             return;
         }
 
         const post = posts.find((p) => p._id === postId);
         const currentVote = getUserVote(post);
-
-        // If user clicks the same vote again, it should remove their vote (null)
         const newVoteType = currentVote === voteType ? null : voteType;
 
         try {
-            await axios.post(
-                'http://localhost:3000/community/vote',
-                { postId, voteType: newVoteType },
-                { withCredentials: true }
+            await axiosSecure.post('/community/vote', {
+                postId,
+                voteType: newVoteType,
+            });
+
+            await refetch(); // Re-fetch data after a successful vote to get updated counts
+            toast.success(
+                newVoteType
+                    ? `You ${newVoteType === "like" ? "liked" : "disliked"} this post.`
+                    : "Your vote was removed."
             );
-            await fetchPosts(); // refresh posts with updated votes
         } catch (error) {
-            console.error('Failed to vote:', error.response?.data?.message || error.message);
+            console.error("Voting error:", error);
+            toast.error("Failed to submit vote.");
         }
     };
-
 
     const getBadgeIcon = (role) => {
         switch (role) {
@@ -135,6 +141,21 @@ const Community = () => {
         tap: { scale: 0.9 },
     };
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <span className="loading loading-spinner loading-lg text-blue-700"></span>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <p className="text-red-600 text-lg">Error loading posts: {error.message}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
@@ -301,11 +322,11 @@ const Community = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className={`px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 min-w-[44px] text-center
-                  ${currentPage === page
+                                    ${currentPage === page
                                         ? 'bg-blue-700 text-white'
                                         : 'bg-white text-gray-700 hover:bg-gray-50'
                                     }
-                `}
+                                `}
                                 aria-current={currentPage === page ? 'page' : undefined}
                                 aria-label={`Go to page ${page}`}
                                 type="button"

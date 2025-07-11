@@ -11,127 +11,196 @@ import {
     Award,
     Shield,
     Send,
+    MoreVertical,
+    Trash2,
 } from 'lucide-react';
-import axios from 'axios';
 import { AuthContext } from '../../Provider/AuthProvider';
-import { formatDistanceToNowStrict } from 'date-fns';
+import { differenceInSeconds, formatDistanceToNowStrict } from 'date-fns';
 import Loader from '../Loader';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
+import useAxiosSecure from '../../Provider/UseAxiosSecure';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import TanStack Query hooks
 
 const CommunityDetails = () => {
     const { id } = useParams();
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
+    const axiosSecure = useAxiosSecure();
+    const queryClient = useQueryClient(); // Get the query client instance
 
-    const [post, setPost] = useState(null);
-    const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
-    const [userVote, setUserVote] = useState(null);
+    const [openCommentMenuId, setOpenCommentMenuId] = useState(null);
 
+    // Initial scroll to top on component mount
     useEffect(() => {
         const timer = setTimeout(() => {
             window.scrollTo(0, 0);
         }, 300);
-        fetchPost();
         return () => clearTimeout(timer);
-    }, [id]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setUpdateTimer((prev) => prev + 1);
-        }, 60000);
-        return () => clearInterval(interval);
     }, []);
 
-    const fetchPost = async () => {
-        try {
-            const res = await axios.get(`http://localhost:3000/community/${id}`);
+    // Effect to update comment timestamps every minute (still needed for UI re-render)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // This will trigger a re-render of comments without refetching data from server
+            // as formatDistanceToNowStrict relies on current time.
+            queryClient.invalidateQueries(['postDetails', id]);
+            // You could also do setComments(prev => [...prev]) if comments state was standalone
+        }, 60000);
+        return () => clearInterval(interval);
+    }, [queryClient, id]);
+
+    // --- TanStack Query for fetching post details ---
+    const { data: post, isLoading, isError, error } = useQuery({
+        queryKey: ['postDetails', id], // Key includes ID to make it unique per post
+        queryFn: async () => {
+            const res = await axiosSecure.get(`/community/${id}`);
             const fetchedPost = res.data;
-            setPost(fetchedPost);
-            setComments(fetchedPost.comments || []);
 
-            if (user && Array.isArray(fetchedPost.votes)) {
-                const vote = fetchedPost.votes.find((v) => v.email === user.email);
-                setUserVote(vote?.type || null);
-            } else {
-                setUserVote(null);
-            }
-        } catch (error) {
-            console.error('Failed to fetch post:', error);
-            toast.error('Failed to load post details.'); // Added toast for user feedback
-        }
-    };
+            // Sort comments by creation date (newest first)
+            fetchedPost.comments = (fetchedPost.comments || []).sort(
+                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            );
+            return fetchedPost;
+        },
+        enabled: !!id, // Only run the query if 'id' is available
+        staleTime: 1000 * 60, // Consider data fresh for 1 minute
+        onError: (err) => {
+            console.error('Failed to fetch post details:', err);
+            toast.error('Failed to load post details.');
+        },
+    });
 
-    const handleVote = async (type) => {
+    // Determine current user's vote status for the post
+    // This derived state will re-calculate whenever `post` or `user` changes
+    const userVote = post?.votes?.find((v) => v.email === user?.email)?.type || null;
+
+    // --- TanStack Query for handling votes ---
+    const voteMutation = useMutation({
+        mutationFn: async ({ postId, voteType }) => {
+            await axiosSecure.post('/community/vote', { postId, voteType });
+        },
+        onSuccess: (data, variables) => {
+            // Invalidate and refetch the post details query to show updated vote counts
+            queryClient.invalidateQueries(['postDetails', id]);
+            toast.success(
+                variables.voteType
+                    ? `You ${variables.voteType === "like" ? "liked" : "disliked"} this post.`
+                    : "Your vote was removed."
+            );
+        },
+        onError: (err) => {
+            console.error("Vote failed:", err);
+            toast.error("Failed to submit vote.");
+        },
+    });
+
+    const handleVote = (voteType) => {
         if (!user) {
-            toast.error('Please login to vote.');
+            toast.warning("Please login to vote.");
             return;
         }
+        const newVoteType = userVote === voteType ? null : voteType;
+        voteMutation.mutate({ postId: post._id, voteType: newVoteType });
+    };
 
-        const newVoteType = userVote === type ? null : type;
-
-        try {
-            // Optimistic UI update
-            const originalUserVote = userVote;
-            const originalPost = { ...post };
-
-            // Update local state immediately
-            setUserVote(newVoteType);
-            setPost(prevPost => {
-                if (!prevPost) return prevPost;
-                const newLikes = newVoteType === 'like' ? (originalUserVote === 'like' ? prevPost.likes - 1 : prevPost.likes + (originalUserVote === 'dislike' ? 1 : 0)) : prevPost.likes;
-                const newDislikes = newVoteType === 'dislike' ? (originalUserVote === 'dislike' ? prevPost.dislikes - 1 : prevPost.dislikes + (originalUserVote === 'like' ? 1 : 0)) : prevPost.dislikes;
-
-                return {
-                    ...prevPost,
-                    likes: newLikes < 0 ? 0 : newLikes,
-                    dislikes: newDislikes < 0 ? 0 : newDislikes
-                };
+    // --- TanStack Query for handling comments ---
+    const addCommentMutation = useMutation({
+        mutationFn: async (commentData) => {
+            const res = await axiosSecure.post(`/community/${post._id}/comments`, commentData);
+            return res.data.comment; // Return the newly created comment
+        },
+        onSuccess: (newCommentData) => {
+            // Optimistically update the cache to show the new comment instantly
+            queryClient.setQueryData(['postDetails', id], (oldData) => {
+                if (!oldData) return oldData;
+                const updatedComments = [newCommentData, ...(oldData.comments || [])];
+                return { ...oldData, comments: updatedComments };
             });
+            setNewComment(""); // Clear the input field
+            toast.success("Comment posted!");
+        },
+        onError: (err) => {
+            console.error("Failed to post comment:", err);
+            toast.error("Failed to post comment. Please try again.");
+        },
+    });
 
-
-            await axios.post(
-                'http://localhost:3000/community/vote',
-                { postId: id, voteType: newVoteType },
-                { withCredentials: true }
-            );
-            // Re-fetch to ensure data consistency after server update
-            fetchPost();
-            toast.success('Vote updated successfully!');
-        } catch (error) {
-            console.error('Vote failed:', error.response?.data?.message || error.message);
-            toast.error('Failed to cast vote.');
-            // Revert optimistic update on error
-            setUserVote(originalUserVote);
-            setPost(originalPost);
-        }
-    };
-
-    const handleCommentSubmit = async (e) => {
+    const handleCommentSubmit = (e) => {
         e.preventDefault();
-        if (!user || !newComment.trim()) {
-            toast.error('Please write a comment before submitting.');
+
+        if (!user) {
+            toast.warning("Please login to comment.");
             return;
         }
 
-        try {
-            const res = await axios.post(
-                `http://localhost:3000/community/${id}/comments`,
-                { commentText: newComment },
-                { withCredentials: true }
-            );
+        if (!newComment.trim()) {
+            toast.error("Comment cannot be empty.");
+            return;
+        }
 
-            if (res.status === 201 || res.status === 200) {
-                // Add the new comment from the response to the state
-                setComments((prev) => [res.data.comment, ...prev]); // Prepend new comment for better visibility
-                setNewComment('');
-                toast.success('Comment posted successfully!');
-            }
-        } catch (error) {
-            console.error('Failed to post comment:', error);
-            toast.error('Failed to post comment.');
+        addCommentMutation.mutate({ commentText: newComment.trim() });
+    };
+
+    // --- TanStack Query for deleting comments ---
+    const deleteCommentMutation = useMutation({
+        mutationFn: async (commentId) => {
+            await axiosSecure.delete(`/community/${post._id}/comments/${commentId}`);
+        },
+        onSuccess: (data, commentId) => {
+            // Optimistically update the cache by removing the deleted comment
+            queryClient.setQueryData(['postDetails', id], (oldData) => {
+                if (!oldData) return oldData;
+                const updatedComments = (oldData.comments || []).filter(
+                    (comment) => comment._id !== commentId
+                );
+                return { ...oldData, comments: updatedComments };
+            });
+            setOpenCommentMenuId(null);
+            Swal.fire({
+                title: "Deleted!",
+                text: "Your comment has been deleted.",
+                icon: "success",
+                showConfirmButton: true,
+            });
+        },
+        onError: (err) => {
+            console.error("Failed to delete comment:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed!',
+                text: 'Failed to delete comment. Please try again.',
+            });
+        },
+    });
+
+    const handleDeleteComment = async (commentId) => {
+        if (!user) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Not Logged In',
+                text: 'You must be logged in to delete a comment.',
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        });
+
+        if (result.isConfirmed) {
+            deleteCommentMutation.mutate(commentId);
         }
     };
+
 
     const getBadgeIcon = (role) => {
         if (role === 'admin') return <Shield className="h-4 w-4 text-red-600" />;
@@ -146,12 +215,16 @@ const CommunityDetails = () => {
     };
 
     const handleShare = () => {
+        if (!post) return; // Ensure post data is available
+
+        const shareData = {
+            title: post.title,
+            text: post.content.substring(0, Math.min(post.content.length, 100)) + '...', // Use Math.min for safety
+            url: window.location.href,
+        };
+
         if (navigator.share) {
-            navigator.share({
-                title: post.title,
-                text: post.content.substring(0, 100) + '...',
-                url: window.location.href,
-            })
+            navigator.share(shareData)
                 .then(() => toast.success('Post shared!'))
                 .catch((error) => console.error('Share failed', error));
         } else {
@@ -160,10 +233,20 @@ const CommunityDetails = () => {
         }
     };
 
-    const isAuthor =
-        user && post && (user.uid === post.authorId || user.displayName === post.author);
+    // Derived state for `isAuthor`
+    const isAuthor = user && post && (user.uid === post.authorId || user.email === post.email);
 
-    if (!post) return <Loader />;
+    if (isLoading) return <Loader />;
+    if (isError) return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <p className="text-red-600 text-lg">Error loading post: {error.message}</p>
+        </div>
+    );
+    if (!post) return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <p className="text-gray-600 text-lg">No post found.</p>
+        </div>
+    );
 
     // Animation variants
     const containerVariants = {
@@ -213,8 +296,8 @@ const CommunityDetails = () => {
                 <motion.button
                     onClick={() => navigate('/community')}
                     className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-                    whileHover={{ x: -5 }} // Subtle slide left on hover
-                    whileTap={{ scale: 0.95 }} // Slight shrink on click
+                    whileHover={{ x: -5 }}
+                    whileTap={{ scale: 0.95 }}
                     variants={itemVariants}
                 >
                     <ArrowLeft className="h-5 w-5" />
@@ -335,6 +418,7 @@ const CommunityDetails = () => {
                                     } focus:outline-none focus-visible:ring-2 rounded`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
+                                disabled={voteMutation.isPending} // Disable button while mutation is running
                             >
                                 <ThumbsUp className="h-5 w-5" />
                                 <span>{post.likes || 0}</span>
@@ -346,6 +430,7 @@ const CommunityDetails = () => {
                                     } focus:outline-none focus-visible:ring-2 rounded`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
+                                disabled={voteMutation.isPending} // Disable button while mutation is running
                             >
                                 <ThumbsDown className="h-5 w-5" />
                                 <span>{post.dislikes || 0}</span>
@@ -353,7 +438,7 @@ const CommunityDetails = () => {
 
                             <div className="flex items-center space-x-2 text-gray-500 select-none">
                                 <MessageSquare className="h-5 w-5" />
-                                <span>{comments.length}</span>
+                                <span>{(post.comments || []).length}</span>
                             </div>
                         </div>
                     </div>
@@ -367,7 +452,7 @@ const CommunityDetails = () => {
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Comments</h2>
 
                     {user ? (
-                        isAuthor ? (
+                        user.email === post.email ? (
                             <motion.div
                                 className="mb-8 p-4 bg-yellow-50 border border-yellow-300 rounded-lg text-center text-yellow-800"
                                 initial={{ opacity: 0, y: -20 }}
@@ -384,11 +469,17 @@ const CommunityDetails = () => {
                                 transition={{ delay: 0.1 }}
                             >
                                 <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                                    <img
-                                        src={user.photoURL}
-                                        alt={user.displayName}
-                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                                    />
+                                    {user.photoURL ? (
+                                        <img
+                                            src={user.photoURL}
+                                            alt={user.displayName}
+                                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                                            {user.displayName?.charAt(0).toUpperCase() || "U"}
+                                        </div>
+                                    )}
                                     <div className="flex-1">
                                         <textarea
                                             value={newComment}
@@ -396,17 +487,22 @@ const CommunityDetails = () => {
                                             placeholder="Share your thoughts..."
                                             rows={3}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                                            disabled={addCommentMutation.isPending} // Disable while commenting
                                         />
                                         <div className="flex justify-end mt-3">
                                             <motion.button
                                                 type="submit"
-                                                disabled={!newComment.trim()}
+                                                disabled={!newComment.trim() || addCommentMutation.isPending}
                                                 className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
-                                                <Send className="h-4 w-4" />
-                                                <span>Post Comment</span>
+                                                {addCommentMutation.isPending ? (
+                                                    <span className="loading loading-spinner loading-sm"></span>
+                                                ) : (
+                                                    <Send className="h-4 w-4" />
+                                                )}
+                                                <span>{addCommentMutation.isPending ? 'Posting...' : 'Post Comment'}</span>
                                             </motion.button>
                                         </div>
                                     </div>
@@ -421,45 +517,52 @@ const CommunityDetails = () => {
                         >
                             <p className="text-blue-800 mb-3">Join the conversation!</p>
                             <div className="space-x-3 flex justify-center">
-                                <motion.customLink
+                                <Link
                                     to="/login"
                                     className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
                                 >
                                     Login
-                                </motion.customLink>
-                                <motion.customLink
+                                </Link>
+                                <Link
                                     to="/register"
                                     className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
                                 >
                                     Sign Up
-                                </motion.customLink>
+                                </Link>
                             </div>
                         </motion.div>
                     )}
 
                     <motion.div
                         className="space-y-6"
-                        variants={containerVariants} // Use container variants for comments list
+                        variants={containerVariants}
                     >
-                        {comments.map((comment) => (
+                        {(post.comments || []).map((comment) => (
                             <motion.div
-                                key={comment._id || comment.id}
-                                className="border-b border-gray-200 pb-6"
-                                variants={commentItemVariants} // Apply comment specific variants
+                                key={comment._id}
+                                className="border-b border-gray-200 pb-6 px-6 relative"
+                                variants={commentItemVariants}
                             >
                                 <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                                    <motion.img
-                                        src={comment.authorPhoto || comment.avatar}
-                                        alt={comment.author}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                    />
+                                    {comment.authorPhoto || comment.avatar ? (
+                                        <motion.img
+                                            src={comment.authorPhoto || comment.avatar}
+                                            alt={comment.author}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ duration: 0.3 }}
+                                        />
+                                    ) : (
+                                        <motion.div
+                                            className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg"
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            {comment.author?.charAt(0).toUpperCase() || "U"}
+                                        </motion.div>
+                                    )}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2 text-gray-800">
                                             <h4 className="font-semibold truncate">{comment.author}</h4>
@@ -471,15 +574,52 @@ const CommunityDetails = () => {
                                             )}
                                             <span className="text-sm text-gray-500">•</span>
                                             <span className="text-sm text-gray-500 whitespace-nowrap">
-                                                {comment.createdAt
-                                                    ? formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })
-                                                    : 'just now'}
+                                                {comment.createdAt && differenceInSeconds(new Date(), new Date(comment.createdAt)) < 60
+                                                    ? "just now"
+                                                    : formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })}
                                             </span>
                                         </div>
                                         <p className="text-gray-700 whitespace-pre-line">
                                             {comment.text || comment.content}
                                         </p>
                                     </div>
+
+                                    {/* Three-dot menu for comments */}
+                                    {user && user.email === comment.email && (
+                                        <div className="relative z-10">
+                                            <motion.button
+                                                onClick={() => setOpenCommentMenuId(openCommentMenuId === comment._id ? null : comment._id)}
+                                                className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
+                                            >
+                                                <MoreVertical className="h-5 w-5 text-gray-500" />
+                                            </motion.button>
+
+                                            {openCommentMenuId === comment._id && (
+                                                <motion.div
+                                                    className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg overflow-hidden"
+                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                    transition={{ duration: 0.2 }}
+                                                >
+                                                    <button
+                                                        onClick={() => handleDeleteComment(comment._id)}
+                                                        className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        disabled={deleteCommentMutation.isPending} // Disable while deleting
+                                                    >
+                                                        {deleteCommentMutation.isPending ? (
+                                                            <span className="loading loading-spinner loading-xs mr-2"></span>
+                                                        ) : (
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                        )}
+                                                        {deleteCommentMutation.isPending ? 'Deleting...' : 'Delete'}
+                                                    </button>
+                                                </motion.div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}

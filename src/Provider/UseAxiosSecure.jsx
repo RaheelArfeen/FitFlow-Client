@@ -1,43 +1,51 @@
 import axios from 'axios';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { AuthContext } from './AuthProvider';
 
 const axiosSecure = axios.create({
-    baseURL: `http://localhost:3000`
+    baseURL: `http://localhost:3000`,
 });
 
+// Flag to avoid attaching interceptors multiple times
+let interceptorsAttached = false;
+
 const useAxiosSecure = () => {
-    const { user, logOut } = useContext(AuthContext);
+    const { logOut } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    axiosSecure.interceptors.request.use(config => {
-        // ✅ Safely attach token only if user exists
-        if (user?.accessToken) {
-            config.headers.Authorization = `Bearer ${user.accessToken}`;
+    useEffect(() => {
+        if (!interceptorsAttached) {
+            // ✅ Attach interceptors only once
+            axiosSecure.interceptors.request.use(
+                (config) => {
+                    const token = localStorage.getItem("FitFlow-token");
+                    if (token) {
+                        config.headers.Authorization = `Bearer ${token}`;
+                    }
+                    return config;
+                },
+                (error) => Promise.reject(error)
+            );
+
+            axiosSecure.interceptors.response.use(
+                (res) => res,
+                (error) => {
+                    const status = error.response?.status;
+                    if (status === 403) {
+                        navigate('/dashboard/forbidden');
+                    } else if (status === 401) {
+                        logOut()
+                            .then(() => navigate('/login'))
+                            .catch(() => { });
+                    }
+                    return Promise.reject(error);
+                }
+            );
+
+            interceptorsAttached = true;
         }
-        return config;
-    }, error => {
-        return Promise.reject(error);
-    });
-
-    axiosSecure.interceptors.response.use(res => {
-        return res;
-    }, error => {
-        const status = error.response?.status;
-
-        if (status === 403) {
-            navigate('/dashboard/forbidden');
-        } else if (status === 401) {
-            logOut()
-                .then(() => {
-                    navigate('/login');
-                })
-                .catch(() => { });
-        }
-
-        return Promise.reject(error);
-    });
+    }, [logOut, navigate]);
 
     return axiosSecure;
 };

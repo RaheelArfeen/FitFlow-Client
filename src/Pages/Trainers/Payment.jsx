@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router"; // Changed to react-router-dom
-import { motion } from "framer-motion"; // Import motion
+import { useParams, useNavigate } from "react-router";
+import { motion } from "framer-motion";
 import Loading from "../../Pages/Loader";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -11,13 +11,12 @@ import {
 } from "@stripe/react-stripe-js";
 import { AuthContext } from "../../Provider/AuthProvider";
 import { CreditCard, Lock } from "lucide-react";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
+import useAxiosSecure from "../../Provider/UseAxiosSecure";
 
-// Your Stripe publishable key here
-const stripePromise = loadStripe(import.meta.env.VITE_PAYMENT_KEY,);
+const stripePromise = loadStripe(import.meta.env.VITE_PAYMENT_KEY);
 
-// Static membershipPackages
 const membershipPackages = [
     {
         id: "basic",
@@ -56,66 +55,62 @@ const CARD_OPTIONS = {
         base: {
             fontSize: "16px",
             color: "#32325d",
-            "::placeholder": {
-                color: "#a0aec0",
-            },
+            "::placeholder": { color: "#a0aec0" },
         },
-        invalid: {
-            color: "#e53e3e",
-        },
+        invalid: { color: "#e53e3e" },
     },
 };
 
 const PaymentForm = () => {
-    const { trainerId, slotId, packageId } = useParams(); // Removed slotName as it's not used
+    const { trainerId, slotId, packageId } = useParams();
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
     const stripe = useStripe();
     const elements = useElements();
+    const axiosSecure = useAxiosSecure();
 
-    const [trainers, setTrainers] = useState([]);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [clientSecret, setClientSecret] = useState("");
-    const [isLoading, setIsLoading] = useState(true);
-    const [fetchError, setFetchError] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const selectedPackage = membershipPackages.find((p) => p.id === packageId);
+
+    const {
+        data: trainers = [],
+        isLoading,
+        error: fetchError,
+        refetch,
+    } = useQuery({
+        queryKey: ["trainers"],
+        queryFn: async () => {
+            const res = await axiosSecure.get("/trainers");
+            return res.data;
+        },
+    });
+
     const trainer = trainers.find((t) => t._id === trainerId);
-    const slot = trainer?.slots.find((s) => s.id === slotId);
+    const slot = trainer?.slots?.find((s) => s.id === slotId);
 
-    // Fetch trainers from backend
     useEffect(() => {
-        axios
-            .get("http://localhost:3000/trainers")
-            .then((res) => {
-                setTrainers(res.data);
-                setIsLoading(false);
-            })
-            .catch(() => {
-                setFetchError("Failed to fetch trainer data.");
-                setIsLoading(false);
-            });
+        window.scrollTo(0, 0);
     }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            window.scrollTo(0, 0);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, []);
+        if (!selectedPackage?.price) return;
 
-    // Create payment intent
-    useEffect(() => {
-        if (selectedPackage?.price) {
-            axios
-                .post("http://localhost:3000/create-payment-intent", {
-                    price: selectedPackage.price,
-                })
-                .then((res) => setClientSecret(res.data.clientSecret))
-                .catch(() =>
-                    Swal.fire("Error", "Failed to initiate payment.", "error")
-                );
-        }
+        const fetchClientSecret = async () => {
+            try {
+                const res = await axiosSecure.post("/create-payment-intent", {
+                    amount: selectedPackage.price,
+                });
+                setClientSecret(res.data.clientSecret);
+            } catch (error) {
+                console.error("Payment intent error:", error);
+                Swal.fire("Error", "Failed to initiate payment.", "error");
+                navigate(-1);
+            }
+        };
+
+        fetchClientSecret();
     }, [selectedPackage?.price]);
 
     const handleSubmit = async (e) => {
@@ -125,18 +120,15 @@ const PaymentForm = () => {
         setIsProcessing(true);
         const card = elements.getElement(CardElement);
 
-        const { paymentIntent, error } = await stripe.confirmCardPayment(
-            clientSecret,
-            {
-                payment_method: {
-                    card,
-                    billing_details: {
-                        name: user?.name || "Unknown",
-                        email: user?.email || "noemail@example.com",
-                    },
+        const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card,
+                billing_details: {
+                    name: user?.name || "Unknown",
+                    email: user?.email || "noemail@example.com",
                 },
-            }
-        );
+            },
+        });
 
         if (error) {
             Swal.fire("Payment Failed", error.message, "error");
@@ -146,7 +138,7 @@ const PaymentForm = () => {
                 email: user?.email,
                 trainerId,
                 slotId,
-                slotName: slot.name,
+                slotName: slot?.name || "",
                 packageId,
                 price: selectedPackage.price,
                 transactionId: paymentIntent.id,
@@ -155,18 +147,17 @@ const PaymentForm = () => {
             };
 
             try {
-                await axios.post("http://localhost:3000/bookings", bookingData, {
-                    withCredentials: true,
-                });
+                await axiosSecure.post("/bookings", bookingData);
                 Swal.fire("Payment Successful", "Your booking is confirmed!", "success");
+                refetch(); // Optionally refresh trainer data
                 navigate("/dashboard");
             } catch (err) {
+                console.error("Booking error:", err);
                 Swal.fire(
                     "Booking Error",
                     "Payment succeeded, but booking failed. Please contact support.",
                     "warning"
                 );
-                console.error("Booking error:", err);
             } finally {
                 setIsProcessing(false);
             }
@@ -183,186 +174,90 @@ const PaymentForm = () => {
 
     if (fetchError || !trainer || !slot || !selectedPackage) {
         return (
-            <motion.div
-                className="min-h-screen bg-gray-50 flex items-center justify-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div className="text-center">
-                    <motion.h2
-                        className="text-2xl font-bold text-gray-800 mb-4"
-                        initial={{ y: -20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        Payment Information Not Found
-                    </motion.h2>
-                    <motion.button
-                        onClick={() => navigate("/trainers")}
-                        className="text-blue-700 hover:text-blue-800"
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        Back to Trainers
-                    </motion.button>
-                </div>
-            </motion.div>
+            <div className="min-h-screen flex flex-col items-center justify-center">
+                <h2 className="text-xl font-semibold text-red-600 mb-4">Something went wrong</h2>
+                <button
+                    onClick={() => refetch()}
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                    Retry
+                </button>
+            </div>
         );
     }
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1 },
-    };
-
     return (
-        <motion.div
-            className="bg-gray-50 py-12"
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-        >
+        <motion.div className="bg-gray-50 py-12" initial="hidden" animate="visible">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
-                    {/* Stripe Form */}
-                    <motion.div
-                        className="bg-white rounded-xl shadow-lg p-8"
-                        variants={itemVariants}
-                    >
-                        <motion.div className="flex items-center mb-6" variants={itemVariants}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Payment Form */}
+                    <motion.div className="bg-white rounded-xl shadow-lg p-8">
+                        <div className="flex items-center mb-6">
                             <CreditCard className="h-6 w-6 text-blue-700 mr-2" />
                             <h2 className="text-2xl font-bold text-gray-800">Payment Details</h2>
-                        </motion.div>
-
+                        </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <motion.div variants={itemVariants}>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Card Info
-                                </label>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Card Info</label>
                                 <div className="border border-gray-300 rounded-lg p-4">
                                     <CardElement options={CARD_OPTIONS} />
                                 </div>
-                            </motion.div>
-
-                            <motion.div variants={itemVariants}>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Email
-                                </label>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Email</label>
                                 <input
                                     type="email"
-                                    value={user?.email || ""}
                                     readOnly
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                                    value={user?.email || ""}
+                                    className="w-full px-4 py-3 border rounded-lg bg-gray-100"
                                 />
-                            </motion.div>
-
-                            <motion.button
+                            </div>
+                            <button
                                 type="submit"
                                 disabled={!stripe || isProcessing}
-                                className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                variants={itemVariants}
+                                className="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold"
                             >
-                                <Lock className="h-5 w-5" />
-                                <span>{isProcessing ? "Processing..." : `Pay $${selectedPackage.price}`}</span>
-                            </motion.button>
+                                {isProcessing ? "Processing..." : `Pay $${selectedPackage.price}`}
+                            </button>
                         </form>
-
-                        <motion.div
-                            className="mt-6 text-center text-sm text-gray-500"
-                            variants={itemVariants}
-                        >
-                            <p>Your payment is secured with Stripe</p>
-                        </motion.div>
+                        <p className="mt-4 text-center text-sm text-gray-500">
+                            Your payment is secured with Stripe.
+                        </p>
                     </motion.div>
 
                     {/* Order Summary */}
-                    <motion.div
-                        className="bg-white rounded-xl shadow-lg p-8"
-                        variants={itemVariants}
-                    >
-                        <motion.h2
-                            className="text-2xl font-bold text-gray-800 mb-6"
-                            variants={itemVariants}
-                        >
-                            Order Summary
-                        </motion.h2>
-                        <motion.div className="space-y-4 mb-6" variants={containerVariants}>
-                            <motion.div className="flex justify-between" variants={itemVariants}>
-                                <span className="text-gray-600">Trainer:</span>
-                                <span className="font-medium">{trainer.name}</span>
-                            </motion.div>
-                            <motion.div className="flex justify-between" variants={itemVariants}>
-                                <span className="text-gray-600">Slot:</span>
-                                <span className="font-medium">{slot.name}</span>
-                            </motion.div>
-                            <motion.div className="flex justify-between" variants={itemVariants}>
-                                <span className="text-gray-600">Time:</span>
-                                <span className="font-medium">{slot.time}</span>
-                            </motion.div>
-                            <motion.div className="flex justify-between" variants={itemVariants}>
-                                <span className="text-gray-600">Day:</span>
-                                <span className="font-medium">{slot.day}</span>
-                            </motion.div>
-                            <motion.div className="flex justify-between" variants={itemVariants}>
-                                <span className="text-gray-600">Package:</span>
-                                <span className="font-medium">{selectedPackage.name}</span>
-                            </motion.div>
-                        </motion.div>
-                        <motion.div className="border-t pt-4 mb-6" variants={itemVariants}>
-                            <div className="flex justify-between text-lg font-semibold">
-                                <span>Total:</span>
-                                <span className="text-blue-700">${selectedPackage.price}</span>
-                            </div>
-                        </motion.div>
-                        <motion.div
-                            className="bg-blue-50 p-4 rounded-lg"
-                            variants={itemVariants}
-                            whileHover={{ scale: 1.02 }}
-                        >
-                            <h3 className="font-semibold text-blue-800 mb-2">Package Includes:</h3>
-                            <ul className="space-y-1">
-                                {selectedPackage.features.map((feature, index) => (
-                                    <motion.li
-                                        key={index}
-                                        className="text-sm text-blue-700"
-                                        initial={{ x: -10, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: index * 0.05 }}
-                                    >
-                                        • {feature}
-                                    </motion.li>
+                    <motion.div className="bg-white rounded-xl shadow-lg p-8">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
+                        <div className="space-y-2 mb-4">
+                            <div className="flex justify-between"><span>Trainer:</span><span>{trainer.name}</span></div>
+                            <div className="flex justify-between"><span>Slot:</span><span>{slot.name}</span></div>
+                            <div className="flex justify-between"><span>Time:</span><span>{slot.time}</span></div>
+                            <div className="flex justify-between"><span>Day:</span><span>{slot.day}</span></div>
+                            <div className="flex justify-between"><span>Package:</span><span>{selectedPackage.name}</span></div>
+                        </div>
+                        <div className="flex justify-between text-lg font-semibold border-t pt-4">
+                            <span>Total:</span>
+                            <span className="text-blue-700">${selectedPackage.price}</span>
+                        </div>
+                        <div className="bg-blue-50 mt-6 p-4 rounded-lg">
+                            <h3 className="font-semibold mb-2 text-blue-800">Package Includes:</h3>
+                            <ul className="list-disc list-inside text-blue-700 text-sm">
+                                {selectedPackage.features.map((f, i) => (
+                                    <li key={i}>{f}</li>
                                 ))}
                             </ul>
-                        </motion.div>
+                        </div>
                     </motion.div>
-                </motion.div>
+                </div>
             </div>
         </motion.div>
     );
 };
 
-const PaymentPage = () => {
-    return (
-        <Elements stripe={stripePromise}>
-            <PaymentForm />
-        </Elements>
-    );
-};
+const PaymentPage = () => (
+    <Elements stripe={stripePromise}>
+        <PaymentForm />
+    </Elements>
+);
 
 export default PaymentPage;

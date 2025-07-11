@@ -6,6 +6,8 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
+    GoogleAuthProvider,
+    signInWithPopup,
 } from "firebase/auth";
 import axios from "axios";
 import app from "../Firebase/firebase.init";
@@ -14,41 +16,40 @@ export const AuthContext = createContext();
 const auth = getAuth(app);
 
 const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // user with role and token
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Register user with name, email, password, photoURL
     const register = async (name, email, password, photoURL) => {
         setLoading(true);
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
             const firebaseUser = userCredential.user;
 
-            // Update Firebase profile with displayName and photoURL
             await updateProfile(firebaseUser, { displayName: name, photoURL: photoURL || null });
 
-            const updatedUser = auth.currentUser;
-            const accessToken = await updatedUser.getIdToken();
+            const { displayName } = firebaseUser;
 
-            // Register user in backend DB and set JWT cookie
-            await axios.post(
-                "http://localhost:3000/register",
-                {
-                    email: updatedUser.email,
-                    displayName: updatedUser.displayName,
-                    photoURL: updatedUser.photoURL,
-                    lastSignInTime: new Date().toISOString(),
-                },
-                { withCredentials: true }
-            );
+            // Send user data to backend for registration & get JWT + role
+            const res = await axios.post("http://localhost:3000/register", {
+                email,
+                displayName,
+                photoURL,
+                lastSignInTime: new Date().toISOString(),
+            });
 
-            // Assume default role 'member' on register
+            const token = res.data.token;
+            localStorage.setItem("FitFlow-token", token);
+
             setUser({
-                displayName: updatedUser.displayName,
-                email: updatedUser.email,
-                photoURL: updatedUser.photoURL,
-                role: "member",
-                accessToken,
+                displayName,
+                email,
+                photoURL,
+                role: res.data.user.role || "member",
+                accessToken: token,
             });
 
             setLoading(false);
@@ -60,31 +61,25 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Sign in user and sync with backend
-    const signIn = async (email, password) => {
+    // Rename signIn to login here to match your Login component
+    const login = async (email, password) => {
         setLoading(true);
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const currentUser = userCredential.user;
-            const accessToken = await currentUser.getIdToken();
+            const firebaseUser = userCredential.user;
 
-            // Notify backend to set JWT cookie
-            await axios.post(
-                "http://localhost:3000/login",
-                { email },
-                { withCredentials: true }
-            );
+            // Request token and role from backend login endpoint
+            const res = await axios.post("http://localhost:3000/login", { email });
 
-            // Fetch user role from backend
-            const roleRes = await axios.get(`http://localhost:3000/users/role/${email}`);
-            const role = roleRes.data.role || "member";
+            const token = res.data.token;
+            localStorage.setItem("FitFlow-token", token);
 
             setUser({
-                displayName: currentUser.displayName,
-                email: currentUser.email,
-                photoURL: currentUser.photoURL,
-                role,
-                accessToken,
+                displayName: firebaseUser.displayName,
+                email: firebaseUser.email,
+                photoURL: firebaseUser.photoURL,
+                role: res.data.user.role || "member",
+                accessToken: token,
             });
 
             setLoading(false);
@@ -95,7 +90,38 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Update Firebase user profile after register or later
+    // Sign in with Google and get token & role from backend
+    const loginWithGoogle = async () => {
+        setLoading(true);
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const firebaseUser = result.user;
+
+            // For simplicity, call login endpoint with email:
+            const res = await axios.post("http://localhost:3000/login", { email: firebaseUser.email });
+
+            const token = res.data.token;
+            localStorage.setItem("FitFlow-token", token);
+
+            setUser({
+                displayName: firebaseUser.displayName,
+                email: firebaseUser.email,
+                photoURL: firebaseUser.photoURL,
+                role: res.data.user.role || "member",
+                accessToken: token,
+            });
+
+            setLoading(false);
+            return true;
+        } catch (err) {
+            console.error("Google login error:", err);
+            setLoading(false);
+            throw err;
+        }
+    };
+
+    // Update Firebase user profile
     const updateUser = async (updatedData) => {
         try {
             await updateProfile(auth.currentUser, updatedData);
@@ -106,14 +132,12 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Logout from Firebase and backend
+    // Logout user and clear state + localStorage
     const logOut = async () => {
         setLoading(true);
         try {
-            // Clear backend JWT cookie
-            await axios.post("http://localhost:3000/logout", {}, { withCredentials: true });
-            // Firebase sign out
             await signOut(auth);
+            localStorage.removeItem("FitFlow-token");
             setUser(null);
         } catch (err) {
             console.error("Logout error:", err);
@@ -122,45 +146,49 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Listen for Firebase auth state changes
+    // Sync auth state & user role on Firebase auth change
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser) {
                 try {
-                    const accessToken = await currentUser.getIdToken();
+                    // Force refresh token to avoid stale token issues
+                    const token = await currentUser.getIdToken(true);
+                    localStorage.setItem("FitFlow-token", token);
 
-                    // Sync backend login state (set JWT cookie)
-                    await axios.post(
-                        "http://localhost:3000/login",
-                        { email: currentUser.email },
-                        { withCredentials: true }
+                    // Fetch role from backend using fresh token
+                    const roleRes = await axios.get(
+                        `http://localhost:3000/users/role/${currentUser.email}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        }
                     );
-
-                    // Get user role from backend
-                    const roleRes = await axios.get(`http://localhost:3000/users/role/${currentUser.email}`);
-                    const role = roleRes.data.role || "member";
 
                     setUser({
                         displayName: currentUser.displayName,
                         email: currentUser.email,
                         photoURL: currentUser.photoURL,
-                        role,
-                        accessToken,
+                        role: roleRes.data.role || "member",
+                        accessToken: token,
                     });
                 } catch (error) {
-                    console.error("Error during auth state sync:", error);
-                    // fallback to default role
+                    console.error("Auth sync error:", error);
+                    // fallback user without backend role
+                    const fallbackToken = await currentUser.getIdToken();
+                    localStorage.setItem("FitFlow-token", fallbackToken);
                     setUser({
                         displayName: currentUser.displayName,
                         email: currentUser.email,
                         photoURL: currentUser.photoURL,
                         role: "member",
-                        accessToken: await currentUser.getIdToken(),
+                        accessToken: fallbackToken,
                     });
                 }
             } else {
                 setUser(null);
+                localStorage.removeItem("FitFlow-token");
             }
             setLoading(false);
         });
@@ -174,7 +202,8 @@ const AuthProvider = ({ children }) => {
                 user,
                 loading,
                 register,
-                signIn,
+                login,           // note: exported as login here
+                loginWithGoogle,
                 updateUser,
                 logOut,
             }}

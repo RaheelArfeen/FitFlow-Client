@@ -1,9 +1,11 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { AuthContext } from '../Provider/AuthProvider';
 import { toast } from 'sonner';
 import Loader from './Loader';
 import { motion, AnimatePresence } from 'framer-motion';
+import useAxiosSecure from '../Provider/UseAxiosSecure';
+import { AuthContext } from '../Provider/AuthProvider';
+import Select from 'react-select';
 
 const containerVariants = {
     hidden: {},
@@ -22,15 +24,14 @@ const childVariants = {
 const BeTrainer = () => {
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
+    const axiosSecure = useAxiosSecure();
 
     useEffect(() => {
         const timer = setTimeout(() => {
             window.scrollTo(0, 0);
         }, 300);
-
         return () => clearTimeout(timer);
     }, []);
-
 
     const certificationOptions = [
         'RYT-200',
@@ -54,13 +55,13 @@ const BeTrainer = () => {
     ];
 
     const dayOptions = [
-        'Sunday',
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
+        { value: 'Sunday', label: 'Sunday' },
+        { value: 'Monday', label: 'Monday' },
+        { value: 'Tuesday', label: 'Tuesday' },
+        { value: 'Wednesday', label: 'Wednesday' },
+        { value: 'Thursday', label: 'Thursday' },
+        { value: 'Friday', label: 'Friday' },
+        { value: 'Saturday', label: 'Saturday' },
     ];
 
     const [formData, setFormData] = useState({
@@ -84,13 +85,8 @@ const BeTrainer = () => {
         slots: [],
     });
 
-    const [newSlot, setNewSlot] = useState({ name: '', time: '', day: '' });
-
     const [isSpecOpen, setIsSpecOpen] = useState(false);
     const specRef = useRef(null);
-
-    const [isSlotDayOpen, setIsSlotDayOpen] = useState(false);
-    const slotDayRef = useRef(null);
 
     useEffect(() => {
         if (user) {
@@ -105,7 +101,6 @@ const BeTrainer = () => {
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (specRef.current && !specRef.current.contains(event.target)) setIsSpecOpen(false);
-            if (slotDayRef.current && !slotDayRef.current.contains(event.target)) setIsSlotDayOpen(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -120,15 +115,6 @@ const BeTrainer = () => {
         }));
     };
 
-    const toggleDay = (day) => {
-        setFormData((prev) => ({
-            ...prev,
-            availableDays: prev.availableDays.includes(day)
-                ? prev.availableDays.filter((d) => d !== day)
-                : [...prev.availableDays, day],
-        }));
-    };
-
     const toggleSlot = (slot) => {
         setFormData((prev) => ({
             ...prev,
@@ -138,31 +124,15 @@ const BeTrainer = () => {
         }));
     };
 
-    const addSlot = () => {
-        if (!newSlot.name || !newSlot.time || !newSlot.day) {
-            toast.error('Please fill all slot fields before adding.');
-            return;
-        }
-        setFormData((prev) => ({
-            ...prev,
-            slots: [
-                ...prev.slots,
-                {
-                    id: Date.now().toString(),
-                    name: newSlot.name,
-                    time: newSlot.time,
-                    day: newSlot.day,
-                    isBooked: false,
-                },
-            ],
-        }));
-        setNewSlot({ name: '', time: '', day: '' });
-    };
+    // React Select value for availableDays
+    const selectedDays = dayOptions.filter((day) =>
+        formData.availableDays.includes(day.value)
+    );
 
-    const removeSlot = (id) => {
+    const handleDaysChange = (selected) => {
         setFormData((prev) => ({
             ...prev,
-            slots: prev.slots.filter((slot) => slot.id !== id),
+            availableDays: selected ? selected.map((option) => option.value) : [],
         }));
     };
 
@@ -175,13 +145,7 @@ const BeTrainer = () => {
             !formData.specialization.trim() ||
             !formData.experience.trim() ||
             !formData.age ||
-            formData.certifications.length === 0 ||
-            !formData.bio.trim() ||
-            formData.availableSlots.length === 0 ||
-            formData.availableDays.length === 0 ||
-            !formData.social.instagram.trim() ||
-            !formData.social.twitter.trim() ||
-            !formData.social.linkedin.trim()
+            !formData.bio.trim()
         ) {
             toast.error('Please fill in all required fields.');
             return;
@@ -192,41 +156,37 @@ const BeTrainer = () => {
             return;
         }
 
-        const trainerData = {
-            ...formData,
-            status: 'pending',
+        const payload = {
+            email: formData.email,
+            name: formData.name,
+            age: formData.age,
+            experience: formData.experience,
+            photoURL: formData.image,
+            specialization: formData.specialization,
+            description: formData.bio,
+            certifications: formData.certifications,
+            availableSlots: formData.availableSlots,
+            availableDays: formData.availableDays,
+            sessions: formData.sessions,
+            social: formData.social,
         };
 
         try {
-            const res = await fetch('http://localhost:3000/trainers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(trainerData),
-            });
+            const res = await axiosSecure.post('/applications/trainer', payload);
 
-            if (res.ok) {
-                // Update role to trainer
-                const roleRes = await fetch(`http://localhost:3000/users`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: formData.email,
-                        role: 'trainer',
-                    }),
-                });
-
-                if (roleRes.ok) {
-                    toast.success('Application submitted and role updated!');
-                    navigate('/');
-                } else {
-                    toast.warning('Trainer added but failed to update role.');
-                }
+            if (res.data?.insertedId || res.data?.acknowledged) {
+                toast.success('Trainer application submitted! Please wait for admin approval.');
+                navigate('/'); // or to a "thank you" page
             } else {
-                toast.error('Trainer submission failed.');
+                toast.error('Failed to submit trainer application.');
             }
         } catch (err) {
+            if (err.response?.status === 409) {
+                toast.error('You have already submitted an application.');
+            } else {
+                toast.error('Something went wrong. Please try again.');
+            }
             console.error(err);
-            toast.error('Error submitting application.');
         }
     };
 
@@ -284,7 +244,9 @@ const BeTrainer = () => {
                                 <motion.input
                                     type="number"
                                     value={formData.age}
-                                    onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, age: Number(e.target.value) })
+                                    }
                                     placeholder="Your Age"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                     required
@@ -298,7 +260,9 @@ const BeTrainer = () => {
                                 <motion.input
                                     type="number"
                                     value={formData.sessions}
-                                    onChange={(e) => setFormData({ ...formData, sessions: Number(e.target.value) })}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, sessions: Number(e.target.value) })
+                                    }
                                     placeholder="e.g., 10"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                     min={0}
@@ -320,12 +284,18 @@ const BeTrainer = () => {
                                 >
                                     {formData.specialization || 'Select Specialization'}
                                     <svg
-                                        className={`w-5 h-5 ml-2 transition-transform ${isSpecOpen ? 'rotate-180' : ''}`}
+                                        className={`w-5 h-5 ml-2 transition-transform ${isSpecOpen ? 'rotate-180' : ''
+                                            }`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
                                     >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M19 9l-7 7-7-7"
+                                        />
                                     </svg>
                                 </motion.button>
                                 <AnimatePresence>
@@ -334,7 +304,7 @@ const BeTrainer = () => {
                                             initial={{ opacity: 0, y: -10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -10 }}
-                                            className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
+                                            className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md text-base border border-gray-200 overflow-auto focus:outline-none scrollbarHidden"
                                             role="listbox"
                                         >
                                             {specializationOptions.map((spec) => (
@@ -344,7 +314,9 @@ const BeTrainer = () => {
                                                         setFormData((prev) => ({ ...prev, specialization: spec }));
                                                         setIsSpecOpen(false);
                                                     }}
-                                                    className={`cursor-pointer select-none relative py-2 px-3 hover:bg-blue-100 ${formData.specialization === spec ? 'bg-blue-600 text-white' : 'text-gray-900'
+                                                    className={`cursor-pointer select-none relative py-2 px-3  ${formData.specialization === spec
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'text-gray-900'
                                                         }`}
                                                     whileHover={{ backgroundColor: '#bfdbfe', scale: 1.02 }}
                                                     role="option"
@@ -389,7 +361,11 @@ const BeTrainer = () => {
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     className="relative mt-3 w-32 h-32 rounded-lg overflow-hidden border"
                                 >
-                                    <img src={formData.image} alt="Profile Preview" className="object-cover w-full h-full" />
+                                    <img
+                                        src={formData.image}
+                                        alt="Profile Preview"
+                                        className="object-cover w-full h-full"
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
@@ -428,7 +404,10 @@ const BeTrainer = () => {
                                             type="button"
                                             onClick={() => toggleCertification(cert)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                      ${selected ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'}`}
+                      ${selected
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
+                                                }`}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                         >
@@ -451,7 +430,10 @@ const BeTrainer = () => {
                                             type="button"
                                             onClick={() => toggleSlot(slot)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                      ${selected ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'}`}
+                      ${selected
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
+                                                }`}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                         >
@@ -462,27 +444,19 @@ const BeTrainer = () => {
                             </motion.div>
                         </motion.div>
 
-                        {/* Available Days */}
+                        {/* Available Days (React Select) */}
                         <motion.div variants={childVariants}>
                             <label className="block text-sm font-medium mb-2">Available Days</label>
-                            <motion.div className="flex flex-wrap gap-2">
-                                {dayOptions.map((day) => {
-                                    const selected = formData.availableDays.includes(day);
-                                    return (
-                                        <motion.button
-                                            key={day}
-                                            type="button"
-                                            onClick={() => toggleDay(day)}
-                                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                      ${selected ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'}`}
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            {day}
-                                        </motion.button>
-                                    );
-                                })}
-                            </motion.div>
+                            <Select
+                                isMulti
+                                options={dayOptions}
+                                value={selectedDays}
+                                onChange={handleDaysChange}
+                                placeholder="Select available days"
+                                classNamePrefix="react-select"
+                                closeMenuOnSelect={false}
+                                isSearchable={false} // Disables typing/input
+                            />
                         </motion.div>
 
                         {/* Social Links */}

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router'; 
-import { motion } from 'framer-motion'; 
+import { useParams, Link } from 'react-router';
+import { motion } from 'framer-motion';
 import {
     Star as StarIcon,
     Calendar,
@@ -15,16 +15,15 @@ import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../../Provider/AuthProvider';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import TanStack Query hooks
 
 const TrainerDetail = () => {
     const { id } = useParams();
     const axiosSecure = useAxiosSecure();
     const { user } = useContext(AuthContext);
+    const queryClient = useQueryClient(); // Get the query client instance
 
-    const [trainer, setTrainer] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [userRating, setUserRating] = useState(0);
-    const [submittingRating, setSubmittingRating] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState(null); // This state wasn't used, but kept in case it's for future use
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -33,69 +32,86 @@ const TrainerDetail = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    useEffect(() => {
-        setLoading(true);
+    // --- TanStack Query for fetching trainer details ---
+    const { data: trainer, isLoading, isError, error } = useQuery({
+        queryKey: ['trainerDetails', id], // Unique key for trainer details
+        queryFn: async () => {
+            const res = await axiosSecure.get(`/trainers/${id}`);
+            return res.data;
+        },
+        enabled: !!id, // Only fetch if ID is available
+        staleTime: 1000 * 60, // Data considered fresh for 1 minute
+        onError: (err) => {
+            console.error('Failed to fetch trainer data:', err);
+            // Swal.fire removed to avoid immediate popups on page load errors
+        },
+    });
 
-        const fetchAllData = async () => {
-            try {
-                const trainerRes = await axiosSecure.get(`/trainers/${id}`);
-                setTrainer(trainerRes.data);
+    // --- TanStack Query for fetching user's rating for this trainer ---
+    const { data: userRatingData, isLoading: isLoadingUserRating } = useQuery({
+        queryKey: ['userRating', id, user?.email], // Key includes trainer ID and user email
+        queryFn: async () => {
+            if (!user?.email) return { userRating: 0 }; // If no user, no rating
+            const res = await axiosSecure.get(`/trainers/rating/${id}`);
+            return res.data;
+        },
+        enabled: !!user?.email && !!id, // Only fetch if user email and trainer ID are available
+        staleTime: 0, // Always refetch user rating as it's user-specific and can change
+    });
 
-                if (user?.email) {
-                    const ratingRes = await axiosSecure.get(`/trainers/rating/${id}`, { withCredentials: true });
-                    setUserRating(ratingRes.data?.userRating || 0);
-                } else {
-                    setUserRating(0);
-                }
-            } catch (err) {
-                console.error("Failed to fetch trainer or rating data:", err);
-                setTrainer(null);
-                setUserRating(0);
-            }
-        };
+    // Extract userRating from userRatingData, default to 0 if not available
+    const userRating = userRatingData?.userRating || 0;
 
-        fetchAllData().finally(() => {
-            setTimeout(() => {
-                setLoading(false);
-            }, 1500);
-        });
-    }, [id, axiosSecure, user]);
-
-    const handleRatingSubmit = async (ratingValue) => {
-        if (!user) {
-            return Swal.fire("Login Required", "Please log in to rate the trainer.", "warning");
-        }
-
-        try {
-            setSubmittingRating(true);
-
+    // --- TanStack Query for submitting trainer ratings ---
+    const rateTrainerMutation = useMutation({
+        mutationFn: async ({ trainerId, rating }) => {
             const res = await axiosSecure.post(
-                `/trainers/rating/${trainer._id}`,
-                { rating: ratingValue },
-                { withCredentials: true }
+                `/trainers/rating/${trainerId}`,
+                { rating }
             );
-
-            if (res.data?.success) {
-                Swal.fire("Thank you!", "Your rating has been submitted.", "success");
-                setUserRating(ratingValue);
-
-                const refreshed = await axiosSecure.get(`/trainers/${trainer._id}`);
-                setTrainer(refreshed.data);
+            return res.data;
+        },
+        onSuccess: (data, variables) => {
+            if (data?.success) {
+                Swal.fire('Thank you!', 'Your rating has been submitted.', 'success');
+                // Invalidate both trainer details (to update average rating) and user's rating
+                queryClient.invalidateQueries(['trainerDetails', id]);
+                queryClient.invalidateQueries(['userRating', id, user?.email]);
             } else {
-                Swal.fire("Notice", res.data?.message || "Rating already submitted.", "info");
+                Swal.fire('Notice', data?.message || 'Rating already submitted.', 'info');
             }
-        } catch (err) {
-            console.error(err);
-            Swal.fire("Error", "Failed to submit rating.", "error");
-        } finally {
-            setSubmittingRating(false);
+        },
+        onError: (err) => {
+            console.error('Failed to submit rating:', err);
+            Swal.fire('Error', 'Failed to submit rating.', 'error');
+        },
+    });
+
+    const handleRatingSubmit = (ratingValue) => {
+        if (!user) {
+            return Swal.fire('Login Required', 'Please log in to rate the trainer.', 'warning');
         }
+        rateTrainerMutation.mutate({ trainerId: trainer._id, rating: ratingValue });
     };
 
-    if (loading) {
+    if (isLoading || isLoadingUserRating) {
         return (
             <div>
                 <Loader />
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Trainer</h2>
+                    <p className="text-gray-600 mb-4">{error?.message || 'An unexpected error occurred.'}</p>
+                    <Link to="/trainers" className="text-blue-700 hover:text-blue-800">
+                        Back to Trainers
+                    </Link>
+                </div>
             </div>
         );
     }
@@ -178,7 +194,7 @@ const TrainerDetail = () => {
                                                     ? 'text-yellow-400 fill-yellow-400'
                                                     : 'text-gray-300'
                                                     }`}
-                                                onClick={() => !submittingRating && handleRatingSubmit(star)}
+                                                onClick={() => !rateTrainerMutation.isPending && handleRatingSubmit(star)}
                                                 title={`${star} star${star > 1 ? 's' : ''}`}
                                             />
                                         </motion.div>
@@ -262,7 +278,9 @@ const TrainerDetail = () => {
                                         >
                                             <Instagram className="h-6 w-6 text-gray-400 hover:text-pink-500 transition-colors duration-200" />
                                         </motion.a>
-                                    ) : <Instagram className="h-6 w-6 text-gray-300" />}
+                                    ) : (
+                                        <Instagram className="h-6 w-6 text-gray-300" />
+                                    )}
 
                                     {trainer.social?.twitter ? (
                                         <motion.a
@@ -274,7 +292,9 @@ const TrainerDetail = () => {
                                         >
                                             <Twitter className="h-6 w-6 text-gray-400 hover:text-blue-400 transition-colors duration-200" />
                                         </motion.a>
-                                    ) : <Twitter className="h-6 w-6 text-gray-300" />}
+                                    ) : (
+                                        <Twitter className="h-6 w-6 text-gray-300" />
+                                    )}
 
                                     {trainer.social?.linkedin ? (
                                         <motion.a
@@ -286,7 +306,9 @@ const TrainerDetail = () => {
                                         >
                                             <Linkedin className="h-6 w-6 text-gray-400 hover:text-blue-600 transition-colors duration-200" />
                                         </motion.a>
-                                    ) : <Linkedin className="h-6 w-6 text-gray-300" />}
+                                    ) : (
+                                        <Linkedin className="h-6 w-6 text-gray-300" />
+                                    )}
                                 </div>
                             </motion.div>
                         </div>
@@ -360,12 +382,14 @@ const TrainerDetail = () => {
                     </motion.section>
                 </div>
 
-                {user.role !== 'trainer' && (
+                {/* Only show "Become a Trainer" section if user is a member or not logged in */}
+                {user?.role !== 'trainer' && user?.role !== 'admin' && (
                     <motion.div
                         className="mt-12 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center"
                         initial={{ y: 50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.5 }}
+                        whileInView={{ y: 0, opacity: 1 }} // Use whileInView for scroll-triggered animation
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true }} // Only animate once when it enters viewport
                     >
                         <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
                         <p className="text-xl mb-6 text-blue-100">

@@ -54,13 +54,13 @@ const AddCommunity = () => {
             authorRole: user?.role || "member",
             email: user?.email,
             createdAt: new Date().toISOString(),
-            likes: 0,
-            dislikes: 0,
             comments: [],
+            like: 0,
+            dislike: 0,
         };
 
         try {
-            const res = await axiosSecure.post('/community', postData, { withCredentials: true });
+            const res = await axiosSecure.post('/community', postData);
             if (res.data.insertedId) {
                 Swal.fire('Success', 'Forum post created successfully!', 'success');
                 setFormData({
