@@ -21,17 +21,15 @@ const childVariants = {
     visible: { opacity: 1, y: 0 },
 };
 
+const fadeSlideUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+};
+
 const BeTrainer = () => {
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
     const axiosSecure = useAxiosSecure();
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            window.scrollTo(0, 0);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, []);
 
     const certificationOptions = [
         'RYT-200',
@@ -85,8 +83,42 @@ const BeTrainer = () => {
         slots: [],
     });
 
-    const [isSpecOpen, setIsSpecOpen] = useState(false);
+    const [newSlot, setNewSlot] = useState({ id: '', name: '', time: '', day: '' });
+    const [isSlotDayOpen, setIsSlotDayOpen] = useState(false);
+    const slotDayRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (slotDayRef.current && !slotDayRef.current.contains(event.target)) {
+                setIsSlotDayOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const addSlot = () => {
+        if (!newSlot.name.trim() || !newSlot.time || !newSlot.day) {
+            toast.error('Please fill in all slot details.');
+            return;
+        }
+        const id = Date.now().toString();
+        const slotToAdd = { ...newSlot, id };
+        setFormData((prev) => ({ ...prev, slots: [...prev.slots, slotToAdd] }));
+        setNewSlot({ id: '', name: '', time: '', day: '' });
+    };
+
+    const removeSlot = (idToRemove) => {
+        setFormData((prev) => ({
+            ...prev,
+            slots: prev.slots.filter((slot) => slot.id !== idToRemove),
+        }));
+    };
+
     const specRef = useRef(null);
+    const [isSpecOpen, setIsSpecOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -106,6 +138,15 @@ const BeTrainer = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const selectedDays = dayOptions.filter((day) => formData.availableDays.includes(day.value));
+
+    const handleDaysChange = (selected) => {
+        setFormData((prev) => ({
+            ...prev,
+            availableDays: selected ? selected.map((option) => option.value) : [],
+        }));
+    };
+
     const toggleCertification = (cert) => {
         setFormData((prev) => ({
             ...prev,
@@ -124,21 +165,8 @@ const BeTrainer = () => {
         }));
     };
 
-    // React Select value for availableDays
-    const selectedDays = dayOptions.filter((day) =>
-        formData.availableDays.includes(day.value)
-    );
-
-    const handleDaysChange = (selected) => {
-        setFormData((prev) => ({
-            ...prev,
-            availableDays: selected ? selected.map((option) => option.value) : [],
-        }));
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (
             !formData.name.trim() ||
             !formData.email.trim() ||
@@ -150,12 +178,10 @@ const BeTrainer = () => {
             toast.error('Please fill in all required fields.');
             return;
         }
-
         if (parseInt(formData.age) < 18) {
             toast.error('You must be at least 18 years old to apply as a trainer.');
             return;
         }
-
         const payload = {
             email: formData.email,
             name: formData.name,
@@ -164,19 +190,21 @@ const BeTrainer = () => {
             photoURL: formData.image,
             specialization: formData.specialization,
             description: formData.bio,
-            certifications: formData.certifications,
-            availableSlots: formData.availableSlots,
-            availableDays: formData.availableDays,
-            sessions: formData.sessions,
-            social: formData.social,
+            certifications: formData.certifications || [],
+            availableSlots: formData.availableSlots || [],
+            availableDays: formData.availableDays || [],
+            sessions: formData.sessions || 0,
+            social: formData.social || {},
+            rating: formData.rating || 0,
+            comments: formData.comments || [],
+            slots: formData.slots || [],
+            ratings: formData.ratings || [],
         };
-
         try {
             const res = await axiosSecure.post('/applications/trainer', payload);
-
             if (res.data?.insertedId || res.data?.acknowledged) {
                 toast.success('Trainer application submitted! Please wait for admin approval.');
-                navigate('/'); // or to a "thank you" page
+                navigate('/');
             } else {
                 toast.error('Failed to submit trainer application.');
             }
@@ -404,7 +432,7 @@ const BeTrainer = () => {
                                             type="button"
                                             onClick={() => toggleCertification(cert)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                      ${selected
+                                            ${selected
                                                     ? 'bg-blue-600 text-white'
                                                     : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
                                                 }`}
@@ -430,7 +458,7 @@ const BeTrainer = () => {
                                             type="button"
                                             onClick={() => toggleSlot(slot)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                      ${selected
+                                            ${selected
                                                     ? 'bg-blue-600 text-white'
                                                     : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
                                                 }`}
@@ -455,8 +483,123 @@ const BeTrainer = () => {
                                 placeholder="Select available days"
                                 classNamePrefix="react-select"
                                 closeMenuOnSelect={false}
-                                isSearchable={false} // Disables typing/input
+                                isSearchable={false}
                             />
+                        </motion.div>
+
+                        <motion.div variants={fadeSlideUp}>
+                            <p className="font-semibold mb-2 text-lg">Add Available Slots</p>
+                            <div className="flex flex-col md:flex-row md:gap-4 items-center">
+                                <motion.input
+                                    type="text"
+                                    placeholder="Slot Name (e.g. Morning Yoga)"
+                                    value={newSlot.name}
+                                    onChange={(e) => setNewSlot({ ...newSlot, name: e.target.value })}
+                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg mb-3 md:mb-0"
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                />
+                                <motion.input
+                                    type="time"
+                                    value={newSlot.time}
+                                    onChange={(e) => setNewSlot({ ...newSlot, time: e.target.value })}
+                                    className="px-4 py-3 border border-gray-300 rounded-lg mb-3 md:mb-0"
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                />
+                                <motion.div className="relative w-48" ref={slotDayRef}>
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setIsSlotDayOpen((open) => !open)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white flex justify-between items-center"
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        aria-haspopup="listbox"
+                                        aria-expanded={isSlotDayOpen}
+                                    >
+                                        {dayOptions.find(d => d.value === newSlot.day)?.label || 'Select Day'}
+                                        <svg
+                                            className={`w-5 h-5 ml-2 transition-transform ${isSlotDayOpen ? 'rotate-180' : ''
+                                                }`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M19 9l-7 7-7-7"
+                                            ></path>
+                                        </svg>
+                                    </motion.button>
+                                    <AnimatePresence>
+                                        {isSlotDayOpen && (
+                                            <motion.ul
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                className="absolute z-10 mt-1 w-full bg-white shadow-lg h-fit rounded-md text-base overflow-auto focus:outline-none scrollbarHidden"
+                                                role="listbox"
+                                            >
+                                                {dayOptions.map((day) => (
+                                                    <motion.li
+                                                        key={day.value}
+                                                        onClick={() => {
+                                                            setNewSlot((prev) => ({ ...prev, day: day.value }));
+                                                            setIsSlotDayOpen(false);
+                                                        }}
+                                                        className="cursor-pointer py-2 px-3"
+                                                        whileHover={{ backgroundColor: '#bfdbfe', scale: 1.02 }}
+                                                        role="option"
+                                                    >
+                                                        {day.label}
+                                                    </motion.li>
+                                                ))}
+                                            </motion.ul>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                                <motion.button
+                                    type="button"
+                                    onClick={addSlot}
+                                    className="mt-3 md:mt-0 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold"
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Add Slot
+                                </motion.button>
+                            </div>
+
+                            {/* Slots list */}
+                            <motion.ul className="mt-4 space-y-2">
+                                <AnimatePresence>
+                                    {formData.slots.map(({ id, name, time, day }) => (
+                                        <motion.li
+                                            key={id}
+                                            initial={{ opacity: 0, x: 50 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -50 }}
+                                            layout
+                                            className="flex justify-between items-center bg-gray-100 rounded-lg px-4 py-2"
+                                        >
+                                            <div>
+                                                <p className="font-semibold text-gray-800">{name}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    {day} | {time}
+                                                </p>
+                                            </div>
+                                            <motion.button
+                                                onClick={() => removeSlot(id)}
+                                                className="text-red-600 hover:text-red-800 font-bold"
+                                                whileHover={{ scale: 1.2 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                aria-label={`Remove slot ${name}`}
+                                            >
+                                                &times;
+                                            </motion.button>
+                                        </motion.li>
+                                    ))}
+                                </AnimatePresence>
+                            </motion.ul>
                         </motion.div>
 
                         {/* Social Links */}
@@ -524,8 +667,8 @@ const BeTrainer = () => {
                         </motion.div>
                     </form>
                 </motion.div>
-            </div>
-        </motion.div>
+            </div >
+        </motion.div >
     );
 };
 

@@ -25,8 +25,11 @@ const AppliedTrainers = () => {
 
     const approveTrainerMutation = useMutation({
         mutationFn: async (trainerData) => {
-            await axiosSecure.post('/trainers', trainerData);
-            await axiosSecure.delete(`/applications/trainer/${trainerData._id}`);
+            const { _id, ...newTrainer } = trainerData; // Remove _id to avoid MongoDB conflict
+            await axiosSecure.post('/trainers', newTrainer);
+            await axiosSecure.delete(`/applications/trainer/${_id}`, {
+                data: {}
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['trainerApplications']);
@@ -38,13 +41,13 @@ const AppliedTrainers = () => {
                 timer: 2000,
                 showConfirmButton: false,
                 didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
         },
         onError: (error) => {
-            console.error('Error approving trainer:', error);
+            console.error('Error approving trainer:', error?.response?.data || error.message);
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
