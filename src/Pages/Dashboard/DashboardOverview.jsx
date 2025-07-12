@@ -34,6 +34,7 @@ const DashboardOverview = () => {
         queryKey: ['community'],
         queryFn: async () => {
             const res = await axiosSecure.get('/community');
+            console.log(res.data);
             return res.data;
         },
     });
@@ -92,11 +93,8 @@ const DashboardOverview = () => {
         return `${base}-${color}-${shade}`;
     };
 
-    const shouldDisplay = (item) => {
-        return (
-            item.authorRole === user?.role ||
-            ['New Feature', 'Challenge', 'Spotlight', 'Success Stories'].includes(item.category)
-        );
+    const shouldDisplay = () => {
+        return true;
     };
 
     const stats = getStatsForRole();

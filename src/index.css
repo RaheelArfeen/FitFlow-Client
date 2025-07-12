@@ -4,10 +4,6 @@ body{
   background-color: #f9fafb;
 }
 
-html{
-  scroll-behavior: smooth;
-}
-
 .scrollbarHidden::-webkit-scrollbar{
   display: none;
 }

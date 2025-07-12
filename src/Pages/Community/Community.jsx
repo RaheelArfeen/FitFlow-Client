@@ -34,7 +34,7 @@ const Community = () => {
     const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['communityPosts', currentPage],
         queryFn: async () => {
-            const res = await axiosSecure.get(`/community?page=${currentPage}&limit=${postsPerPage}`);
+            const res = await axiosSecure.get(`/community/pagination?page=${currentPage}&limit=${postsPerPage}`);
             return res.data;
         },
         keepPreviousData: true,
@@ -80,7 +80,7 @@ const Community = () => {
             await refetch();
             toast.success(
                 newVoteType
-                    ? `You ${newVoteType === "like" ? "liked" : "disliked"} this post.`
+                    ? `You ${newVoteType === "like" ? "liked" : "disliked"} this post."`
                     : "Your vote was removed."
             );
         } catch (error) {
@@ -142,7 +142,7 @@ const Community = () => {
                 }
             }
 
-            for (let i = startPage; i <= endPage; i++) {
+            for (let i = startPage; i => endPage; i++) {
                 pages.push(i);
             }
 
@@ -333,9 +333,10 @@ const Community = () => {
                                         onClick={() => setCurrentPage(page)}
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className={`px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 min-w-[44px] text-center${currentPage === page
-                                            ? 'text-black'
-                                            : 'bg-white text-gray-300 hover:bg-gray-50'
+                                        className={`px-4 py-2 rounded-lg border transition-colors duration-200 min-w-[44px] text-center
+                                            ${currentPage === page
+                                                ? 'bg-blue-600 text-white border-blue-600' // Active page styles
+                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' // Inactive page styles
                                             }`}
                                     >
                                         {page}
