@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { AuthContext } from '../../Provider/AuthProvider';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
-import { useQuery } from '@tanstack/react-query'; // Import useQuery
+import { useQuery } from '@tanstack/react-query'; 
 
 const Trainers = () => {
     const { user } = useContext(AuthContext);
@@ -15,14 +15,13 @@ const Trainers = () => {
     const { data: trainers, isLoading, isError, error } = useQuery({
         queryKey: ['trainers'], // Unique key for this query
         queryFn: async () => {
-            const res = await axiosSecure.get('/trainers');
+            const res = await axiosSecure.get('/trainers?status=accepted');
             return res.data;
         },
-        staleTime: 1000 * 60 * 5, // Data considered fresh for 5 minutes
-        cacheTime: 1000 * 60 * 30, // Data stays in cache for 30 minutes
+        staleTime: 1000 * 60 * 5,
+        cacheTime: 1000 * 60 * 30,
         onError: (err) => {
             console.error('Error fetching trainers:', err);
-            // Optionally, you can show a toast error here if needed
         },
     });
 
@@ -84,7 +83,7 @@ const Trainers = () => {
                         }
                     }}
                 >
-                    {trainers && trainers.length > 0 ? ( // Ensure trainers data is available
+                    {trainers && trainers.length > 0 ? (
                         trainers.map((trainer, index) => (
                             <motion.article
                                 key={trainer._id}
@@ -95,7 +94,7 @@ const Trainers = () => {
                             >
                                 <div className="relative">
                                     <img
-                                        src={trainer.image}
+                                        src={trainer.photoURL}
                                         alt={trainer.name || 'Trainer Profile'}
                                         className="w-full h-64 object-cover"
                                     />

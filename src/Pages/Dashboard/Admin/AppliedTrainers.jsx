@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Eye, Check, X, Calendar, User } from 'lucide-react';
 import useAxiosSecure from '../../../Provider/UseAxiosSecure';
 import Loader from '../../Loader';
-import Swal from 'sweetalert2'; // Import SweetAlert2
-import { motion, AnimatePresence } from 'framer-motion'; // Import Framer Motion
+import Swal from 'sweetalert2';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AppliedTrainers = () => {
     const axiosSecure = useAxiosSecure();
@@ -15,24 +15,45 @@ const AppliedTrainers = () => {
     const [modalType, setModalType] = useState('details');
     const [rejectFeedback, setRejectFeedback] = useState('');
 
-    const { data: applications = [], isLoading } = useQuery({
-        queryKey: ['trainerApplications'],
+    // Fetch only pending trainers directly from the backend
+    const { data: pendingTrainers = [], isLoading } = useQuery({
+        queryKey: ['pendingTrainerApplications'],
         queryFn: async () => {
-            const res = await axiosSecure.get('/applications/trainer');
+            const res = await axiosSecure.get('/trainers?status=pending');
             return res.data;
         },
     });
 
+    // Fetch accepted trainers for stats/display
+    const { data: acceptedTrainers = [], isLoading: isLoadingAccepted } = useQuery({
+        queryKey: ['acceptedTrainers'],
+        queryFn: async () => {
+            const res = await axiosSecure.get('/trainers?status=accepted');
+            return res.data;
+        },
+    });
+
+    // Fetch rejected trainers for stats/display
+    const { data: rejectedTrainers = [], isLoading: isLoadingRejected } = useQuery({
+        queryKey: ['rejectedTrainers'],
+        queryFn: async () => {
+            const res = await axiosSecure.get('/trainers?status=rejected');
+            return res.data;
+        },
+    });
+
+    // Total trainers for stats, combine all fetched lists
+    const allTrainersCount = pendingTrainers.length + acceptedTrainers.length + rejectedTrainers.length;
+
+
+    // Mutation to approve a trainer (change status to 'accepted')
     const approveTrainerMutation = useMutation({
-        mutationFn: async (trainerData) => {
-            const { _id, ...newTrainer } = trainerData; // Remove _id to avoid MongoDB conflict
-            await axiosSecure.post('/trainers', newTrainer);
-            await axiosSecure.delete(`/applications/trainer/${_id}`, {
-                data: {}
-            });
+        mutationFn: async (trainerId) => {
+            await axiosSecure.patch(`/trainers/${trainerId}/status`, { status: 'accepted' });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['trainerApplications']);
+            queryClient.invalidateQueries(['pendingTrainerApplications']); // Invalidate specific pending query
+            queryClient.invalidateQueries(['acceptedTrainers']); // Invalidate accepted query
             setShowModal(false);
             Swal.fire({
                 icon: 'success',
@@ -51,17 +72,19 @@ const AppliedTrainers = () => {
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: 'Something went wrong during approval!',
+                text: 'Something went wrong during approval! ' + (error?.response?.data?.message || error.message),
             });
         },
     });
 
+    // Mutation to reject a trainer (change status to 'rejected' with feedback)
     const rejectTrainerMutation = useMutation({
         mutationFn: async ({ id, feedback }) => {
-            await axiosSecure.delete(`/applications/trainer/${id}`, { data: { feedback } });
+            await axiosSecure.patch(`/trainers/${id}/status`, { status: 'rejected', feedback });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['trainerApplications']);
+            queryClient.invalidateQueries(['pendingTrainerApplications']); // Invalidate specific pending query
+            queryClient.invalidateQueries(['rejectedTrainers']); // Invalidate rejected query
             setShowModal(false);
             setRejectFeedback('');
             Swal.fire({
@@ -81,7 +104,7 @@ const AppliedTrainers = () => {
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: 'Something went wrong during rejection!',
+                text: 'Something went wrong during rejection! ' + (error?.response?.data?.message || error.message),
             });
         },
     });
@@ -103,7 +126,7 @@ const AppliedTrainers = () => {
             confirmButtonText: 'Yes, approve it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                approveTrainerMutation.mutate(trainer);
+                approveTrainerMutation.mutate(trainer._id);
             }
         });
     };
@@ -141,13 +164,9 @@ const AppliedTrainers = () => {
         }
     };
 
-    if (isLoading) return <Loader />;
+    if (isLoading || isLoadingAccepted || isLoadingRejected) return <Loader />; // Check all loading states
 
-    const pending = applications.filter((a) => a.status === 'pending');
-    const accepted = applications.filter((a) => a.status === 'accepted');
-    const rejected = applications.filter((a) => a.status === 'rejected');
-
-    // Framer Motion Variants (similar to DashboardOverview)
+    // Framer Motion Variants
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -162,7 +181,7 @@ const AppliedTrainers = () => {
     const cardVariants = {
         hidden: { opacity: 0, scale: 0.9 },
         visible: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 100, damping: 10 } },
-        exit: { opacity: 0, y: -50, transition: { duration: 0.3 } } // Added exit for individual cards
+        exit: { opacity: 0, y: -50, transition: { duration: 0.3 } }
     };
 
     const modalContentVariants = {
@@ -177,7 +196,7 @@ const AppliedTrainers = () => {
             variants={cardVariants}
             initial="hidden"
             animate="visible"
-            exit="exit" // Use the exit variant
+            exit="exit"
             whileHover={{
                 scale: 1.03,
                 boxShadow:
@@ -237,12 +256,12 @@ const AppliedTrainers = () => {
                     ))}
                 </div>
 
-                {trainer.status === 'rejected' && trainer.feedback && (
+                {trainer.status === 'rejected' && trainer.adminFeedback && (
                     <p className="mt-3 text-sm text-red-700 italic">
                         <strong>Rejection Feedback:</strong>{' '}
-                        {trainer.feedback.length > 100
-                            ? trainer.feedback.slice(0, 100) + '...'
-                            : trainer.feedback}
+                        {trainer.adminFeedback.length > 100
+                            ? trainer.adminFeedback.slice(0, 100) + '...'
+                            : trainer.adminFeedback}
                     </p>
                 )}
 
@@ -254,7 +273,7 @@ const AppliedTrainers = () => {
                         <Eye className="h-4 w-4" /> View
                     </button>
 
-                    {trainer.status !== 'accepted' && (
+                    {trainer.status === 'pending' && (
                         <>
                             <button
                                 onClick={() => handleApprove(trainer)}
@@ -284,7 +303,7 @@ const AppliedTrainers = () => {
             initial="hidden"
             animate="visible"
         >
-            <motion.h1 className="text-3xl font-bold text-gray-800 mb-4" variants={cardVariants}>Applied Trainerst</motion.h1>
+            <motion.h1 className="text-3xl font-bold text-gray-800 mb-4" variants={cardVariants}>Manage Trainer Applications</motion.h1>
             <motion.p className="text-gray-600 mb-8" variants={cardVariants}>Review and manage trainer applications.</motion.p>
 
             {/* Stats */}
@@ -293,10 +312,10 @@ const AppliedTrainers = () => {
                 variants={containerVariants}
             >
                 {[
-                    { label: 'Pending', count: pending.length, icon: <User />, color: 'orange' },
-                    { label: 'Approved', count: accepted.length, icon: <Check />, color: 'green' },
-                    { label: 'Rejected', count: rejected.length, icon: <X />, color: 'red' },
-                    { label: 'Total', count: applications.length, icon: <Calendar />, color: 'blue' },
+                    { label: 'Pending', count: pendingTrainers.length, icon: <User />, color: 'orange' },
+                    { label: 'Approved', count: acceptedTrainers.length, icon: <Check />, color: 'green' },
+                    { label: 'Rejected', count: rejectedTrainers.length, icon: <X />, color: 'red' },
+                    { label: 'Total', count: allTrainersCount, icon: <Calendar />, color: 'blue' },
                 ].map(({ label, count, icon, color }, i) => (
                     <motion.div
                         key={i}
@@ -317,10 +336,10 @@ const AppliedTrainers = () => {
                 ))}
             </motion.div>
 
-            {/* Pending Applications */}
+            {/* Pending Applications Section */}
             <section className="mb-10">
                 <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Pending Applications</motion.h2>
-                {pending.length === 0 ? (
+                {pendingTrainers.length === 0 ? (
                     <motion.div
                         className="text-center bg-white py-20 rounded-xl shadow"
                         variants={cardVariants}
@@ -336,7 +355,57 @@ const AppliedTrainers = () => {
                         variants={containerVariants}
                     >
                         <AnimatePresence>
-                            {pending.map(renderTrainerCard)}
+                            {pendingTrainers.map(renderTrainerCard)}
+                        </AnimatePresence>
+                    </motion.div>
+                )}
+            </section>
+
+            {/* Accepted Applications Section */}
+            <section className="mb-10">
+                <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Accepted Trainers</motion.h2>
+                {acceptedTrainers.length === 0 ? (
+                    <motion.div
+                        className="text-center bg-white py-20 rounded-xl shadow"
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        <Check className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-xl font-semibold">No accepted trainers</p>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        variants={containerVariants}
+                    >
+                        <AnimatePresence>
+                            {acceptedTrainers.map(renderTrainerCard)}
+                        </AnimatePresence>
+                    </motion.div>
+                )}
+            </section>
+
+            {/* Rejected Applications Section */}
+            <section className="mb-10">
+                <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Rejected Trainers</motion.h2>
+                {rejectedTrainers.length === 0 ? (
+                    <motion.div
+                        className="text-center bg-white py-20 rounded-xl shadow"
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        <X className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-xl font-semibold">No rejected trainers</p>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        variants={containerVariants}
+                    >
+                        <AnimatePresence>
+                            {rejectedTrainers.map(renderTrainerCard)}
                         </AnimatePresence>
                     </motion.div>
                 )}
@@ -392,15 +461,9 @@ const AppliedTrainers = () => {
                                                 : 'None'}
                                         </p>
                                         <p>
-                                            <strong>Available Days:</strong>{' '}
-                                            {selectedTrainer.availableDays && selectedTrainer.availableDays.length > 0
-                                                ? selectedTrainer.availableDays.join(', ')
-                                                : 'None'}
-                                        </p>
-                                        <p>
                                             <strong>Available Slots:</strong>{' '}
-                                            {selectedTrainer.availableSlots && selectedTrainer.availableSlots.length > 0
-                                                ? selectedTrainer.availableSlots.map(slot => `${slot.day}: ${slot.time}`).join(', ')
+                                            {selectedTrainer.slots && selectedTrainer.slots.length > 0
+                                                ? selectedTrainer.slots.map(slot => `${slot.day}: ${slot.time}${slot.isBooked ? ' (Booked)' : ''}`).join(', ')
                                                 : 'None'}
                                         </p>
 
@@ -450,14 +513,14 @@ const AppliedTrainers = () => {
                                         </div>
                                     </div>
 
-                                    {selectedTrainer.status === 'rejected' && selectedTrainer.feedback && (
+                                    {selectedTrainer.status === 'rejected' && selectedTrainer.adminFeedback && (
                                         <p className="text-red-700 italic mt-4 mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
-                                            <strong>Rejection Feedback:</strong> {selectedTrainer.feedback}
+                                            <strong>Rejection Feedback:</strong> {selectedTrainer.adminFeedback}
                                         </p>
                                     )}
 
                                     <div className="flex space-x-3 flex-wrap mt-6 justify-end">
-                                        {selectedTrainer.status !== 'accepted' && (
+                                        {selectedTrainer.status === 'pending' && (
                                             <>
                                                 <button
                                                     onClick={() => handleApprove(selectedTrainer)}

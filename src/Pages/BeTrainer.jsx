@@ -68,13 +68,10 @@ const BeTrainer = () => {
         specialization: '',
         experience: '',
         image: '',
-        rating: 0.0,
         age: '',
         sessions: 0,
         certifications: [],
         bio: '',
-        availableSlots: [],
-        availableDays: [],
         social: {
             instagram: '',
             twitter: '',
@@ -83,9 +80,16 @@ const BeTrainer = () => {
         slots: [],
     });
 
-    const [newSlot, setNewSlot] = useState({ id: '', name: '', time: '', day: '' });
+    const [newSlot, setNewSlot] = useState({ id: '', name: '', timeRange: '', day: '' });
     const [isSlotDayOpen, setIsSlotDayOpen] = useState(false);
     const slotDayRef = useRef(null);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -100,14 +104,15 @@ const BeTrainer = () => {
     }, []);
 
     const addSlot = () => {
-        if (!newSlot.name.trim() || !newSlot.time || !newSlot.day) {
-            toast.error('Please fill in all slot details.');
+        if (!newSlot.name.trim() || !newSlot.timeRange.trim() || !newSlot.day) {
+            toast.error('Please fill in all slot details (Name, Time Range, Day).');
             return;
         }
         const id = Date.now().toString();
-        const slotToAdd = { ...newSlot, id };
+        // Add a default 'isBooked' property for new slots
+        const slotToAdd = { ...newSlot, id, isBooked: false };
         setFormData((prev) => ({ ...prev, slots: [...prev.slots, slotToAdd] }));
-        setNewSlot({ id: '', name: '', time: '', day: '' });
+        setNewSlot({ id: '', name: '', timeRange: '', day: '' });
     };
 
     const removeSlot = (idToRemove) => {
@@ -138,30 +143,12 @@ const BeTrainer = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const selectedDays = dayOptions.filter((day) => formData.availableDays.includes(day.value));
-
-    const handleDaysChange = (selected) => {
-        setFormData((prev) => ({
-            ...prev,
-            availableDays: selected ? selected.map((option) => option.value) : [],
-        }));
-    };
-
     const toggleCertification = (cert) => {
         setFormData((prev) => ({
             ...prev,
             certifications: prev.certifications.includes(cert)
                 ? prev.certifications.filter((c) => c !== cert)
                 : [...prev.certifications, cert],
-        }));
-    };
-
-    const toggleSlot = (slot) => {
-        setFormData((prev) => ({
-            ...prev,
-            availableSlots: prev.availableSlots.includes(slot)
-                ? prev.availableSlots.filter((s) => s !== slot)
-                : [...prev.availableSlots, slot],
         }));
     };
 
@@ -173,15 +160,17 @@ const BeTrainer = () => {
             !formData.specialization.trim() ||
             !formData.experience.trim() ||
             !formData.age ||
-            !formData.bio.trim()
+            !formData.bio.trim() ||
+            formData.slots.length === 0 // Ensure at least one slot is added
         ) {
-            toast.error('Please fill in all required fields.');
+            toast.error('Please fill in all required fields and add at least one available slot.');
             return;
         }
         if (parseInt(formData.age) < 18) {
             toast.error('You must be at least 18 years old to apply as a trainer.');
             return;
         }
+
         const payload = {
             email: formData.email,
             name: formData.name,
@@ -191,26 +180,23 @@ const BeTrainer = () => {
             specialization: formData.specialization,
             description: formData.bio,
             certifications: formData.certifications || [],
-            availableSlots: formData.availableSlots || [],
-            availableDays: formData.availableDays || [],
             sessions: formData.sessions || 0,
             social: formData.social || {},
-            rating: formData.rating || 0,
-            comments: formData.comments || [],
-            slots: formData.slots || [],
-            ratings: formData.ratings || [],
+            slots: formData.slots || [], // Send the detailed slots array
         };
+
         try {
-            const res = await axiosSecure.post('/applications/trainer', payload);
+            // Directly submit to the /trainers endpoint
+            const res = await axiosSecure.post('/trainers', payload);
             if (res.data?.insertedId || res.data?.acknowledged) {
-                toast.success('Trainer application submitted! Please wait for admin approval.');
-                navigate('/');
+                toast.success('Trainer application submitted! It is under review.');
+                navigate('/trainers'); // Navigate to trainers page (where pending trainers will be listed)
             } else {
                 toast.error('Failed to submit trainer application.');
             }
         } catch (err) {
             if (err.response?.status === 409) {
-                toast.error('You have already submitted an application.');
+                toast.error('A trainer profile (or application) already exists for this email.');
             } else {
                 toast.error('Something went wrong. Please try again.');
             }
@@ -446,50 +432,10 @@ const BeTrainer = () => {
                             </motion.div>
                         </motion.div>
 
-                        {/* Available Slots */}
-                        <motion.div variants={childVariants}>
-                            <label className="block text-sm font-medium mb-2">Available Slots</label>
-                            <motion.div className="flex gap-4 flex-wrap">
-                                {['Morning', 'Noon', 'After-noon', 'Evening', 'Night'].map((slot) => {
-                                    const selected = formData.availableSlots.includes(slot);
-                                    return (
-                                        <motion.button
-                                            key={slot}
-                                            type="button"
-                                            onClick={() => toggleSlot(slot)}
-                                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                                            ${selected
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
-                                                }`}
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            {slot}
-                                        </motion.button>
-                                    );
-                                })}
-                            </motion.div>
-                        </motion.div>
-
-                        {/* Available Days (React Select) */}
-                        <motion.div variants={childVariants}>
-                            <label className="block text-sm font-medium mb-2">Available Days</label>
-                            <Select
-                                isMulti
-                                options={dayOptions}
-                                value={selectedDays}
-                                onChange={handleDaysChange}
-                                placeholder="Select available days"
-                                classNamePrefix="react-select"
-                                closeMenuOnSelect={false}
-                                isSearchable={false}
-                            />
-                        </motion.div>
-
                         <motion.div variants={fadeSlideUp}>
                             <p className="font-semibold mb-2 text-lg">Add Available Slots</p>
-                            <div className="flex flex-col md:flex-row md:gap-4 items-center">
+                            <div className="flex flex-col md:flex-row md:gap-4 items-center flex-wrap">
+                                {/* Slot name */}
                                 <motion.input
                                     type="text"
                                     placeholder="Slot Name (e.g. Morning Yoga)"
@@ -498,13 +444,17 @@ const BeTrainer = () => {
                                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg mb-3 md:mb-0"
                                     whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
+
                                 <motion.input
-                                    type="time"
-                                    value={newSlot.time}
-                                    onChange={(e) => setNewSlot({ ...newSlot, time: e.target.value })}
+                                    type="text"
+                                    placeholder="Time Range (e.g. 9:00 AM - 12:00 PM)"
+                                    value={newSlot.timeRange}
+                                    onChange={(e) => setNewSlot({ ...newSlot, timeRange: e.target.value })}
                                     className="px-4 py-3 border border-gray-300 rounded-lg mb-3 md:mb-0"
                                     whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
+
+                                {/* Day selector remains unchanged */}
                                 <motion.div className="relative w-48" ref={slotDayRef}>
                                     <motion.button
                                         type="button"
@@ -558,6 +508,8 @@ const BeTrainer = () => {
                                         )}
                                     </AnimatePresence>
                                 </motion.div>
+
+                                {/* Add button */}
                                 <motion.button
                                     type="button"
                                     onClick={addSlot}
@@ -569,10 +521,10 @@ const BeTrainer = () => {
                                 </motion.button>
                             </div>
 
-                            {/* Slots list */}
+                            {/* Display list */}
                             <motion.ul className="mt-4 space-y-2">
                                 <AnimatePresence>
-                                    {formData.slots.map(({ id, name, time, day }) => (
+                                    {formData.slots.map(({ id, name, timeRange, day }) => (
                                         <motion.li
                                             key={id}
                                             initial={{ opacity: 0, x: 50 }}
@@ -584,7 +536,7 @@ const BeTrainer = () => {
                                             <div>
                                                 <p className="font-semibold text-gray-800">{name}</p>
                                                 <p className="text-sm text-gray-600">
-                                                    {day} | {time}
+                                                    {day} | {timeRange}
                                                 </p>
                                             </div>
                                             <motion.button
@@ -655,10 +607,10 @@ const BeTrainer = () => {
                         </motion.div>
 
                         {/* Submit Button */}
-                        <motion.div variants={childVariants} className="text-center pt-4">
+                        <motion.div variants={childVariants} className="text-center mt-8">
                             <motion.button
                                 type="submit"
-                                className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-md hover:bg-blue-700"
+                                className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
@@ -667,8 +619,8 @@ const BeTrainer = () => {
                         </motion.div>
                     </form>
                 </motion.div>
-            </div >
-        </motion.div >
+            </div>
+        </motion.div>
     );
 };
 

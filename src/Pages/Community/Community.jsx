@@ -12,7 +12,7 @@ import { AuthContext } from '../../Provider/AuthProvider';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { toast } from 'sonner';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
-import { useQuery } from '@tanstack/react-query'; // Import useQuery
+import { useQuery } from '@tanstack/react-query';
 
 const postsPerPage = 6;
 
@@ -21,7 +21,7 @@ const Community = () => {
     const axiosSecure = useAxiosSecure();
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [updateTimer, setUpdateTimer] = useState(0); // Still needed for timestamp updates
+    const [updateTimer, setUpdateTimer] = useState(0);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -79,7 +79,7 @@ const Community = () => {
                 voteType: newVoteType,
             });
 
-            await refetch(); // Re-fetch data after a successful vote to get updated counts
+            await refetch();
             toast.success(
                 newVoteType
                     ? `You ${newVoteType === "like" ? "liked" : "disliked"} this post.`

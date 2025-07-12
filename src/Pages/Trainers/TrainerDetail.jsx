@@ -15,15 +15,15 @@ import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../../Provider/AuthProvider';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import TanStack Query hooks
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const TrainerDetail = () => {
     const { id } = useParams();
     const axiosSecure = useAxiosSecure();
     const { user } = useContext(AuthContext);
-    const queryClient = useQueryClient(); // Get the query client instance
+    const queryClient = useQueryClient();
 
-    const [openMenuId, setOpenMenuId] = useState(null); // This state wasn't used, but kept in case it's for future use
+    const [openMenuId, setOpenMenuId] = useState(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -159,7 +159,7 @@ const TrainerDetail = () => {
                     >
                         <motion.div className="text-center" variants={itemVariants}>
                             <motion.img
-                                src={trainer.image}
+                                src={trainer.photoURL}
                                 alt={trainer.name}
                                 className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
                                 initial={{ scale: 0 }}
