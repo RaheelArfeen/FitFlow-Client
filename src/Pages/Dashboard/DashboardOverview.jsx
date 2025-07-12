@@ -86,13 +86,13 @@ const DashboardOverview = () => {
 
     const getCategoryClass = (base, category, shade) => {
         const color = categoryColors[category] || 'gray';
+        if (base === 'border') {
+            return `border-${color}-${shade}`;
+        }
         return `${base}-${color}-${shade}`;
     };
 
     const shouldDisplay = (item) => {
-        // You might want to refine this logic.
-        // Currently, it checks if the author role matches the user's role OR
-        // if the category is one of the specified ones.
         return (
             item.authorRole === user?.role ||
             ['New Feature', 'Challenge', 'Spotlight', 'Success Stories'].includes(item.category)
@@ -386,7 +386,7 @@ const DashboardOverview = () => {
                 <motion.div className="bg-white rounded-xl shadow-lg p-6 relative" variants={containerVariants}>
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Updates & News</h2>
                     <div className="space-y-4">
-                        {recentUpdates.map( // Changed `updates` to `recentUpdates`
+                        {recentUpdates.map(
                             (item) =>
                                 shouldDisplay(item) && (
                                     <motion.div

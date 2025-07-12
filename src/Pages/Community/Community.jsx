@@ -6,6 +6,8 @@ import {
     ThumbsDown,
     Award,
     Shield,
+    ChevronRight,
+    ChevronLeft,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../Provider/AuthProvider';
@@ -15,6 +17,7 @@ import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
 
 const postsPerPage = 6;
+const MAX_VISIBLE_PAGES = 5; // Define how many page numbers to show before ellipsis
 
 const Community = () => {
     const { user } = useContext(AuthContext);
@@ -24,45 +27,40 @@ const Community = () => {
     const [updateTimer, setUpdateTimer] = useState(0);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            window.scrollTo(0, 0);
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Use Tanstack Query to fetch posts
-    const { data: posts = [], isLoading, isError, error, refetch } = useQuery({
-        queryKey: ['communityPosts'], // Unique key for this query
-        queryFn: async () => {
-            const res = await axiosSecure.get('/community');
-            return res.data;
-        },
-        // Optional: Configure refetching behavior if needed, e.g., staleTime, refetchOnWindowFocus
-        staleTime: 1000 * 60 * 5, // Data is considered fresh for 5 minutes
-        onError: (err) => {
-            console.error('Failed to fetch posts with Tanstack Query:', err);
-            toast.error('Failed to fetch posts.');
-        }
+        window.scrollTo(0, 0);
     });
 
-    // Timer to update timestamps every minute (still relevant as useQuery doesn't handle this specific UI update)
+    // Use Tanstack Query to fetch paginated posts
+    const { data, isLoading, isError, error, refetch } = useQuery({
+        queryKey: ['communityPosts', currentPage],
+        queryFn: async () => {
+            const res = await axiosSecure.get(`/community?page=${currentPage}&limit=${postsPerPage}`);
+            return res.data;
+        },
+        keepPreviousData: true,
+        staleTime: 1000 * 60 * 5,
+        onError: (err) => {
+            console.error('Failed to fetch posts:', err);
+            toast.error('Failed to fetch posts.');
+        },
+    });
+
+    const posts = data?.posts || [];
+    const totalPages = data?.totalPages || 1;
+
     useEffect(() => {
         const interval = setInterval(() => {
             setUpdateTimer((prev) => prev + 1);
-        }, 60000); // every 60 seconds
-
+        }, 60000);
         return () => clearInterval(interval);
     }, []);
 
-    // Get current user's vote type on a post ('like', 'dislike', or null)
     const getUserVote = (post) => {
         if (!user || !post.votes) return null;
         const vote = post.votes.find(v => v.email === user.email);
         return vote ? vote.type : null;
     };
 
-    // Toggle like/dislike vote or remove vote
     const handleVote = async (postId, voteType) => {
         if (!user) {
             toast.warning("Please login to vote.");
@@ -93,40 +91,25 @@ const Community = () => {
 
     const getBadgeIcon = (role) => {
         switch (role) {
-            case 'admin':
-                return <Shield className="h-4 w-4 text-red-600" />;
-            case 'trainer':
-                return <Award className="h-4 w-4 text-blue-600" />;
-            default:
-                return null;
+            case 'admin': return <Shield className="h-4 w-4 text-red-600" />;
+            case 'trainer': return <Award className="h-4 w-4 text-blue-600" />;
+            default: return null;
         }
     };
 
     const getBadgeText = (role) => {
         switch (role) {
-            case 'admin':
-                return 'Admin';
-            case 'trainer':
-                return 'Trainer';
-            default:
-                return '';
+            case 'admin': return 'Admin';
+            case 'trainer': return 'Trainer';
+            default: return '';
         }
     };
 
-    // Pagination
-    const indexOfLastPost = currentPage * postsPerPage;
-    const indexOfFirstPost = indexOfLastPost - postsPerPage;
-    const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
-    const totalPages = Math.ceil(posts.length / postsPerPage);
-
-    // Framer Motion variants for staggered animation
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
+            transition: { staggerChildren: 0.1 },
         },
     };
 
@@ -140,6 +123,39 @@ const Community = () => {
         hover: { scale: 1.1 },
         tap: { scale: 0.9 },
     };
+
+    // Logic for visible page numbers with ellipsis
+    const getVisiblePageNumbers = () => {
+        const pages = [];
+        if (totalPages <= MAX_VISIBLE_PAGES) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            const startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
+            const endPage = Math.min(totalPages, startPage + MAX_VISIBLE_PAGES - 1);
+
+            if (startPage > 1) {
+                pages.push(1);
+                if (startPage > 2) {
+                    pages.push('...');
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pages.push('...');
+                }
+                pages.push(totalPages);
+            }
+        }
+        return pages;
+    };
+
 
     if (isLoading) {
         return (
@@ -160,7 +176,6 @@ const Community = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-                {/* Header */}
                 <div className="text-center mb-12 px-2 sm:px-0">
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
@@ -181,21 +196,20 @@ const Community = () => {
                     </motion.p>
                 </div>
 
-                {/* Posts Grid */}
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
                 >
-                    {currentPosts.map((post) => {
+                    {posts.map((post) => {
                         const userVote = getUserVote(post);
 
                         return (
                             <motion.article
                                 key={post._id}
-                                variants={itemVariants} // Apply item variants here
-                                whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }} // Lift on hover
+                                variants={itemVariants}
+                                whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
                                 transition={{ duration: 0.2 }}
                                 className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
                             >
@@ -222,9 +236,7 @@ const Community = () => {
                                             )}
                                             <span className="text-sm text-gray-500 whitespace-nowrap">
                                                 {post.createdAt
-                                                    ? formatDistanceToNowStrict(new Date(post.createdAt), {
-                                                        addSuffix: true,
-                                                    })
+                                                    ? formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: true })
                                                     : 'just now'}
                                             </span>
                                         </div>
@@ -235,19 +247,13 @@ const Community = () => {
                                 </div>
 
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3 line-clamp-2 hover:text-blue-700 cursor-pointer transition-colors duration-200">
-                                    <Link
-                                        to={`/community/post/${post._id}`}
-                                        className="break-words"
-                                        title={post.title}
-                                    >
+                                    <Link to={`/community/post/${post._id}`} title={post.title}>
                                         {post.title}
                                     </Link>
                                 </h3>
 
                                 <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-5">
-                                    {post.content.length > 300
-                                        ? `${post.content.slice(0, 300)}...`
-                                        : post.content}
+                                    {post.content.length > 300 ? `${post.content.slice(0, 300)}...` : post.content}
                                 </p>
 
                                 <div className="flex flex-wrap items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100 gap-3">
@@ -262,8 +268,6 @@ const Community = () => {
                                                     ? 'text-green-600 ring-green-400'
                                                     : 'hover:text-green-600 focus-visible:ring-green-400'
                                                 }`}
-                                            aria-label="Like post"
-                                            type="button"
                                         >
                                             <ThumbsUp className="h-4 w-4" />
                                             <span>{post.likes || 0}</span>
@@ -278,8 +282,6 @@ const Community = () => {
                                                     ? 'text-red-600 ring-red-400'
                                                     : 'hover:text-red-600 focus-visible:ring-red-400'
                                                 }`}
-                                            aria-label="Dislike post"
-                                            type="button"
                                         >
                                             <ThumbsDown className="h-4 w-4" />
                                             <span>{post.dislikes || 0}</span>
@@ -290,17 +292,10 @@ const Community = () => {
                                             className="flex items-center space-x-1 hover:text-blue-500 transition-colors duration-200 select-none cursor-pointer"
                                         >
                                             <MessageSquare className="h-4 w-4" />
-                                            <span>
-                                                {Array.isArray(post.comments)
-                                                    ? post.comments.length
-                                                    : post.comments || 0}
-                                            </span>
+                                            <span>{Array.isArray(post.comments) ? post.comments.length : post.comments || 0}</span>
                                         </motion.div>
                                     </div>
-                                    <Link
-                                        to={`/community/${post._id}`}
-                                        className="text-blue-700 hover:text-blue-800 font-medium transition-colors duration-200 whitespace-nowrap"
-                                    >
+                                    <Link to={`/community/${post._id}`} className="text-blue-700 hover:text-blue-800 font-medium transition-colors duration-200 whitespace-nowrap">
                                         Read More
                                     </Link>
                                 </div>
@@ -309,31 +304,59 @@ const Community = () => {
                     })}
                 </motion.div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
-                    <nav
-                        aria-label="Pagination"
-                        className="flex flex-wrap justify-center gap-2 mb-8"
-                    >
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <motion.button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className={`px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 min-w-[44px] text-center
-                                    ${currentPage === page
-                                        ? 'bg-blue-700 text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                                    }
-                                `}
-                                aria-current={currentPage === page ? 'page' : undefined}
-                                aria-label={`Go to page ${page}`}
-                                type="button"
-                            >
-                                {page}
-                            </motion.button>
-                        ))}
+                    <nav className="flex flex-wrap justify-between gap-2 mb-8 items-center" aria-label="Pagination">
+                        {/* Previous Button */}
+                        <motion.button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            disabled={currentPage === 1}
+                            className={`px-2 py-2 rounded-lg border transition-colors duration-200 text-center font-medium ${currentPage === 1
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                }`}
+                        >
+                            <ChevronLeft />
+                        </motion.button>
+
+                        {/* Page Numbers with Ellipsis Logic */}
+                        <div className='flex items-center gap-2'>
+                            {getVisiblePageNumbers().map((page, index) => (
+                                page === '...' ? (
+                                    <span key={`ellipsis-${index}`} className="px-4 py-2 text-gray-700">
+                                        ...
+                                    </span>
+                                ) : (
+                                    <motion.button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className={`px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 min-w-[44px] text-center${currentPage === page
+                                            ? 'text-black'
+                                            : 'bg-white text-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {page}
+                                    </motion.button>
+                                )
+                            ))}
+                        </div>
+
+                        {/* Next Button */}
+                        <motion.button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            disabled={currentPage === totalPages}
+                            className={`px-2 py-2 rounded-lg border transition-colors duration-200 text-center font-medium ${currentPage === totalPages
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                }`}
+                        >
+                            <ChevronRight />
+                        </motion.button>
                     </nav>
                 )}
             </div>

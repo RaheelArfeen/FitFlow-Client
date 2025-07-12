@@ -111,9 +111,9 @@ const Trainers = () => {
                                     </div>
 
                                     <p className="text-gray-600 text-sm mb-4 leading-relaxed flex-grow">
-                                        {trainer.bio && trainer.bio.length > 80
-                                            ? trainer.bio.slice(0, 80) + '...'
-                                            : trainer.bio || 'No bio available.'}
+                                        {trainer.description && trainer.description.length > 80
+                                            ? trainer.description.slice(0, 80) + '...'
+                                            : trainer.description || 'No description available.'}
                                     </p>
 
                                     <div className="space-y-3 mb-6">

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link } from 'react-router'; 
 import { motion } from 'framer-motion';
 import {
     Star as StarIcon,
@@ -22,8 +22,6 @@ const TrainerDetail = () => {
     const axiosSecure = useAxiosSecure();
     const { user } = useContext(AuthContext);
     const queryClient = useQueryClient();
-
-    const [openMenuId, setOpenMenuId] = useState(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -91,6 +89,9 @@ const TrainerDetail = () => {
         if (!user) {
             return Swal.fire('Login Required', 'Please log in to rate the trainer.', 'warning');
         }
+        if (user?.email === trainer?.email) {
+            return Swal.fire('Action Not Allowed', 'You cannot rate yourself as a trainer.', 'info');
+        }
         rateTrainerMutation.mutate({ trainerId: trainer._id, rating: ratingValue });
     };
 
@@ -144,6 +145,8 @@ const TrainerDetail = () => {
         visible: { y: 0, opacity: 1 },
     };
 
+    const isTrainerSelf = user?.email === trainer?.email;
+
     return (
         <motion.div
             className="min-h-screen bg-gray-50 py-12"
@@ -186,16 +189,17 @@ const TrainerDetail = () => {
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <motion.div
                                             key={star}
-                                            whileHover={{ scale: 1.2 }}
-                                            whileTap={{ scale: 0.9 }}
+                                            whileHover={{ scale: isTrainerSelf ? 1 : 1.2 }}
+                                            whileTap={{ scale: isTrainerSelf ? 1 : 0.9 }}
                                         >
                                             <StarIcon
-                                                className={`h-6 w-6 cursor-pointer transition-colors duration-200 ${star <= userRating
+                                                className={`h-6 w-6 transition-colors duration-200 ${star <= userRating
                                                     ? 'text-yellow-400 fill-yellow-400'
                                                     : 'text-gray-300'
+                                                    } ${isTrainerSelf ? 'cursor-not-allowed' : 'cursor-pointer'
                                                     }`}
-                                                onClick={() => !rateTrainerMutation.isPending && handleRatingSubmit(star)}
-                                                title={`${star} star${star > 1 ? 's' : ''}`}
+                                                onClick={() => !rateTrainerMutation.isPending && !isTrainerSelf && handleRatingSubmit(star)}
+                                                title={isTrainerSelf ? "You cannot rate yourself" : `${star} star${star > 1 ? 's' : ''}`}
                                             />
                                         </motion.div>
                                     ))}
@@ -226,7 +230,7 @@ const TrainerDetail = () => {
                         <div className="space-y-6 mt-8">
                             <motion.div variants={itemVariants}>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">About</h3>
-                                <p className="text-gray-600 leading-relaxed">{trainer.bio || 'No bio available.'}</p>
+                                <p className="text-gray-600 leading-relaxed">{trainer.description || 'No bio available.'}</p>
                             </motion.div>
 
                             {trainer.certifications && trainer.certifications.length > 0 && (
@@ -330,14 +334,14 @@ const TrainerDetail = () => {
                                 trainer.slots.map((slot, index) => (
                                     <motion.div
                                         key={index}
-                                        className={`border rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between transition-colors duration-200 ${slot.isBooked
+                                        className={`border rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between transition-colors duration-200 ${slot.isBooked || isTrainerSelf
                                             ? 'bg-gray-50 border-gray-200'
                                             : 'bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer'
                                             }`}
                                         initial={{ x: -100, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                         transition={{ delay: index * 0.05 }}
-                                        whileHover={{ scale: 1.02 }}
+                                        whileHover={{ scale: isTrainerSelf ? 1 : 1.02 }}
                                     >
                                         <div className="flex flex-col flex-1">
                                             <h3 className="font-semibold text-gray-800 text-lg sm:text-xl mb-2 sm:mb-0">
@@ -358,7 +362,11 @@ const TrainerDetail = () => {
                                         </div>
 
                                         <div className="mt-4 sm:mt-0">
-                                            {slot.isBooked ? (
+                                            {isTrainerSelf ? (
+                                                <span className="bg-purple-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
+                                                    Your Slot
+                                                </span>
+                                            ) : slot.isBooked ? (
                                                 <span className="bg-gray-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
                                                     Booked
                                                 </span>
@@ -382,7 +390,7 @@ const TrainerDetail = () => {
                     </motion.section>
                 </div>
 
-                {/* Only show "Become a Trainer" section if user is a member or not logged in */}
+                {/* Only show "Become a Trainer" section if user is a member and not the current trainer or admin */}
                 {user?.role !== 'trainer' && user?.role !== 'admin' && (
                     <motion.div
                         className="mt-12 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center"
