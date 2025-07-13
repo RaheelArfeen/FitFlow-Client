@@ -29,10 +29,10 @@ import forbidden from "../Pages/Dashboard/forbidden";
 import Community from "../Pages/Community/Community";
 import Classes from "../Pages/Classes";
 import CommunityDetails from "../Pages/Community/CommunityDetails";
-import AddClass from "../Pages/Dashboard/Trainer/AddClass";
 import AddSlot from "../Pages/Dashboard/Trainer/AddSlot";
 import ManageSlot from "../Pages/Dashboard/Trainer/ManageSlots";
 import Profile from "../Pages/Dashboard/Member/Profile";
+import AddNewClass from "../Pages/Dashboard/Admin/AddClass";
 
 
 export const router = createBrowserRouter([
@@ -70,8 +70,8 @@ export const router = createBrowserRouter([
             { path: 'trainers', element: <AdminRoute><AllTrainers /></AdminRoute> },
             { path: 'applied-trainers', element: <AdminRoute><AppliedTrainers /></AdminRoute> },
             { path: 'balance', element: <AdminRoute><Balance /></AdminRoute> },
+            { path: 'add-class', element: <AddNewClass /> },
             // trainer routes
-            { path: 'add-class', element: <AddClass /> },
             { path: 'add-slot', element: <TrainersRoute><AddSlot /></TrainersRoute> },
             { path: 'manage-slots', element: <TrainersRoute><ManageSlot /></TrainersRoute> },
             { path: 'forbidden', Component: forbidden },

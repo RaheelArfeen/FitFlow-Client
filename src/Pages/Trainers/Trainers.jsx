@@ -1,11 +1,11 @@
 import React, { useContext, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Star, Calendar, Award, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { Star, Calendar, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../Provider/AuthProvider';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
-import { useQuery } from '@tanstack/react-query'; 
+import { useQuery } from '@tanstack/react-query';
 
 const Trainers = () => {
     const { user } = useContext(AuthContext);
@@ -15,7 +15,7 @@ const Trainers = () => {
     const { data: trainers, isLoading, isError, error } = useQuery({
         queryKey: ['trainers'], // Unique key for this query
         queryFn: async () => {
-            const res = await axiosSecure.get('/trainers?status=accepted');
+            const res = await axiosSecure.get('/trainers?status=accepted'); // This will now hit your backend
             return res.data;
         },
         staleTime: 1000 * 60 * 5,
@@ -86,7 +86,7 @@ const Trainers = () => {
                     {trainers && trainers.length > 0 ? (
                         trainers.map((trainer, index) => (
                             <motion.article
-                                key={trainer._id}
+                                key={trainer.email}
                                 className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col"
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -119,7 +119,7 @@ const Trainers = () => {
                                     <div className="space-y-3 mb-6">
                                         <div className="flex items-center text-sm text-gray-500">
                                             <Calendar className="h-4 w-4 mr-2" />
-                                            <span>{trainer.experience || 'N/A'} experience</span>
+                                            <span>{trainer.experience} years experience</span>
                                         </div>
                                         <div className="flex items-center text-sm text-gray-500">
                                             <Award className="h-4 w-4 mr-2" />
@@ -130,74 +130,30 @@ const Trainers = () => {
                                     <div className="mb-4">
                                         <div className="text-sm text-gray-600 mb-2">Available Slots:</div>
                                         <div className="flex flex-wrap gap-2">
-                                            {(trainer.availableSlots && trainer.availableSlots.length > 0)
-                                                ? trainer.availableSlots.map((slot) => (
-                                                    <span
-                                                        key={slot}
-                                                        className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
-                                                    >
-                                                        {slot}
-                                                    </span>
-                                                ))
+                                            {(trainer.slots && trainer.slots.length > 0)
+                                                ? trainer.slots
+                                                    .filter(slot => !slot.isBooked) // Filter for available (not booked) slots
+                                                    .map((slot) => (
+                                                        <span
+                                                            key={slot.id}
+                                                            className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
+                                                        >
+                                                            {`${slot.day}, ${slot.timeRange}`}
+                                                        </span>
+                                                    ))
                                                 : <span className="text-gray-400 text-xs italic">No slots available</span>
                                             }
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-auto">
-                                        <div className="flex space-x-3">
-                                            <motion.div whileHover={{ scale: 1.2 }}>
-                                                {trainer.social?.instagram ? (
-                                                    <a
-                                                        href={`${trainer.social.instagram.startsWith('http') ? '' : 'https://'}${trainer.social.instagram.replace('@', '')}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <Instagram className="h-5 w-5 text-gray-400 hover:text-pink-500 transition-colors duration-200" />
-                                                    </a>
-                                                ) : (
-                                                    <Instagram className="h-5 w-5 text-gray-300 cursor-not-allowed" />
-                                                )}
-                                            </motion.div>
-
-                                            <motion.div whileHover={{ scale: 1.2 }}>
-                                                {trainer.social?.twitter ? (
-                                                    <a
-                                                        href={`${trainer.social.twitter.startsWith('http') ? '' : 'https://'}${trainer.social.twitter.replace('@', '')}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 transition-colors duration-200" />
-                                                    </a>
-                                                ) : (
-                                                    <Twitter className="h-5 w-5 text-gray-300 cursor-not-allowed" />
-                                                )}
-                                            </motion.div>
-
-                                            <motion.div whileHover={{ scale: 1.2 }}>
-                                                {trainer.social?.linkedin ? (
-                                                    <a
-                                                        href={`${trainer.social.linkedin.startsWith('http') ? '' : 'https://'}${trainer.social.linkedin}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <Linkedin className="h-5 w-5 text-gray-400 hover:text-blue-600 transition-colors duration-200" />
-                                                    </a>
-                                                ) : (
-                                                    <Linkedin className="h-5 w-5 text-gray-300 cursor-not-allowed" />
-                                                )}
-                                            </motion.div>
-                                        </div>
-
-                                        <motion.div whileHover={{ scale: 1.05 }}>
-                                            <Link
-                                                to={`/trainer/${trainer._id}`}
-                                                className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                                            >
-                                                Know More
-                                            </Link>
-                                        </motion.div>
-                                    </div>
+                                    <motion.div whileHover={{ scale: 1.05 }} className="mt-auto text-right">
+                                        <Link
+                                            to={`/trainer/${trainer._id}`}
+                                            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                                        >
+                                            Know More
+                                        </Link>
+                                    </motion.div>
                                 </div>
                             </motion.article>
                         ))

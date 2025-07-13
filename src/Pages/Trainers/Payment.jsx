@@ -231,7 +231,7 @@ const PaymentForm = () => {
                         <div className="space-y-2 mb-4">
                             <div className="flex justify-between"><span>Trainer:</span><span>{trainer.name}</span></div>
                             <div className="flex justify-between"><span>Slot:</span><span>{slot.name}</span></div>
-                            <div className="flex justify-between"><span>Time:</span><span>{slot.time}</span></div>
+                            <div className="flex justify-between"><span>Time:</span><span>{slot.timeRange}</span></div>
                             <div className="flex justify-between"><span>Day:</span><span>{slot.day}</span></div>
                             <div className="flex justify-between"><span>Package:</span><span>{selectedPackage.name}</span></div>
                         </div>

@@ -5,7 +5,7 @@ import Loader from './Loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAxiosSecure from '../Provider/UseAxiosSecure';
 import { AuthContext } from '../Provider/AuthProvider';
-import Select from 'react-select';
+import Select from 'react-select'; // Import React Select
 
 const containerVariants = {
     hidden: {},
@@ -52,6 +52,7 @@ const BeTrainer = () => {
         'Nutrition Coaching',
     ];
 
+    // Options for React Select - value and label are required
     const dayOptions = [
         { value: 'Sunday', label: 'Sunday' },
         { value: 'Monday', label: 'Monday' },
@@ -72,17 +73,14 @@ const BeTrainer = () => {
         sessions: 0,
         certifications: [],
         bio: '',
-        social: {
-            instagram: '',
-            twitter: '',
-            linkedin: '',
-        },
         slots: [],
     });
 
-    const [newSlot, setNewSlot] = useState({ id: '', name: '', timeRange: '', day: '' });
-    const [isSlotDayOpen, setIsSlotDayOpen] = useState(false);
-    const slotDayRef = useRef(null);
+    // newSlot state now holds the selected day object from react-select
+    const [newSlot, setNewSlot] = useState({ id: '', name: '', timeRange: '', day: null }); // day is now an object { value, label }
+
+    const specRef = useRef(null);
+    const [isSpecOpen, setIsSpecOpen] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -90,40 +88,6 @@ const BeTrainer = () => {
         }, 300);
         return () => clearTimeout(timer);
     }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (slotDayRef.current && !slotDayRef.current.contains(event.target)) {
-                setIsSlotDayOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const addSlot = () => {
-        if (!newSlot.name.trim() || !newSlot.timeRange.trim() || !newSlot.day) {
-            toast.error('Please fill in all slot details (Name, Time Range, Day).');
-            return;
-        }
-        const id = Date.now().toString();
-        // Add a default 'isBooked' property for new slots
-        const slotToAdd = { ...newSlot, id, isBooked: false };
-        setFormData((prev) => ({ ...prev, slots: [...prev.slots, slotToAdd] }));
-        setNewSlot({ id: '', name: '', timeRange: '', day: '' });
-    };
-
-    const removeSlot = (idToRemove) => {
-        setFormData((prev) => ({
-            ...prev,
-            slots: prev.slots.filter((slot) => slot.id !== idToRemove),
-        }));
-    };
-
-    const specRef = useRef(null);
-    const [isSpecOpen, setIsSpecOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -142,6 +106,26 @@ const BeTrainer = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const addSlot = () => {
+        // Check if day is selected (it will be an object if selected)
+        if (!newSlot.name.trim() || !newSlot.timeRange.trim() || !newSlot.day) {
+            toast.error('Please fill in all slot details (Name, Time Range, Day).');
+            return;
+        }
+        const id = Date.now().toString();
+        // Store only the value of the day (e.g., 'Monday')
+        const slotToAdd = { ...newSlot, id, day: newSlot.day.value, isBooked: false };
+        setFormData((prev) => ({ ...prev, slots: [...prev.slots, slotToAdd] }));
+        setNewSlot({ id: '', name: '', timeRange: '', day: null }); // Reset day to null
+    };
+
+    const removeSlot = (idToRemove) => {
+        setFormData((prev) => ({
+            ...prev,
+            slots: prev.slots.filter((slot) => slot.id !== idToRemove),
+        }));
+    };
 
     const toggleCertification = (cert) => {
         setFormData((prev) => ({
@@ -181,8 +165,7 @@ const BeTrainer = () => {
             description: formData.bio,
             certifications: formData.certifications || [],
             sessions: formData.sessions || 0,
-            social: formData.social || {},
-            slots: formData.slots || [], // Send the detailed slots array
+            slots: formData.slots || [],
         };
 
         try {
@@ -329,8 +312,8 @@ const BeTrainer = () => {
                                                         setIsSpecOpen(false);
                                                     }}
                                                     className={`cursor-pointer select-none relative py-2 px-3  ${formData.specialization === spec
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'text-gray-900'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'text-gray-900'
                                                         }`}
                                                     whileHover={{ backgroundColor: '#bfdbfe', scale: 1.02 }}
                                                     role="option"
@@ -418,7 +401,7 @@ const BeTrainer = () => {
                                             type="button"
                                             onClick={() => toggleCertification(cert)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
-                                            ${selected
+                                                ${selected
                                                     ? 'bg-blue-600 text-white'
                                                     : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
                                                 }`}
@@ -454,59 +437,33 @@ const BeTrainer = () => {
                                     whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
 
-                                {/* Day selector remains unchanged */}
-                                <motion.div className="relative w-48" ref={slotDayRef}>
-                                    <motion.button
-                                        type="button"
-                                        onClick={() => setIsSlotDayOpen((open) => !open)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white flex justify-between items-center"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        aria-haspopup="listbox"
-                                        aria-expanded={isSlotDayOpen}
-                                    >
-                                        {dayOptions.find(d => d.value === newSlot.day)?.label || 'Select Day'}
-                                        <svg
-                                            className={`w-5 h-5 ml-2 transition-transform ${isSlotDayOpen ? 'rotate-180' : ''
-                                                }`}
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M19 9l-7 7-7-7"
-                                            ></path>
-                                        </svg>
-                                    </motion.button>
-                                    <AnimatePresence>
-                                        {isSlotDayOpen && (
-                                            <motion.ul
-                                                initial={{ opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                                className="absolute z-10 mt-1 w-full bg-white shadow-lg h-fit rounded-md text-base overflow-auto focus:outline-none scrollbarHidden"
-                                                role="listbox"
-                                            >
-                                                {dayOptions.map((day) => (
-                                                    <motion.li
-                                                        key={day.value}
-                                                        onClick={() => {
-                                                            setNewSlot((prev) => ({ ...prev, day: day.value }));
-                                                            setIsSlotDayOpen(false);
-                                                        }}
-                                                        className="cursor-pointer py-2 px-3"
-                                                        whileHover={{ backgroundColor: '#bfdbfe', scale: 1.02 }}
-                                                        role="option"
-                                                    >
-                                                        {day.label}
-                                                    </motion.li>
-                                                ))}
-                                            </motion.ul>
-                                        )}
-                                    </AnimatePresence>
+                                {/* React Select for Day */}
+                                <motion.div className="relative w-48 mb-3 md:mb-0">
+                                    <Select
+                                        options={dayOptions}
+                                        value={newSlot.day}
+                                        onChange={(selectedOption) => setNewSlot({ ...newSlot, day: selectedOption })}
+                                        placeholder="Select Day"
+                                        isClearable={true}
+                                        isSearchable={false}
+                                        // Apply Tailwind classes here
+                                        classNames={{
+                                            control: (state) =>
+                                                `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 !rounded-lg !shadow-none ${state.isFocused ? '!border-blue-600 !ring-0' : ''}`,
+                                            placeholder: () => '!text-gray-500',
+                                            singleValue: () => '!text-gray-900',
+                                            indicatorSeparator: () => '!hidden',
+                                            dropdownIndicator: () => '!text-gray-500',
+                                            menu: () => '!border !border-gray-200 !rounded-lg !shadow-lg !mt-1 !overflow-hidden',
+                                            option: (state) =>
+                                                `!px-4 !py-3 !cursor-pointer ${state.isSelected
+                                                    ? '!bg-blue-600 !text-white'
+                                                    : state.isFocused
+                                                        ? '!bg-blue-100 !text-gray-900'
+                                                        : '!bg-white !text-gray-900'
+                                                }`,
+                                        }}
+                                    />
                                 </motion.div>
 
                                 {/* Add button */}
@@ -552,58 +509,6 @@ const BeTrainer = () => {
                                     ))}
                                 </AnimatePresence>
                             </motion.ul>
-                        </motion.div>
-
-                        {/* Social Links */}
-                        <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Instagram</label>
-                                <motion.input
-                                    type="url"
-                                    value={formData.social.instagram}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            social: { ...prev.social, instagram: e.target.value },
-                                        }))
-                                    }
-                                    placeholder="https://instagram.com/yourprofile"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Twitter</label>
-                                <motion.input
-                                    type="url"
-                                    value={formData.social.twitter}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            social: { ...prev.social, twitter: e.target.value },
-                                        }))
-                                    }
-                                    placeholder="https://twitter.com/yourprofile"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">LinkedIn</label>
-                                <motion.input
-                                    type="url"
-                                    value={formData.social.linkedin}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            social: { ...prev.social, linkedin: e.target.value },
-                                        }))
-                                    }
-                                    placeholder="https://linkedin.com/in/yourprofile"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
-                                />
-                            </div>
                         </motion.div>
 
                         {/* Submit Button */}

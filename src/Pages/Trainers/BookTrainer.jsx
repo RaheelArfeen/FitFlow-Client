@@ -216,7 +216,7 @@ const BookTrainerPage = () => {
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Time:</span>
-                                        <span className="font-medium">{slot.time}</span>
+                                        <span className="font-medium">{slot.timeRange}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Day:</span>

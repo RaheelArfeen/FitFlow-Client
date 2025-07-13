@@ -351,7 +351,7 @@ const TrainerDetail = () => {
                                             <div className="flex flex-wrap gap-4 text-gray-600 text-sm sm:text-base">
                                                 <div className="flex items-center space-x-1">
                                                     <Clock className="h-5 w-5 text-gray-500" />
-                                                    <span>{slot.time}</span>
+                                                    <span>{slot.timeRange}</span>
                                                 </div>
 
                                                 <div className="flex items-center space-x-1">
