@@ -34,7 +34,6 @@ const DashboardOverview = () => {
         queryKey: ['community'],
         queryFn: async () => {
             const res = await axiosSecure.get('/community');
-            console.log(res.data);
             return res.data;
         },
     });
@@ -43,7 +42,7 @@ const DashboardOverview = () => {
     const members = users.filter((u) => u.role === 'member');
     const recentUpdates = [...community]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 4);
+        .slice(0, 3);
 
     // Combine loading and error states from useQuery hooks
     const isLoading = usersLoading || communityLoading;
@@ -87,9 +86,6 @@ const DashboardOverview = () => {
 
     const getCategoryClass = (base, category, shade) => {
         const color = categoryColors[category] || 'gray';
-        if (base === 'border') {
-            return `border-${color}-${shade}`;
-        }
         return `${base}-${color}-${shade}`;
     };
 
@@ -126,13 +122,13 @@ const DashboardOverview = () => {
         visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 100, damping: 10, delay: 0.6 } },
     };
 
-    if (isLoading) { // Use the combined isLoading
+    if (isLoading) {
         return (
             <Loader />
         );
     }
 
-    if (error) { // Handle error gracefully
+    if (error) {
         return (
             <div className="p-8 text-center text-red-500">
                 Error: {error.message || 'An unexpected error occurred.'}
@@ -380,40 +376,42 @@ const DashboardOverview = () => {
                     </div>
                 </motion.div>
 
-                {/* Recent Updates */}
+                {/* Recent Updates - Option 1: Subtle Separators and Elevated Cards */}
                 <motion.div className="bg-white rounded-xl shadow-lg p-6 relative" variants={containerVariants}>
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Updates & News</h2>
                     <div className="space-y-4">
                         {recentUpdates.map(
-                            (item) =>
+                            (item, index) =>
                                 shouldDisplay(item) && (
                                     <motion.div
                                         key={item._id}
-                                        className={`border-l-4 ${getCategoryClass('border', item.category, 500)} pl-4 py-2`}
+                                        className={`relative p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200 ${index < recentUpdates.length - 1 ? 'mb-4 border-b border-gray-100 pb-4' : ''}`}
                                         variants={itemVariants}
-                                        whileHover={{ x: 5 }}
-                                        transition={{ duration: 0.1 }}
+                                        whileHover={{ y: -3, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}
+                                        transition={{ duration: 0.2 }}
                                     >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h3 className="font-semibold text-gray-800">{item.title}</h3>
-                                            <span className="text-xs text-gray-500">
-                                                {formatDistanceToNowStrict(new Date(item.createdAt))} ago
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-gray-600 line-clamp-3">{item.content}</p>
-                                        <div className="mt-2 flex items-center space-x-2">
-                                            <span
-                                                className={`${getCategoryClass('bg', item.category, 100)} ${getCategoryClass('text', item.category, 700)} px-2 py-1 rounded-full text-xs`}
-                                            >
-                                                {item.category}
-                                            </span>
+                                        <div className="pl-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h3 className="font-semibold text-gray-800">{item.title}</h3>
+                                                <span className="text-xs text-gray-500">
+                                                    {formatDistanceToNowStrict(new Date(item.createdAt))} ago
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-600 line-clamp-3">{item.content}</p>
+                                            <div className="mt-2 flex items-center space-x-2">
+                                                <span
+                                                    className={`${getCategoryClass('bg', item.category, 100)} ${getCategoryClass('text', item.category, 700)} px-2 py-1 rounded-full text-xs font-medium`}
+                                                >
+                                                    {item.category}
+                                                </span>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )
                         )}
                     </div>
                 </motion.div>
-            </div >
+            </div>
             {
                 user?.role === 'member' && (
                     <motion.div
