@@ -44,6 +44,7 @@ export const router = createBrowserRouter([
             { index: true, path: '/', Component: Home },
             { path: '/be-trainer', element: <ProtectedRoute><BeTrainer /></ProtectedRoute> },
             { path: '/classes', Component: Classes },
+            { path: '/join-class/:id', Component: Classes },
             { path: '/trainers', Component: Trainers },
             { path: '/trainer/:id', Component: TrainerDetail },
             { path: '/book-trainer/:trainerId/:slotId', element: <ProtectedRoute><BookTrainerPage /></ProtectedRoute> },
