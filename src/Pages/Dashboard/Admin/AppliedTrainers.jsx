@@ -463,54 +463,9 @@ const AppliedTrainers = () => {
                                         <p>
                                             <strong>Available Slots:</strong>{' '}
                                             {selectedTrainer.slots && selectedTrainer.slots.length > 0
-                                                ? selectedTrainer.slots.map(slot => `${slot.day}: ${slot.time}${slot.isBooked ? ' (Booked)' : ''}`).join(', ')
+                                                ? selectedTrainer.slots.map(slot => `${slot.days}: ${slot.slotTime}${slot.isBooked ? ' (Booked)' : ''}`).join(', ')
                                                 : 'None'}
                                         </p>
-
-                                        <div className="pt-2">
-                                            <strong>Social Links:</strong>
-                                            <ul className="list-disc list-inside text-blue-600 text-sm">
-                                                {selectedTrainer.social?.instagram && (
-                                                    <li>
-                                                        <a
-                                                            href={selectedTrainer.social.instagram}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="underline hover:text-blue-800"
-                                                        >
-                                                            Instagram
-                                                        </a>
-                                                    </li>
-                                                )}
-                                                {selectedTrainer.social?.twitter && (
-                                                    <li>
-                                                        <a
-                                                            href={selectedTrainer.social.twitter}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="underline hover:text-blue-800"
-                                                        >
-                                                            Twitter
-                                                        </a>
-                                                    </li>
-                                                )}
-                                                {selectedTrainer.social?.linkedin && (
-                                                    <li>
-                                                        <a
-                                                            href={selectedTrainer.social.linkedin}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="underline hover:text-blue-800"
-                                                        >
-                                                            LinkedIn
-                                                        </a>
-                                                    </li>
-                                                )}
-                                                {!selectedTrainer.social?.instagram &&
-                                                    !selectedTrainer.social?.twitter &&
-                                                    !selectedTrainer.social?.linkedin && <li>None</li>}
-                                            </ul>
-                                        </div>
                                     </div>
 
                                     {selectedTrainer.status === 'rejected' && selectedTrainer.adminFeedback && (

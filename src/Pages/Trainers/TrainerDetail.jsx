@@ -1,18 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router'; 
+import { useParams, Link, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import {
     Star as StarIcon,
     Calendar,
     Award,
-    Instagram,
-    Twitter,
-    Linkedin,
     Clock,
+    Users,
     MapPin,
+    Hourglass,
 } from 'lucide-react';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
-import Loader from '../Loader';
+import Loader from '../../Pages/Loader';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../../Provider/AuthProvider';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +21,7 @@ const TrainerDetail = () => {
     const axiosSecure = useAxiosSecure();
     const { user } = useContext(AuthContext);
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -32,32 +32,45 @@ const TrainerDetail = () => {
 
     // --- TanStack Query for fetching trainer details ---
     const { data: trainer, isLoading, isError, error } = useQuery({
-        queryKey: ['trainerDetails', id], // Unique key for trainer details
+        queryKey: ['trainerDetails', id],
         queryFn: async () => {
             const res = await axiosSecure.get(`/trainers/${id}`);
             return res.data;
         },
-        enabled: !!id, // Only fetch if ID is available
-        staleTime: 1000 * 60, // Data considered fresh for 1 minute
+        enabled: !!id,
+        staleTime: 1000 * 60,
         onError: (err) => {
             console.error('Failed to fetch trainer data:', err);
-            // Swal.fire removed to avoid immediate popups on page load errors
         },
     });
 
     // --- TanStack Query for fetching user's rating for this trainer ---
     const { data: userRatingData, isLoading: isLoadingUserRating } = useQuery({
-        queryKey: ['userRating', id, user?.email], // Key includes trainer ID and user email
+        queryKey: ['userRating', id, user?.email],
         queryFn: async () => {
-            if (!user?.email) return { userRating: 0 }; // If no user, no rating
-            const res = await axiosSecure.get(`/trainers/rating/${id}`);
+            if (!user?.email) return { userRating: 0 };
+            const res = await axiosSecure.get(`/trainers/rating/${id}`, { params: { userEmail: user.email } });
             return res.data;
         },
-        enabled: !!user?.email && !!id, // Only fetch if user email and trainer ID are available
-        staleTime: 0, // Always refetch user rating as it's user-specific and can change
+        enabled: !!user?.email && !!id,
+        staleTime: 0,
     });
 
-    // Extract userRating from userRatingData, default to 0 if not available
+    // --- NEW: TanStack Query for fetching user's bookings ---
+    const { data: userBookings = [], isLoading: isLoadingUserBookings, refetch: refetchUserBookings } = useQuery({
+        queryKey: ['userBookings', user?.email],
+        queryFn: async () => {
+            if (!user?.email) return [];
+            const res = await axiosSecure.get(`/bookings`, {
+                params: { email: user.email }
+            });
+            return res.data.bookings || [];
+        },
+        enabled: !!user?.email,
+        staleTime: 0,
+    });
+
+
     const userRating = userRatingData?.userRating || 0;
 
     // --- TanStack Query for submitting trainer ratings ---
@@ -65,14 +78,13 @@ const TrainerDetail = () => {
         mutationFn: async ({ trainerId, rating }) => {
             const res = await axiosSecure.post(
                 `/trainers/rating/${trainerId}`,
-                { rating }
+                { rating, userEmail: user?.email, userName: user?.displayName, userPhotoURL: user?.photoURL }
             );
             return res.data;
         },
         onSuccess: (data, variables) => {
             if (data?.success) {
                 Swal.fire('Thank you!', 'Your rating has been submitted.', 'success');
-                // Invalidate both trainer details (to update average rating) and user's rating
                 queryClient.invalidateQueries(['trainerDetails', id]);
                 queryClient.invalidateQueries(['userRating', id, user?.email]);
             } else {
@@ -95,7 +107,7 @@ const TrainerDetail = () => {
         rateTrainerMutation.mutate({ trainerId: trainer._id, rating: ratingValue });
     };
 
-    if (isLoading || isLoadingUserRating) {
+    if (isLoading || isLoadingUserRating || isLoadingUserBookings) {
         return (
             <div>
                 <Loader />
@@ -218,7 +230,11 @@ const TrainerDetail = () => {
                             >
                                 <div className="flex items-center space-x-1">
                                     <Calendar className="h-4 w-4" />
-                                    <span>{trainer.experience || 'N/A'}</span>
+                                    <span>{trainer.experience || 'N/A'} Years Exp.</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                    <Clock className="h-4 w-4" />
+                                    <span>Age: {trainer.age || 'N/A'}</span>
                                 </div>
                                 <div className="flex items-center space-x-1">
                                     <Award className="h-4 w-4" />
@@ -269,52 +285,56 @@ const TrainerDetail = () => {
                                 </motion.div>
                             )}
 
-                            <motion.div variants={itemVariants}>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Connect</h3>
-                                <div className="flex space-x-4">
-                                    {trainer.social?.instagram ? (
-                                        <motion.a
-                                            href={`https://instagram.com/${trainer.social.instagram.replace('@', '')}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            whileHover={{ y: -3 }}
-                                            whileTap={{ y: 0 }}
-                                        >
-                                            <Instagram className="h-6 w-6 text-gray-400 hover:text-pink-500 transition-colors duration-200" />
-                                        </motion.a>
-                                    ) : (
-                                        <Instagram className="h-6 w-6 text-gray-300" />
-                                    )}
+                            {/* Client Reviews Section */}
+                            {trainer.ratings && trainer.ratings.length > 0 && (
+                                <motion.div variants={itemVariants}>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Client Reviews</h3>
+                                    <div className="space-y-4">
+                                        {trainer.ratings.map((review, index) => {
+                                            const validPhoto = review.photoURL && review.photoURL.startsWith('https');
+                                            const fallbackLetter = review.name?.charAt(0).toUpperCase() || '?';
 
-                                    {trainer.social?.twitter ? (
-                                        <motion.a
-                                            href={`https://twitter.com/${trainer.social.twitter.replace('@', '')}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            whileHover={{ y: -3 }}
-                                            whileTap={{ y: 0 }}
-                                        >
-                                            <Twitter className="h-6 w-6 text-gray-400 hover:text-blue-400 transition-colors duration-200" />
-                                        </motion.a>
-                                    ) : (
-                                        <Twitter className="h-6 w-6 text-gray-300" />
-                                    )}
-
-                                    {trainer.social?.linkedin ? (
-                                        <motion.a
-                                            href={`https://linkedin.com/in/${trainer.social.linkedin}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            whileHover={{ y: -3 }}
-                                            whileTap={{ y: 0 }}
-                                        >
-                                            <Linkedin className="h-6 w-6 text-gray-400 hover:text-blue-600 transition-colors duration-200" />
-                                        </motion.a>
-                                    ) : (
-                                        <Linkedin className="h-6 w-6 text-gray-300" />
-                                    )}
-                                </div>
-                            </motion.div>
+                                            return (
+                                                <motion.div
+                                                    key={index}
+                                                    className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg shadow-sm"
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                >
+                                                    {validPhoto ? (
+                                                        <img
+                                                            src={review.photoURL}
+                                                            alt={review.name}
+                                                            className="w-10 h-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg transform hover:scale-105 transition-transform duration-200 ease-in-out">
+                                                            {fallbackLetter}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1">
+                                                        <div>
+                                                            <p className="font-semibold text-gray-800">{review.name}</p>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1 text-yellow-500 mb-1">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <StarIcon
+                                                                    key={star}
+                                                                    className={`h-4 w-4 ${star <= review.rating ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-xs text-gray-500">
+                                                            Rated on: {new Date(review.date).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
                     </motion.div>
 
@@ -331,91 +351,103 @@ const TrainerDetail = () => {
 
                         <motion.div className="space-y-4" variants={containerVariants}>
                             {trainer.slots && trainer.slots.length > 0 ? (
-                                trainer.slots.map((slot, index) => (
-                                    <motion.div
-                                        key={index}
-                                        className={`border rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between transition-colors duration-200 ${slot.isBooked || isTrainerSelf
-                                            ? 'bg-gray-50 border-gray-200'
-                                            : 'bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer'
-                                            }`}
-                                        initial={{ x: -100, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        whileHover={{ scale: isTrainerSelf ? 1 : 1.02 }}
-                                    >
-                                        <div className="flex flex-col flex-1">
-                                            <h3 className="font-semibold text-gray-800 text-lg sm:text-xl mb-2 sm:mb-0">
-                                                {slot.name}
-                                            </h3>
+                                trainer.slots.map((slot, index) => {
+                                    const isAlreadyBookedByUser = userBookings.some(
+                                        (booking) => booking.trainerId === trainer._id && booking.slotId === slot.id
+                                    );
+                                    const isSlotFull = slot.bookingCount >= slot.maxParticipants;
 
-                                            <div className="flex flex-wrap gap-4 text-gray-600 text-sm sm:text-base">
-                                                <div className="flex items-center space-x-1">
-                                                    <Clock className="h-5 w-5 text-gray-500" />
-                                                    <span>{slot.timeRange}</span>
+                                    const isDisabled = isTrainerSelf || isAlreadyBookedByUser || isSlotFull;
+
+                                    return (
+                                        // You might need to import the Hourglass icon or a similar one
+                                        // import { Hourglass } from 'lucide-react'; // Example import
+
+                                        <motion.div
+                                            key={index}
+                                            className={`border rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between transition-colors duration-200 ${isDisabled
+                                                ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
+                                                : 'bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer'
+                                                }`}
+                                            initial={{ x: -100, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            whileHover={{ scale: isDisabled ? 1 : 1.02 }}
+                                        >
+                                            <div className="flex flex-col flex-1">
+                                                <h3 className="font-semibold text-gray-800 text-lg sm:text-xl mb-2 sm:mb-0">
+                                                    {slot.slotName}
+                                                </h3>
+
+                                                {/* Details Row 1: Time, Duration, and Day */}
+                                                <div className="flex flex-wrap gap-4 text-gray-600 text-sm sm:text-base">
+                                                    <div className="flex items-center space-x-1">
+                                                        <Clock className="h-5 w-5 text-gray-500" />
+                                                        <span>{slot.slotTime}</span>
+                                                    </div>
+
+                                                    {slot.duration && (
+                                                        <div className="flex items-center space-x-1">
+                                                            <Hourglass className="h-5 w-5 text-gray-500" />
+                                                            <span>{slot.duration}</span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex items-center space-x-1">
+                                                        <MapPin className="h-5 w-5 text-gray-500" />
+                                                        <span>{slot.days}</span>
+                                                    </div>
                                                 </div>
 
-                                                <div className="flex items-center space-x-1">
-                                                    <MapPin className="h-5 w-5 text-gray-500" />
-                                                    <span>{slot.day}</span>
-                                                </div>
+                                                {/* Details Row 2: Participants - only if it's a group slot */}
+                                                {slot.maxParticipants > 1 && (
+                                                    <div className="flex items-center space-x-1 text-gray-600 text-sm sm:text-base mt-2">
+                                                        <Users className="h-5 w-5 text-gray-500" />
+                                                        <span>{slot.bookingCount || 0}/{slot.maxParticipants} Participants</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
 
-                                        <div className="mt-4 sm:mt-0">
-                                            {isTrainerSelf ? (
-                                                <span className="bg-purple-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
-                                                    Your Slot
-                                                </span>
-                                            ) : slot.isBooked ? (
-                                                <span className="bg-gray-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
-                                                    Booked
-                                                </span>
-                                            ) : (
-                                                <Link
-                                                    to={`/book-trainer/${trainer._id}/${slot.id}`}
-                                                    className="inline-block bg-blue-700 hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 text-white px-5 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-200 min-w-[96px] text-center"
-                                                    tabIndex={0}
-                                                    aria-label={`Book slot ${slot.name} at ${slot.time} on ${slot.day}`}
-                                                >
-                                                    Book Now
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))
+                                            <div className="mt-4 sm:mt-0">
+                                                {isTrainerSelf ? (
+                                                    <span className="bg-purple-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
+                                                        Your Slot
+                                                    </span>
+                                                ) : isAlreadyBookedByUser ? (
+                                                    <span className="bg-yellow-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
+                                                        Booked by You
+                                                    </span>
+                                                ) : isSlotFull ? (
+                                                    <span className="bg-red-500 text-white px-5 py-2 rounded-lg text-sm sm:text-base select-none inline-block text-center min-w-[96px]">
+                                                        Full
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        to={`/book-trainer/${trainer._id}/${slot.id}`}
+                                                        className="inline-block bg-blue-700 hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 text-white px-5 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-200 min-w-[96px] text-center"
+                                                        onClick={(e) => {
+                                                            if (!user) {
+                                                                e.preventDefault();
+                                                                Swal.fire("Login Required", "Please log in to book a slot.", "warning");
+                                                                navigate('/login');
+                                                            }
+                                                        }}
+                                                    >
+                                                        Book Now
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })
                             ) : (
-                                <p className="text-center text-sm text-gray-400 italic">No slots available</p>
+                                <motion.p variants={itemVariants} className="text-center text-gray-600 text-lg py-8">
+                                    No slots available at the moment.
+                                </motion.p>
                             )}
                         </motion.div>
                     </motion.section>
                 </div>
-
-                {/* Only show "Become a Trainer" section if user is a member and not the current trainer or admin */}
-                {user?.role !== 'trainer' && user?.role !== 'admin' && (
-                    <motion.div
-                        className="mt-12 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center"
-                        initial={{ y: 50, opacity: 0 }}
-                        whileInView={{ y: 0, opacity: 1 }} // Use whileInView for scroll-triggered animation
-                        transition={{ duration: 0.5 }}
-                        viewport={{ once: true }} // Only animate once when it enters viewport
-                    >
-                        <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
-                        <p className="text-xl mb-6 text-blue-100">
-                            Join our team of expert trainers and help others achieve their fitness goals.
-                        </p>
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <Link
-                                to="/be-trainer"
-                                className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
-                            >
-                                Become a Trainer
-                            </Link>
-                        </motion.div>
-                    </motion.div>
-                )}
             </div>
         </motion.div>
     );

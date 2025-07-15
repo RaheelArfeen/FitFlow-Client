@@ -1,11 +1,11 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import Loader from './Loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAxiosSecure from '../Provider/UseAxiosSecure';
 import { AuthContext } from '../Provider/AuthProvider';
-import Select from 'react-select'; // Import React Select
+import Select from 'react-select';
 
 const containerVariants = {
     hidden: {},
@@ -40,20 +40,19 @@ const BeTrainer = () => {
     ];
 
     const specializationOptions = [
-        'Yoga & Mindfulness',
-        'Pilates',
-        'HIIT',
-        'Strength Training',
-        'Cardio',
-        'Boxing',
-        'Dance Fitness',
-        'Crossfit',
-        'Meditation',
-        'Nutrition Coaching',
+        { value: 'Yoga & Mindfulness', label: 'Yoga & Mindfulness' },
+        { value: 'Pilates', label: 'Pilates' },
+        { value: 'HIIT', label: 'HIIT' },
+        { value: 'Strength Training', label: 'Strength Training' },
+        { value: 'Cardio', label: 'Cardio' },
+        { value: 'Boxing', label: 'Boxing' },
+        { value: 'Dance Fitness', label: 'Dance Fitness' },
+        { value: 'Crossfit', label: 'Crossfit' },
+        { value: 'Meditation', label: 'Meditation' },
+        { value: 'Nutrition Coaching', label: 'Nutrition Coaching' },
     ];
 
-    // Options for React Select - value and label are required
-    const dayOptions = [
+    const availableDayOptions = [
         { value: 'Sunday', label: 'Sunday' },
         { value: 'Monday', label: 'Monday' },
         { value: 'Tuesday', label: 'Tuesday' },
@@ -63,32 +62,32 @@ const BeTrainer = () => {
         { value: 'Saturday', label: 'Saturday' },
     ];
 
+    const slotDayOptions = availableDayOptions;
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        specialization: '',
+        specialization: [],
         experience: '',
         image: '',
         age: '',
-        sessions: 0,
+        sessions: '',
         certifications: [],
         bio: '',
         slots: [],
     });
 
-    // newSlot state now holds the selected day object from react-select
-    const [newSlot, setNewSlot] = useState({ id: '', name: '', timeRange: '', day: null }); // day is now an object { value, label }
+    const [newSlot, setNewSlot] = useState({
+        id: '',
+        slotName: '',
+        slotTime: '',
+        duration: '',
+        selectedDays: [],
+        maxParticipants: 1,
+        description: ''
+    });
 
-    const specRef = useRef(null);
-    const [isSpecOpen, setIsSpecOpen] = useState(false);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            window.scrollTo(0, 0);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, []);
-
+    // ✅ Set name & email from user
     useEffect(() => {
         if (user) {
             setFormData((prev) => ({
@@ -100,24 +99,47 @@ const BeTrainer = () => {
     }, [user]);
 
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (specRef.current && !specRef.current.contains(event.target)) setIsSpecOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        const timer = setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 300);
+        return () => clearTimeout(timer);
     }, []);
 
     const addSlot = () => {
-        // Check if day is selected (it will be an object if selected)
-        if (!newSlot.name.trim() || !newSlot.timeRange.trim() || !newSlot.day) {
-            toast.error('Please fill in all slot details (Name, Time Range, Day).');
+        if (
+            !newSlot.slotName.trim() ||
+            !newSlot.slotTime.trim() ||
+            !newSlot.duration.trim() ||
+            newSlot.selectedDays.length === 0 ||
+            newSlot.maxParticipants < 1
+        ) {
+            toast.error('Please fill in all required fields for the new slot (Name, Time, Duration, Days, Participants).');
             return;
         }
+
         const id = Date.now().toString();
-        // Store only the value of the day (e.g., 'Monday')
-        const slotToAdd = { ...newSlot, id, day: newSlot.day.value, isBooked: false };
+        const slotToAdd = {
+            id,
+            slotName: newSlot.slotName,
+            slotTime: newSlot.slotTime,
+            duration: newSlot.duration,
+            days: newSlot.selectedDays.map(day => day.value),
+            maxParticipants: newSlot.maxParticipants,
+            description: newSlot.description.trim(),
+            bookingCount: 0,
+            bookedMembers: [],
+        };
+
         setFormData((prev) => ({ ...prev, slots: [...prev.slots, slotToAdd] }));
-        setNewSlot({ id: '', name: '', timeRange: '', day: null }); // Reset day to null
+        setNewSlot({
+            id: '',
+            slotName: '',
+            slotTime: '',
+            duration: '',
+            selectedDays: [],
+            maxParticipants: 1,
+            description: ''
+        });
     };
 
     const removeSlot = (idToRemove) => {
@@ -138,16 +160,17 @@ const BeTrainer = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (
             !formData.name.trim() ||
             !formData.email.trim() ||
-            !formData.specialization.trim() ||
+            formData.specialization.length === 0 ||
             !formData.experience.trim() ||
             !formData.age ||
             !formData.bio.trim() ||
-            formData.slots.length === 0 // Ensure at least one slot is added
+            formData.slots.length === 0
         ) {
-            toast.error('Please fill in all required fields and add at least one available slot.');
+            toast.error('Please fill in all required fields, including your general availability and at least one specific training slot.');
             return;
         }
         if (parseInt(formData.age) < 18) {
@@ -155,25 +178,38 @@ const BeTrainer = () => {
             return;
         }
 
+        const selectedSpecializationValues = formData.specialization.map(spec => spec.value);
+        let formattedSpecialization;
+
+        if (selectedSpecializationValues.length === 1) {
+            formattedSpecialization = selectedSpecializationValues[0];
+        } else if (selectedSpecializationValues.length === 2) {
+            formattedSpecialization = selectedSpecializationValues.join(' & ');
+        } else if (selectedSpecializationValues.length >= 3) {
+            const lastSpecialization = selectedSpecializationValues.pop();
+            formattedSpecialization = selectedSpecializationValues.join(', ') + ' & ' + lastSpecialization;
+        } else {
+            formattedSpecialization = '';
+        }
+
         const payload = {
-            email: formData.email,
+            email: user?.email,
             name: formData.name,
             age: formData.age,
             experience: formData.experience,
-            photoURL: formData.image,
-            specialization: formData.specialization,
+            photoURL: formData.image || user?.photoURL || '',
+            specialization: formattedSpecialization,
             description: formData.bio,
             certifications: formData.certifications || [],
-            sessions: formData.sessions || 0,
+            sessions: formData.sessions,
             slots: formData.slots || [],
         };
 
         try {
-            // Directly submit to the /trainers endpoint
             const res = await axiosSecure.post('/trainers', payload);
             if (res.data?.insertedId || res.data?.acknowledged) {
                 toast.success('Trainer application submitted! It is under review.');
-                navigate('/trainers'); // Navigate to trainers page (where pending trainers will be listed)
+                navigate('/');
             } else {
                 toast.error('Failed to submit trainer application.');
             }
@@ -245,7 +281,7 @@ const BeTrainer = () => {
                                         setFormData({ ...formData, age: Number(e.target.value) })
                                     }
                                     placeholder="Your Age"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield]"
                                     required
                                     min={18}
                                     whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
@@ -261,69 +297,45 @@ const BeTrainer = () => {
                                         setFormData({ ...formData, sessions: Number(e.target.value) })
                                     }
                                     placeholder="e.g., 10"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield]"
+                                    required
                                     min={0}
                                     whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
                                 />
                             </motion.div>
 
-                            {/* Specialization dropdown */}
-                            <motion.div ref={specRef} variants={childVariants} className="relative">
-                                <label className="block text-sm font-medium mb-2">Specialization</label>
-                                <motion.button
-                                    type="button"
-                                    onClick={() => setIsSpecOpen((open) => !open)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white flex justify-between items-center"
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    aria-haspopup="listbox"
-                                    aria-expanded={isSpecOpen}
-                                >
-                                    {formData.specialization || 'Select Specialization'}
-                                    <svg
-                                        className={`w-5 h-5 ml-2 transition-transform ${isSpecOpen ? 'rotate-180' : ''
-                                            }`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
-                                </motion.button>
-                                <AnimatePresence>
-                                    {isSpecOpen && (
-                                        <motion.ul
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md text-base border border-gray-200 overflow-auto focus:outline-none scrollbarHidden"
-                                            role="listbox"
-                                        >
-                                            {specializationOptions.map((spec) => (
-                                                <motion.li
-                                                    key={spec}
-                                                    onClick={() => {
-                                                        setFormData((prev) => ({ ...prev, specialization: spec }));
-                                                        setIsSpecOpen(false);
-                                                    }}
-                                                    className={`cursor-pointer select-none relative py-2 px-3  ${formData.specialization === spec
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'text-gray-900'
-                                                        }`}
-                                                    whileHover={{ backgroundColor: '#bfdbfe', scale: 1.02 }}
-                                                    role="option"
-                                                >
-                                                    {spec}
-                                                </motion.li>
-                                            ))}
-                                        </motion.ul>
-                                    )}
-                                </AnimatePresence>
+                            {/* React Select for Specialization (Multi-select) */}
+                            <motion.div variants={childVariants}>
+                                <label className="block text-sm font-medium mb-2">Specializations</label>
+                                <Select
+                                    options={specializationOptions}
+                                    value={formData.specialization}
+                                    onChange={(selectedOptions) =>
+                                        setFormData({ ...formData, specialization: selectedOptions || [] })
+                                    }
+                                    placeholder="Select Specializations"
+                                    isMulti
+                                    isClearable={true}
+                                    isSearchable={true}
+                                    classNames={{
+                                        control: (state) =>
+                                            `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 !rounded-lg !shadow-none ${state.isFocused ? '!border-blue-600 !ring-0' : ''}`,
+                                        placeholder: () => '!text-gray-500',
+                                        multiValue: () => '!bg-blue-100 !rounded-md',
+                                        multiValueLabel: () => '!text-blue-800 !py-1 !px-2',
+                                        multiValueRemove: () => '!text-blue-500 hover:!bg-blue-200 !rounded-r-md',
+                                        indicatorSeparator: () => '!hidden',
+                                        dropdownIndicator: () => '!text-gray-500',
+                                        menu: () => '!border !border-gray-200 !rounded-lg !shadow-lg !mt-1 !overflow-hidden',
+                                        option: (state) =>
+                                            `!px-4 !py-3 !cursor-pointer ${state.isSelected
+                                                ? '!bg-blue-600 !text-white'
+                                                : state.isFocused
+                                                    ? '!bg-blue-100 !text-gray-900'
+                                                    : '!bg-white !text-gray-900'
+                                            }`,
+                                    }}
+                                />
                             </motion.div>
 
                             <motion.div variants={childVariants}>
@@ -415,43 +427,84 @@ const BeTrainer = () => {
                             </motion.div>
                         </motion.div>
 
-                        <motion.div variants={fadeSlideUp}>
-                            <p className="font-semibold mb-2 text-lg">Add Available Slots</p>
-                            <div className="flex flex-col md:flex-row md:gap-4 items-center flex-wrap">
-                                {/* Slot name */}
-                                <motion.input
-                                    type="text"
-                                    placeholder="Slot Name (e.g. Morning Yoga)"
-                                    value={newSlot.name}
-                                    onChange={(e) => setNewSlot({ ...newSlot, name: e.target.value })}
-                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg mb-3 md:mb-0"
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
-                                />
+                        {/* --- Add New Specific Slot Section --- */}
+                        <motion.div variants={fadeSlideUp} className="p-6 bg-blue-50 rounded-lg border border-blue-200">
+                            <h2 className="text-2xl font-semibold text-blue-800 mb-4">Add Specific Training Slots</h2>
+                            <p className="text-base text-gray-600 mb-4">Define individual session times and details.</p>
 
-                                <motion.input
-                                    type="text"
-                                    placeholder="Time Range (e.g. 9:00 AM - 12:00 PM)"
-                                    value={newSlot.timeRange}
-                                    onChange={(e) => setNewSlot({ ...newSlot, timeRange: e.target.value })}
-                                    className="px-4 py-3 border border-gray-300 rounded-lg mb-3 md:mb-0"
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
-                                />
+                            <div className="grid gap-4 items-center">
+                                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                    {/* Slot Name */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Slot Name</label>
+                                        <motion.input
+                                            type="text"
+                                            placeholder="Ex: Morning Yoga"
+                                            value={newSlot.slotName}
+                                            onChange={(e) => setNewSlot({ ...newSlot, slotName: e.target.value })}
+                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                        />
+                                    </div>
 
-                                {/* React Select for Day */}
-                                <motion.div className="relative w-48 mb-3 md:mb-0">
+                                    {/* Slot Time (Specific Time) */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Slot Time</label>
+                                        <motion.input
+                                            type="text"
+                                            placeholder="Ex: 9:00 AM - 10:00 AM"
+                                            value={newSlot.slotTime}
+                                            onChange={(e) => setNewSlot({ ...newSlot, slotTime: e.target.value })}
+                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                        />
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Duration</label>
+                                        <motion.input
+                                            type="text"
+                                            placeholder="Ex: 1 hour, 45 minutes"
+                                            value={newSlot.duration}
+                                            onChange={(e) => setNewSlot({ ...newSlot, duration: e.target.value })}
+                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                        />
+                                    </div>
+
+
+                                    {/* Max Participants */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Max Participants</label>
+                                        <motion.input
+                                            type="number"
+                                            placeholder="Ex: 10"
+                                            value={newSlot.maxParticipants}
+                                            onChange={(e) => setNewSlot({ ...newSlot, maxParticipants: Math.max(1, Number(e.target.value)) })}
+                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield]"
+                                            min={1}
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                        />
+                                    </div>
+                                </div>
+                                {/* Select Days for this Slot */}
+                                <div>
+                                    <label className="block w-full text-sm font-medium mb-1">Days for this Slot</label>
                                     <Select
-                                        options={dayOptions}
-                                        value={newSlot.day}
-                                        onChange={(selectedOption) => setNewSlot({ ...newSlot, day: selectedOption })}
-                                        placeholder="Select Day"
-                                        isClearable={true}
-                                        isSearchable={false}
-                                        // Apply Tailwind classes here
+                                        options={slotDayOptions}
+                                        value={newSlot.selectedDays}
+                                        onChange={(selectedOptions) => setNewSlot({ ...newSlot, selectedDays: selectedOptions || [] })}
+                                        placeholder="Select Day(s)"
+                                        isMulti
+                                        isClearable
                                         classNames={{
                                             control: (state) =>
                                                 `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 !rounded-lg !shadow-none ${state.isFocused ? '!border-blue-600 !ring-0' : ''}`,
                                             placeholder: () => '!text-gray-500',
-                                            singleValue: () => '!text-gray-900',
+                                            multiValue: () => '!bg-blue-100 !rounded-md',
+                                            multiValueLabel: () => '!text-blue-800 !py-1 !px-2',
+                                            multiValueRemove: () => '!text-blue-500 hover:!bg-blue-200 !rounded-r-md',
                                             indicatorSeparator: () => '!hidden',
                                             dropdownIndicator: () => '!text-gray-500',
                                             menu: () => '!border !border-gray-200 !rounded-lg !shadow-lg !mt-1 !overflow-hidden',
@@ -464,44 +517,57 @@ const BeTrainer = () => {
                                                 }`,
                                         }}
                                     />
-                                </motion.div>
-
-                                {/* Add button */}
-                                <motion.button
-                                    type="button"
-                                    onClick={addSlot}
-                                    className="mt-3 md:mt-0 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    Add Slot
-                                </motion.button>
+                                </div>
                             </div>
 
-                            {/* Display list */}
-                            <motion.ul className="mt-4 space-y-2">
+                            {/* Slot Description (New Field) */}
+                            <motion.div className="mt-4"> {/* Use mt-4 for spacing */}
+                                <label className="block text-sm font-medium mb-1">Slot Description (Optional)</label>
+                                <motion.textarea
+                                    value={newSlot.description}
+                                    onChange={(e) => setNewSlot({ ...newSlot, description: e.target.value })}
+                                    rows={6}
+                                    className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
+                                    placeholder="Provide details about this specific slot, e.g., 'Focuses on core strength and flexibility.'"
+                                    whileFocus={{ scale: 1.01, borderColor: '#2563EB' }}
+                                />
+                            </motion.div>
+
+                            <motion.button
+                                type="button"
+                                onClick={addSlot}
+                                className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Add Slot
+                            </motion.button>
+
+                            <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">Added Slots</h3>
+                            <motion.ul className="space-y-2">
                                 <AnimatePresence>
-                                    {formData.slots.map(({ id, name, timeRange, day }) => (
+                                    {formData.slots.map((slot) => (
                                         <motion.li
-                                            key={id}
+                                            key={slot.id}
                                             initial={{ opacity: 0, x: 50 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, x: -50 }}
                                             layout
-                                            className="flex justify-between items-center bg-gray-100 rounded-lg px-4 py-2"
+                                            className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-100 rounded-lg px-4 py-3 shadow-sm border border-gray-200"
                                         >
                                             <div>
-                                                <p className="font-semibold text-gray-800">{name}</p>
+                                                <p className="font-semibold text-gray-800">{slot.slotName}</p>
                                                 <p className="text-sm text-gray-600">
-                                                    {day} | {timeRange}
+                                                    {slot.days?.join(', ')} | {slot.slotTime} ({slot.duration}) | Max: {slot.maxParticipants}
                                                 </p>
+                                                {slot.description && <p className="text-xs text-gray-500 mt-1">Description: {slot.description}</p>}
                                             </div>
                                             <motion.button
-                                                onClick={() => removeSlot(id)}
-                                                className="text-red-600 hover:text-red-800 font-bold"
+                                                onClick={() => removeSlot(slot.id)}
+                                                className="mt-2 sm:mt-0 text-red-600 hover:text-red-800 font-bold text-lg"
                                                 whileHover={{ scale: 1.2 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                aria-label={`Remove slot ${name}`}
+                                                aria-label={`Remove slot ${slot.slotName}`}
                                             >
                                                 &times;
                                             </motion.button>
@@ -510,6 +576,7 @@ const BeTrainer = () => {
                                 </AnimatePresence>
                             </motion.ul>
                         </motion.div>
+                        {/* --- End Add New Specific Slot Section --- */}
 
                         {/* Submit Button */}
                         <motion.div variants={childVariants} className="text-center mt-8">

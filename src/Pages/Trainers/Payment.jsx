@@ -138,11 +138,17 @@ const PaymentForm = () => {
                 email: user?.email,
                 trainerId,
                 slotId,
-                slotName: slot?.name || "",
+                slotName: slot?.slotName || "",
+                slotDay: slot?.days || "",
+                slotDuration: slot?.duration || "",
+                slotTime: slot?.slotTime || "",
                 packageId,
+                packageName: selectedPackage?.name || "",
+                packagePrice: selectedPackage?.price || 0,
+                sessionType: selectedPackage?.name?.toLowerCase().includes("personal") ? "personal" : "group",
                 price: selectedPackage.price,
                 transactionId: paymentIntent.id,
-                paymentStatus: "paid",
+                paymentStatus: "Completed",
                 createdAt: new Date().toISOString(),
             };
 
@@ -230,9 +236,10 @@ const PaymentForm = () => {
                         <h2 className="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
                         <div className="space-y-2 mb-4">
                             <div className="flex justify-between"><span>Trainer:</span><span>{trainer.name}</span></div>
-                            <div className="flex justify-between"><span>Slot:</span><span>{slot.name}</span></div>
-                            <div className="flex justify-between"><span>Time:</span><span>{slot.timeRange}</span></div>
-                            <div className="flex justify-between"><span>Day:</span><span>{slot.day}</span></div>
+                            <div className="flex justify-between"><span>Slot:</span><span>{slot.slotName}</span></div>
+                            <div className="flex justify-between"><span>Time:</span><span>{slot.slotTime}</span></div>
+                            <div className="flex justify-between"><span>Duration:</span><span>{slot.duration}</span></div>
+                            <div className="flex justify-between"><span>Day:</span><span>{slot.days}</span></div>
                             <div className="flex justify-between"><span>Package:</span><span>{selectedPackage.name}</span></div>
                         </div>
                         <div className="flex justify-between text-lg font-semibold border-t pt-4">
@@ -254,10 +261,10 @@ const PaymentForm = () => {
     );
 };
 
-const PaymentPage = () => (
+const Payment = () => (
     <Elements stripe={stripePromise}>
         <PaymentForm />
     </Elements>
 );
 
-export default PaymentPage;
+export default Payment;

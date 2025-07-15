@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
-import { Users, Clock, Star, Search, Filter, Grid, List, Award, TrendingUp, ChevronLeft, ChevronRight, AlertCircle, ChevronDown } from 'lucide-react';
+import { Users, Clock, Search, Filter, Grid, List, Award, TrendingUp, ChevronLeft, ChevronRight, AlertCircle, ChevronDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import useAxiosSecure from '../Provider/UseAxiosSecure';
+import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { motion, AnimatePresence } from 'framer-motion';
-import Loader from '../Pages/Loader'
+import Loader from '../Loader';
 
 const Classes = () => {
     const axiosSecure = useAxiosSecure();
@@ -73,7 +73,7 @@ const Classes = () => {
                                     <motion.button
                                         key={option.value}
                                         onClick={() => handleSelect(option.value)}
-                                        className={`block w-full text-left px-4 py-2 text-sm ${option.value === value ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                                        className={`block w-full text-left px-4 py-2 text-sm ${option.value === value ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}
                                         role="menuitem"
                                         variants={itemVariants}
                                         whileHover="hover"
@@ -89,7 +89,6 @@ const Classes = () => {
             </div>
         );
     };
-    // --- End Custom Dropdown Component ---
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -101,7 +100,7 @@ const Classes = () => {
 
     const categories = [
         { id: 'HIIT', name: 'HIIT' },
-        { id: 'YogaMindfulness', name: 'Yoga & Mindfulness' },
+        { id: 'Yoga', name: 'Yoga & Mindfulness' },
         { id: 'Strength', name: 'Strength Training' },
         { id: 'Cardio', name: 'Cardio' },
         { id: 'Pilates', name: 'Pilates' },
@@ -118,18 +117,22 @@ const Classes = () => {
         queryKey: ['classes'],
         queryFn: async () => {
             const res = await axiosSecure.get('/classes');
-            return res.data;
+            return res.data.map(cls => ({ ...cls, _id: cls._id || cls.id }));
         },
         enabled: !!axiosSecure,
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
     });
 
     const { data: allTrainers = [], isLoading: trainersLoading, isError: trainersError } = useQuery({
         queryKey: ['trainers'],
         queryFn: async () => {
             const res = await axiosSecure.get('/trainers');
-            return res.data;
+            return res.data.map(trainer => ({ ...trainer, _id: trainer._id || trainer.id }));
         },
         enabled: !!axiosSecure,
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
     });
 
     const filteredAndSortedClasses = useMemo(() => {
@@ -139,6 +142,7 @@ const Classes = () => {
             tempClasses = tempClasses.filter(classItem => {
                 const categoryName = categories.find(cat => cat.id === classItem.category)?.name || classItem.category;
                 return classItem.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    classItem.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     categoryName.toLowerCase().includes(searchTerm.toLowerCase());
             });
         }
@@ -155,8 +159,6 @@ const Classes = () => {
             switch (sortBy) {
                 case 'popular':
                     return b.bookings - a.bookings;
-                case 'rating':
-                    return b.rating - a.rating;
                 case 'newest':
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 case 'name':
@@ -174,16 +176,23 @@ const Classes = () => {
     const currentClasses = filteredAndSortedClasses.slice(indexOfFirstClass, indexOfLastClass);
     const totalPages = Math.ceil(filteredAndSortedClasses.length / classesPerPage);
 
-    const getTrainersByClass = useCallback((classTrainersNames) => {
-        return allTrainers
-            .filter(trainer => classTrainersNames.includes(trainer.name))
-            .map(trainer => ({
-                id: trainer._id,
-                name: trainer.name,
-                image: trainer.photoURL,
-            }))
-            .slice(0, 5);
+    const getTrainersForClass = useCallback((classItemTrainers) => {
+        if (!classItemTrainers || !Array.isArray(classItemTrainers)) return [];
+
+        const assignedTrainersDetails = classItemTrainers.map(assignedTrainer => {
+            const fullTrainer = allTrainers.find(
+                t => t._id === assignedTrainer.id || t.id === assignedTrainer.id
+            );
+            return fullTrainer ? {
+                id: fullTrainer._id,
+                name: fullTrainer.name,
+                image: fullTrainer.photoURL,
+            } : null;
+        }).filter(Boolean);
+
+        return assignedTrainersDetails.slice(0, 5);
     }, [allTrainers]);
+
 
     useEffect(() => {
         setCurrentPage(1);
@@ -191,13 +200,12 @@ const Classes = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [currentPage, searchTerm, selectedCategory, selectedDifficulty, sortBy]);
+    }, [currentPage]);
 
 
     const isLoading = classesLoading || trainersLoading;
     const isError = classesError || trainersError;
 
-    // --- Framer Motion Variants ---
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut", staggerChildren: 0.1 } }
@@ -231,8 +239,8 @@ const Classes = () => {
     const viewModeButtonVariants = {
         active: { backgroundColor: '#1d4ed8', color: '#ffffff', scale: 1 },
         inactive: { backgroundColor: '#ffffff', color: '#4b5563', scale: 1 },
-        hover: { scale: 1.05, backgroundColor: '#f3f4f6' },
-        tap: { scale: 0.95 }
+        hover: { scale: 1.05 },
+        tap: { scale: 0.95 },
     };
 
     const badgeVariants = {
@@ -279,34 +287,44 @@ const Classes = () => {
         disabled: { backgroundColor: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed', scale: 1, transition: { duration: 0.1 } }
     };
 
-    const pageNumberItemVariants = {
-        hidden: { opacity: 0, y: 10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-        exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: "easeIn" } }
-    };
-
     const getVisiblePageNumbers = useCallback(() => {
         const delta = 2;
         const range = [];
-        const left = currentPage - delta;
-        const right = currentPage + delta;
+        const left = Math.max(1, currentPage - delta);
+        const right = Math.min(totalPages, currentPage + delta);
 
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= left && i <= right)) {
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
                 range.push(i);
             }
+        } else {
+            range.push(1);
+
+            if (left > 2) {
+                range.push('...');
+            }
+
+            for (let i = left; i <= right; i++) {
+                if (i !== 1 && i !== totalPages) {
+                    range.push(i);
+                }
+            }
+
+            if (right < totalPages - 1) {
+                range.push('...');
+            }
+
+            if (totalPages > 1) {
+                range.push(totalPages);
+            }
         }
 
-        const visiblePages = [];
-        let lastPage = 0;
-        for (let i = 0; i < range.length; i++) {
-            if (range[i] - lastPage > 1) {
-                visiblePages.push('...');
-            }
-            visiblePages.push(range[i]);
-            lastPage = range[i];
-        }
-        return visiblePages;
+        return [...new Set(range)].sort((a, b) => {
+            if (a === '...') return -1;
+            if (b === '...') return 1;
+            return a - b;
+        });
+
     }, [currentPage, totalPages]);
 
 
@@ -349,8 +367,8 @@ const Classes = () => {
 
                     <motion.div variants={controlsContainerVariants} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                         <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
-                            <div className="text-2xl font-bold text-blue-700">{classesData.length}</div>
-                            <div className="text-sm text-gray-600">Total Classes</div>
+                            <div className="text-2xl font-bold text-blue-700">{filteredAndSortedClasses.length}</div>
+                            <div className="text-sm text-gray-600">Active Classes</div>
                         </motion.div>
                         <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-green-700">{categories.length}</div>
@@ -360,18 +378,23 @@ const Classes = () => {
                             <div className="text-2xl font-bold text-orange-700">{classesData.reduce((sum, c) => sum + c.bookings, 0)}</div>
                             <div className="text-sm text-gray-600">Total Bookings</div>
                         </motion.div>
+                        {/* Removed Avg Rating Stat Box */}
                         <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-purple-700">
-                                {(classesData.length > 0 ? (classesData.reduce((sum, c) => sum + c.rating, 0) / classesData.length).toFixed(1) : '0')}
+                                {allTrainers.length}
                             </div>
-                            <div className="text-sm text-gray-600">Avg Rating</div>
+                            <div className="text-sm text-gray-600">Active Trainers</div>
                         </motion.div>
                     </motion.div>
                 </div>
 
-                <motion.div variants={controlsContainerVariants} className="bg-white rounded-xl shadow-lg p-6 mb-8">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
-                        <motion.div variants={controlItemVariants} className="flex-1 max-w-md">
+                <motion.div
+                    variants={controlsContainerVariants}
+                    className="bg-white rounded-xl shadow-lg p-6 mb-8"
+                >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        {/* Search Input */}
+                        <motion.div variants={controlItemVariants} className="w-full lg:max-w-md">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <motion.input
@@ -387,53 +410,73 @@ const Classes = () => {
                             </div>
                         </motion.div>
 
-                        <div className="flex flex-wrap items-center space-x-4">
-                            <motion.div variants={controlItemVariants} className="flex items-center space-x-2">
+                        {/* Filter Controls */}
+                        <div className="flex flex-wrap gap-3 items-center justify-start">
+                            {/* Category Filter */}
+                            <motion.div
+                                variants={controlItemVariants}
+                                className="flex items-center space-x-2 w-full sm:w-auto"
+                            >
                                 <Filter className="h-5 w-5 text-gray-500" />
                                 <CustomDropdown
                                     options={[
                                         { label: 'All Categories', value: '' },
-                                        ...categories.map(cat => ({ label: cat.name, value: cat.id }))
+                                        ...categories.map((cat) => ({
+                                            label: cat.name,
+                                            value: cat.id,
+                                        })),
                                     ]}
                                     value={selectedCategory}
                                     onChange={setSelectedCategory}
                                     placeholder="All Categories"
-                                    className="w-full sm:w-auto"
+                                    className="w-full sm:w-40"
                                 />
                             </motion.div>
 
-                            <CustomDropdown
-                                options={[
-                                    { label: 'All Levels', value: '' },
-                                    ...difficulties.map(diff => ({ label: diff, value: diff }))
-                                ]}
-                                value={selectedDifficulty}
-                                onChange={setSelectedDifficulty}
-                                placeholder="All Levels"
-                                className="w-full sm:w-auto"
-                            />
+                            {/* Difficulty Filter */}
+                            <div className="w-full sm:w-36">
+                                <CustomDropdown
+                                    options={[
+                                        { label: 'All Levels', value: '' },
+                                        ...difficulties.map((diff) => ({
+                                            label: diff,
+                                            value: diff,
+                                        })),
+                                    ]}
+                                    value={selectedDifficulty}
+                                    onChange={setSelectedDifficulty}
+                                    placeholder="All Levels"
+                                    className="w-full"
+                                />
+                            </div>
 
-                            <CustomDropdown
-                                options={[
-                                    { label: 'Most Popular', value: 'popular' },
-                                    { label: 'Highest Rated', value: 'rating' },
-                                    { label: 'Newest', value: 'newest' },
-                                    { label: 'Name A-Z', value: 'name' }
-                                ]}
-                                value={sortBy}
-                                onChange={setSortBy}
-                                placeholder="Sort By"
-                                className="w-full sm:w-auto"
-                            />
+                            {/* Sort Filter */}
+                            <div className="w-full sm:w-36">
+                                <CustomDropdown
+                                    options={[
+                                        { label: 'Most Popular', value: 'popular' },
+                                        { label: 'Newest', value: 'newest' },
+                                        { label: 'Name A-Z', value: 'name' },
+                                    ]}
+                                    value={sortBy}
+                                    onChange={setSortBy}
+                                    placeholder="Sort By"
+                                    className="w-full"
+                                />
+                            </div>
 
-                            <motion.div variants={controlItemVariants} className="flex border border-gray-300 rounded-lg overflow-hidden">
+                            {/* View Mode Toggle */}
+                            <motion.div
+                                variants={controlItemVariants}
+                                className="flex border border-gray-300 rounded-lg overflow-hidden"
+                            >
                                 <motion.button
                                     onClick={() => setViewMode('grid')}
                                     variants={viewModeButtonVariants}
                                     animate={viewMode === 'grid' ? 'active' : 'inactive'}
                                     whileHover="hover"
                                     whileTap="tap"
-                                    className={`p-2 transition-colors duration-200`}
+                                    className="p-2"
                                 >
                                     <Grid className="h-4 w-4" />
                                 </motion.button>
@@ -443,7 +486,7 @@ const Classes = () => {
                                     animate={viewMode === 'list' ? 'active' : 'inactive'}
                                     whileHover="hover"
                                     whileTap="tap"
-                                    className={`p-2 transition-colors duration-200`}
+                                    className="p-2"
                                 >
                                     <List className="h-4 w-4" />
                                 </motion.button>
@@ -451,6 +494,7 @@ const Classes = () => {
                         </div>
                     </div>
 
+                    {/* Active Filters Display */}
                     <AnimatePresence>
                         {(selectedCategory || selectedDifficulty || searchTerm) && (
                             <motion.div
@@ -458,36 +502,83 @@ const Classes = () => {
                                 animate="visible"
                                 exit="exit"
                                 variants={controlItemVariants}
-                                className="mt-4 flex flex-wrap items-center space-x-2"
+                                className="mt-4 flex flex-wrap gap-2 items-center"
                             >
                                 <span className="text-sm text-gray-600">Active filters:</span>
+
                                 {selectedCategory && (
-                                    <motion.span variants={badgeVariants} initial="hidden" animate="visible" exit="exit" className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
-                                        <span>{categories.find(cat => cat.id === selectedCategory)?.name || selectedCategory}</span>
-                                        <motion.button onClick={() => setSelectedCategory('')} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.8 }} className="text-blue-600 hover:text-blue-800">×</motion.button>
+                                    <motion.span
+                                        variants={badgeVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="exit"
+                                        className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                                    >
+                                        <span>
+                                            {categories.find((cat) => cat.id === selectedCategory)?.name ||
+                                                selectedCategory}
+                                        </span>
+                                        <motion.button
+                                            onClick={() => setSelectedCategory('')}
+                                            whileHover={{ scale: 1.2 }}
+                                            whileTap={{ scale: 0.8 }}
+                                            className="text-blue-600 hover:text-blue-800"
+                                        >
+                                            ×
+                                        </motion.button>
                                     </motion.span>
                                 )}
+
                                 {selectedDifficulty && (
-                                    <motion.span variants={badgeVariants} initial="hidden" animate="visible" exit="exit" className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
+                                    <motion.span
+                                        variants={badgeVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="exit"
+                                        className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                                    >
                                         <span>{selectedDifficulty}</span>
-                                        <motion.button onClick={() => setSelectedDifficulty('')} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.8 }} className="text-green-600 hover:text-green-800">×</motion.button>
+                                        <motion.button
+                                            onClick={() => setSelectedDifficulty('')}
+                                            whileHover={{ scale: 1.2 }}
+                                            whileTap={{ scale: 0.8 }}
+                                            className="text-green-600 hover:text-green-800"
+                                        >
+                                            ×
+                                        </motion.button>
                                     </motion.span>
                                 )}
+
                                 {searchTerm && (
-                                    <motion.span variants={badgeVariants} initial="hidden" animate="visible" exit="exit" className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
+                                    <motion.span
+                                        variants={badgeVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="exit"
+                                        className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                                    >
                                         <span>"{searchTerm}"</span>
-                                        <motion.button onClick={() => setSearchTerm('')} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.8 }} className="text-orange-600 hover:text-orange-800">×</motion.button>
+                                        <motion.button
+                                            onClick={() => setSearchTerm('')}
+                                            whileHover={{ scale: 1.2 }}
+                                            whileTap={{ scale: 0.8 }}
+                                            className="text-orange-600 hover:text-orange-800"
+                                        >
+                                            ×
+                                        </motion.button>
                                     </motion.span>
                                 )}
+
                                 <motion.button
                                     onClick={() => {
                                         setSearchTerm('');
                                         setSelectedCategory('');
                                         setSelectedDifficulty('');
+                                        setSortBy('popular');
                                     }}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="text-sm text-gray-500 hover:text-gray-700 underline"
+                                    className="text-sm text-gray-500 hover:text-gray-700 underline ml-2"
                                 >
                                     Clear all
                                 </motion.button>
@@ -531,7 +622,7 @@ const Classes = () => {
                                                 <motion.img
                                                     src={classItem.image}
                                                     alt={classItem.name}
-                                                    className="w-full h-48 object-cover transition-transform duration-300"
+                                                    className="w-full h-60 object-cover transition-transform duration-300"
                                                     variants={cardImageVariants}
                                                 />
                                                 <div className="absolute top-4 right-4 bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
@@ -545,33 +636,13 @@ const Classes = () => {
                                             </div>
 
                                             <div className="p-6">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <h3 className="text-xl font-semibold text-gray-800">{classItem.name}</h3>
-                                                    <div className="flex items-center space-x-1">
-                                                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                                        <span className="text-sm text-gray-600">{classItem.rating.toFixed(1)}</span>
-                                                    </div>
-                                                </div>
+                                                <h3 className="text-xl font-semibold text-gray-800 mb-2">{classItem.name}</h3>
 
-                                                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                                                    {classItem.description}
-                                                </p>
-
-                                                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                                                    <div className="flex items-center space-x-1">
-                                                        <Users className="h-4 w-4" />
-                                                        <span>{classItem.bookings} joined</span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-1">
-                                                        <Clock className="h-4 w-4" />
-                                                        <span>{classItem.duration}</span>
-                                                    </div>
-                                                </div>
-
+                                                {/* Trainer Position for Grid View - Moved Up */}
                                                 <div className="mb-4">
                                                     <h4 className="text-sm font-medium text-gray-700 mb-2">Trainers:</h4>
                                                     <div className="flex -space-x-2">
-                                                        {getTrainersByClass(classItem.trainers).map((trainer) => (
+                                                        {getTrainersForClass(classItem.trainers).map((trainer) => (
                                                             <Link
                                                                 key={trainer.id}
                                                                 to={`/trainer/${trainer.id}`}
@@ -587,17 +658,28 @@ const Classes = () => {
                                                                 />
                                                             </Link>
                                                         ))}
+                                                        {classItem.trainers.length > 5 && (
+                                                            <span className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
+                                                                +{classItem.trainers.length - 5}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                <Link
-                                                    to={`/join-class/${classItem._id}`}
-                                                    className="w-full bg-blue-700 text-white py-3 rounded-lg text-sm font-medium inline-block text-center"
-                                                >
-                                                    <motion.span whileHover="hover" whileTap="tap" className="block">
-                                                        Join Class
-                                                    </motion.span>
-                                                </Link>
+                                                <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-3">
+                                                    {classItem.description}
+                                                </p>
+
+                                                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                                                    <div className="flex items-center space-x-1">
+                                                        <Users className="h-4 w-4" />
+                                                        <span>{classItem.bookings} joined</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Clock className="h-4 w-4" />
+                                                        <span>{classItem.duration}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </motion.div>
                                     ) : (
@@ -606,75 +688,71 @@ const Classes = () => {
                                             variants={classCardVariants}
                                             custom={index}
                                             whileHover="hover"
-                                            className="bg-white rounded-xl shadow-lg p-6 transition-shadow duration-300"
+                                            className="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 transition-shadow duration-300"
                                         >
-                                            <div className="flex items-start space-x-6">
-                                                <motion.img
-                                                    src={classItem.image}
-                                                    alt={classItem.name}
-                                                    className="w-32 h-32 object-cover rounded-lg flex-shrink-0"
-                                                    variants={cardImageVariants}
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="flex items-start justify-between mb-3">
-                                                        <div>
-                                                            <h3 className="text-xl font-semibold text-gray-800 mb-1">{classItem.name}</h3>
-                                                            <div className="flex items-center space-x-3">
-                                                                <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
-                                                                    {categories.find(cat => cat.id === classItem.category)?.name || classItem.category}
-                                                                </span>
-                                                                <div className="flex items-center space-x-1">
-                                                                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                                                    <span className="text-sm text-gray-600">{classItem.rating.toFixed(1)}</span>
+                                            <motion.img
+                                                src={classItem.image}
+                                                alt={classItem.name}
+                                                className="w-50 h-50 object-cover rounded-lg flex-shrink-0"
+                                                variants={cardImageVariants}
+                                                whileHover="hover"
+                                            />
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-semibold text-gray-800 mb-2">{classItem.name}</h3>
+                                                <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium mb-3">
+                                                    {categories.find(cat => cat.id === classItem.category)?.name || classItem.category}
+                                                </span>
+
+                                                {/* Trainer Position for List View - Moved Up */}
+                                                <div className="mb-3">
+                                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Trainers:</h4>
+                                                    <div className="flex space-x-2">
+                                                        {getTrainersForClass(classItem.trainers).map((trainer) => (
+                                                            <Link
+                                                                key={trainer.id}
+                                                                to={`/trainer/${trainer.id}`}
+                                                                className="relative"
+                                                            >
+                                                                <div className='flex items-center gap-2 bg-gray-100 pr-2.5 pl-1 py-1 rounded-lg'>
+                                                                    <motion.img
+                                                                        src={trainer.image}
+                                                                        alt={trainer.name}
+                                                                        className="w-8 h-8 rounded-full border-2 object-cover border-white"
+                                                                        title={trainer.name}
+                                                                        variants={trainerImageVariants}
+                                                                        whileHover="hover"
+                                                                    />
+                                                                    <span>{trainer.name}</span>
                                                                 </div>
-                                                            </div>
-                                                        </div>
-                                                        <Link
-                                                            to={`/join-class/${classItem._id}`}
-                                                            className="bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium"
-                                                        >
-                                                            <motion.span whileHover="hover" whileTap="tap" className="block">
-                                                                Join Class
-                                                            </motion.span>
-                                                        </Link>
+                                                            </Link>
+                                                        ))}
+                                                        {classItem.trainers.length > 5 && (
+                                                            <span className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
+                                                                +{classItem.trainers.length - 5}
+                                                            </span>
+                                                        )}
                                                     </div>
+                                                </div>
 
-                                                    <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                                                        {classItem.description}
-                                                    </p>
-
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                                            <div className="flex items-center space-x-1">
-                                                                <Users className="h-4 w-4" />
-                                                                <span>{classItem.bookings} joined</span>
-                                                            </div>
-                                                            <div className="flex items-center space-x-1">
-                                                                <Clock className="h-4 w-4" />
-                                                                <span>{classItem.duration}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex -space-x-2">
-                                                            {getTrainersByClass(classItem.trainers).map((trainer) => (
-                                                                <Link
-                                                                    key={trainer.id}
-                                                                    to={`/trainer/${trainer.id}`}
-                                                                    className="relative"
-                                                                >
-                                                                    <motion.div whileHover="hover" className='flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg ml-3'>
-                                                                        <motion.img
-                                                                            src={trainer.image}
-                                                                            alt={trainer.name}
-                                                                            className="w-6 h-6 rounded-full border-2 border-white object-cover"
-                                                                            title={trainer.name}
-                                                                            variants={trainerImageVariants}
-                                                                        />
-                                                                        <span className='text-sm'>{trainer.name}</span>
-                                                                    </motion.div>
-                                                                </Link>
-                                                            ))}
-                                                        </div>
+                                                <p className="text-gray-600 mb-3 text-sm line-clamp-2">
+                                                    {classItem.description}
+                                                </p>
+                                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                                                    <div className="flex items-center space-x-1">
+                                                        <Users className="h-4 w-4" />
+                                                        <span>{classItem.bookings} joined</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Clock className="h-4 w-4" />
+                                                        <span>{classItem.duration}</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${classItem.difficulty === 'Beginner' ? 'bg-green-100 text-green-800' :
+                                                            classItem.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                                                                classItem.difficulty === 'Advanced' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                            {classItem.difficulty}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -683,27 +761,25 @@ const Classes = () => {
                                 ))
                             ) : (
                                 <motion.div
-                                    initial="hidden"
-                                    animate="visible"
-                                    variants={textVariants}
-                                    className="text-center py-16 col-span-full"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="col-span-full text-center py-12 text-gray-600 text-lg"
                                 >
-                                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <Search className="h-12 w-12 text-gray-400" />
-                                    </div>
-                                    <h3 className="text-2xl font-semibold text-gray-800 mb-2">No classes found</h3>
-                                    <p className="text-gray-600 mb-6">Try adjusting your search terms or filters to find what you're looking for.</p>
+                                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                                    No classes found matching your criteria.
                                     <motion.button
                                         onClick={() => {
                                             setSearchTerm('');
                                             setSelectedCategory('');
                                             setSelectedDifficulty('');
+                                            setSortBy('popular');
                                         }}
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+                                        className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition duration-300"
                                     >
-                                        Clear Filters
+                                        Clear All Filters
                                     </motion.button>
                                 </motion.div>
                             )}
@@ -711,66 +787,54 @@ const Classes = () => {
                     </motion.div>
                 )}
 
-                {!isLoading && totalPages > 1 && (
-                    <nav className="flex flex-wrap justify-between gap-2 mb-8 items-center" aria-label="Pagination">
+                {totalPages > 1 && (
+                    <div className="flex justify-between items-center space-x-2 mt-8">
                         <motion.button
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
                             variants={paginationIconButtonVariants}
                             initial="rest"
                             whileHover="hover"
                             whileTap="tap"
-                            animate={currentPage === 1 ? "disabled" : "rest"}
-                            className="px-2 py-2 rounded-lg border text-center font-medium flex items-center justify-center"
+                            animate={currentPage === 1 ? 'disabled' : 'rest'}
+                            className="p-2 border rounded-lg"
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft className="h-5 w-5" />
                         </motion.button>
 
-                        <div className='flex items-center gap-2'>
-                            <AnimatePresence mode='wait'>
-                                {getVisiblePageNumbers().map((page) => (
-                                    <motion.span
-                                        key={page}
-                                        variants={pageNumberItemVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit="exit"
+                        <AnimatePresence mode="wait">
+                            <div className="flex space-x-2">
+                                {getVisiblePageNumbers().map((pageNumber, index) => (
+                                    <motion.button
+                                        key={pageNumber === '...' ? `dots-${index}` : pageNumber}
+                                        onClick={() => pageNumber !== '...' && setCurrentPage(pageNumber)}
+                                        disabled={pageNumber === '...'}
+                                        variants={paginationButtonVariants}
+                                        initial="rest"
+                                        whileHover={pageNumber === '...' ? 'disabled' : 'hover'}
+                                        whileTap={pageNumber === '...' ? 'disabled' : 'tap'}
+                                        animate={currentPage === pageNumber ? 'active' : 'rest'}
+                                        className="px-4 py-2 border rounded-lg text-sm font-medium"
                                     >
-                                        {page === '...' ? (
-                                            <span className="px-4 py-2 text-gray-700 text-center">
-                                                ...
-                                            </span>
-                                        ) : (
-                                            <motion.button
-                                                onClick={() => setCurrentPage(page)}
-                                                variants={paginationButtonVariants}
-                                                initial="rest"
-                                                whileHover="hover"
-                                                whileTap="tap"
-                                                animate={currentPage === page ? "active" : "rest"}
-                                                className="px-4 py-2 rounded-lg border min-w-[44px] text-center"
-                                            >
-                                                {page}
-                                            </motion.button>
-                                        )}
-                                    </motion.span>
+                                        {pageNumber}
+                                    </motion.button>
                                 ))}
-                            </AnimatePresence>
-                        </div>
+                            </div>
+                        </AnimatePresence>
 
                         <motion.button
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
                             variants={paginationIconButtonVariants}
                             initial="rest"
                             whileHover="hover"
                             whileTap="tap"
-                            animate={currentPage === totalPages ? "disabled" : "rest"}
-                            className="px-2 py-2 rounded-lg border text-center font-medium flex items-center justify-center"
+                            animate={currentPage === totalPages ? 'disabled' : 'rest'}
+                            className="p-2 border rounded-lg"
                         >
-                            <ChevronRight size={20} />
+                            <ChevronRight className="h-5 w-5" />
                         </motion.button>
-                    </nav>
+                    </div>
                 )}
             </div>
         </motion.div>

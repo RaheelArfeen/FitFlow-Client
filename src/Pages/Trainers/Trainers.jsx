@@ -132,13 +132,12 @@ const Trainers = () => {
                                         <div className="flex flex-wrap gap-2">
                                             {(trainer.slots && trainer.slots.length > 0)
                                                 ? trainer.slots
-                                                    .filter(slot => !slot.isBooked) // Filter for available (not booked) slots
                                                     .map((slot) => (
                                                         <span
                                                             key={slot.id}
                                                             className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
                                                         >
-                                                            {`${slot.day}, ${slot.timeRange}`}
+                                                            {`${slot.days}, ${slot.slotTime}`}
                                                         </span>
                                                     ))
                                                 : <span className="text-gray-400 text-xs italic">No slots available</span>

@@ -212,15 +212,19 @@ const BookTrainerPage = () => {
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Selected Slot:</span>
-                                        <span className="font-medium">{slot.name}</span>
+                                        <span className="font-medium">{slot.slotName}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Time:</span>
-                                        <span className="font-medium">{slot.timeRange}</span>
+                                        <span className="font-medium">{slot.slotTime}</span>
+                                    </motion.div>
+                                    <motion.div className="flex gap-2" variants={itemVariants}>
+                                        <span className="text-gray-600">Duration:</span>
+                                        <span className="font-medium">{slot.duration}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
                                         <span className="text-gray-600">Day:</span>
-                                        <span className="font-medium">{slot.day}</span>
+                                        <span className="font-medium">{slot.days}</span>
                                     </motion.div>
                                 </div>
                             </motion.div>

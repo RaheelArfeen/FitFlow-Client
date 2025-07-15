@@ -3,6 +3,10 @@ import Banner from '../Components/HomeComponents/Banner';
 import FeaturedSection from '../Components/HomeComponents/FeaturedSection';
 import AboutSection from '../Components/HomeComponents/AboutSection';
 import FeaturedClasses from '../Components/HomeComponents/FeaturedClasses';
+import TestimonialsSection from '../Components/HomeComponents/TestimonialsSection';
+import CommunitySection from '../Components/HomeComponents/CommunitySection';
+import NewsletterSection from '../Components/HomeComponents/NewsletterSection';
+import TeamSection from '../Components/HomeComponents/TeamSection';
 
 const Home = () => {
 
@@ -19,6 +23,10 @@ const Home = () => {
             <FeaturedSection />
             <AboutSection/>
             <FeaturedClasses/>
+            <TestimonialsSection/>
+            <CommunitySection/>
+            <TeamSection/>
+            <NewsletterSection/>
         </div>
     );
 };

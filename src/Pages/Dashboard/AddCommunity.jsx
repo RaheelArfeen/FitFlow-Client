@@ -179,23 +179,23 @@ const AddCommunity = () => {
                                     transition={{ duration: 0.15 }}
                                 >
                                     {categories.map((category) => (
-                                        <motion.li
+                                        <li
                                             key={category}
                                             onClick={() => {
                                                 setFormData({ ...formData, category });
                                                 setCategoryOpen(false);
                                             }}
-                                            className={`cursor-pointer select-none py-2 pl-10 pr-4 hover:bg-blue-100 ${formData.category === category ? 'font-semibold text-blue-600' : 'text-gray-900'}`}
+                                            className={`cursor-pointer select-none flex py-2 pl-4 pr-4 hover:bg-blue-100 ${formData.category === category ? 'font-semibold text-blue-600' : 'text-gray-900 scrollbarHidden'}`}
                                             variants={dropdownItemVariants}
                                             whileHover={{ x: 5 }}
                                         >
-                                            {category}
                                             {formData.category === category && (
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                                <span className="flex items-center pr-3 text-blue-600">
                                                     ✓
                                                 </span>
                                             )}
-                                        </motion.li>
+                                            {category}
+                                        </li>
                                     ))}
                                 </motion.ul>
                             )}

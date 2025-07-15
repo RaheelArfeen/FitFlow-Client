@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Trash2, Star, Calendar, Award, CheckCircle } from 'lucide-react'; // Import CheckCircle for certified count
+import { Search, Trash2, Star, Calendar, Award, CheckCircle, Mail } from 'lucide-react';
 import useAxiosSecure from '../../../Provider/UseAxiosSecure';
 import Loader from '../../Loader';
 import Swal from 'sweetalert2';
+import { motion } from 'framer-motion';
 
 const AllTrainers = () => {
     const axiosSecure = useAxiosSecure();
@@ -20,6 +21,8 @@ const AllTrainers = () => {
             const res = await axiosSecure.get('/trainers?status=accepted');
             return res.data;
         },
+        staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+        cacheTime: 30 * 60 * 1000, // Data kept in cache for 30 minutes
     });
 
     // Calculate stats
@@ -27,9 +30,8 @@ const AllTrainers = () => {
     const totalSessions = acceptedTrainers.reduce((sum, trainer) => sum + (trainer.sessions || 0), 0);
     const averageRating = totalTrainers > 0
         ? (acceptedTrainers.reduce((sum, trainer) => sum + (trainer.rating || 0), 0) / totalTrainers).toFixed(1)
-        : '0';
+        : '0.0';
 
-    // NEW: Calculate Total Certified Trainers
     const totalCertifiedTrainers = acceptedTrainers.filter(trainer =>
         trainer.certifications && trainer.certifications.length > 0
     ).length;
@@ -37,8 +39,8 @@ const AllTrainers = () => {
     // Filter and paginate trainers
     const filteredTrainers = acceptedTrainers.filter(trainer =>
         trainer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trainer.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trainer.email.toLowerCase().includes(searchTerm.toLowerCase())
+        trainer.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) || // Added safe navigation for specialization
+        trainer.email?.toLowerCase().includes(searchTerm.toLowerCase()) // Added safe navigation for email
     );
 
     const indexOfLastTrainer = currentPage * trainersPerPage;
@@ -49,9 +51,7 @@ const AllTrainers = () => {
     // Mutation to demote a trainer (change status to 'rejected' and user role to 'member')
     const demoteTrainerMutation = useMutation({
         mutationFn: async ({ trainerId, trainerEmail, trainerName }) => {
-            // 1. Change trainer status to 'rejected'
             await axiosSecure.patch(`/trainers/${trainerId}/status`, { status: 'rejected', feedback: 'Demoted by Admin' });
-            // 2. Change user role back to 'member'
             await axiosSecure.patch(`/users`, { email: trainerEmail, role: 'member' });
         },
         onSuccess: (_, variables) => {
@@ -97,171 +97,273 @@ const AllTrainers = () => {
         });
     };
 
-    if (isLoading) return <Loader />;
-    if (error) return <div className="text-red-500 text-center py-10">Error loading trainers: {error.message}</div>;
+    // Framer Motion Variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+            },
+        },
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: 'spring',
+                stiffness: 100,
+                damping: 10,
+            },
+        },
+    };
+
+    const cardVariants = {
+        hidden: { opacity: 0, scale: 0.9 },
+        visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+        hover: { scale: 1.03, boxShadow: "0 15px 25px rgba(0, 0, 0, 0.15)" }, // More prominent hover shadow
+    };
+
+    const trainerCardVariants = {
+        hidden: { opacity: 0, y: 50 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+        hover: { scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)" }
+    };
+
+    if (isLoading) return <Loader />; // Your existing Loader component
+    if (error) return <div className="text-red-500 text-center py-10 text-xl font-medium">Error loading trainers: {error.message}</div>;
 
     return (
-        <div className="p-6 md:p-8 lg:p-10">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">All Trainers</h1>
-                <p className="text-gray-600">Manage all accepted trainers on the platform.</p>
-            </div>
+        <motion.div
+            className="p-8 bg-gray-50 min-h-screen"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
+            {/* Header */}
+            <motion.div className="mb-12 text-center md:text-left" variants={itemVariants}>
+                <h1 className="text-4xl font-extrabold text-gray-900 mb-4">All Trainers</h1>
+                <p className="text-lg text-gray-600">
+                    Oversee and manage all approved professional fitness trainers.
+                </p>
+            </motion.div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center justify-between">
+            <motion.div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-8 mb-12" variants={containerVariants}>
+                <motion.div
+                    className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100 flex flex-col justify-between"
+                    variants={cardVariants}
+                    whileHover="hover"
+                >
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{totalTrainers}</h3>
-                            <p className="text-gray-600">Total Accepted Trainers</p>
+                            <h3 className="text-4xl font-bold text-gray-900 leading-tight">{totalTrainers}</h3>
+                            <p className="text-lg text-gray-600">Total Trainers</p>
                         </div>
-                        <Award className="h-8 w-8 text-blue-600" />
+                        <div className="p-4 bg-blue-50 rounded-full">
+                            <Award className="h-10 w-10 text-blue-600" />
+                        </div>
                     </div>
-                </div>
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-500 mt-2">Active trainers on the platform.</p>
+                </motion.div>
+
+                <motion.div
+                    className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100 flex flex-col justify-between"
+                    variants={cardVariants}
+                    whileHover="hover"
+                >
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{averageRating}</h3>
-                            <p className="text-gray-600">Avg Rating</p>
+                            <h3 className="text-4xl font-bold text-gray-900 leading-tight">{averageRating}</h3>
+                            <p className="text-lg text-gray-600">Average Rating</p>
                         </div>
-                        <Star className="h-8 w-8 text-yellow-500" />
+                        <div className="p-4 bg-yellow-50 rounded-full">
+                            <Star className="h-10 w-10 text-yellow-600 fill-yellow-600" />
+                        </div>
                     </div>
-                </div>
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-500 mt-2">Platform-wide average trainer rating.</p>
+                </motion.div>
+
+                <motion.div
+                    className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100 flex flex-col justify-between"
+                    variants={cardVariants}
+                    whileHover="hover"
+                >
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{totalSessions}</h3>
-                            <p className="text-gray-600">Total Sessions</p>
+                            <h3 className="text-4xl font-bold text-gray-900 leading-tight">{totalSessions}</h3>
+                            <p className="text-lg text-gray-600">Total Sessions Conducted</p>
                         </div>
-                        <Calendar className="h-8 w-8 text-green-600" />
+                        <div className="p-4 bg-green-50 rounded-full">
+                            <Calendar className="h-10 w-10 text-green-600" />
+                        </div>
                     </div>
-                </div>
-                {/* REPLACED: Average Experience with Certified Trainers */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-500 mt-2">Cumulative sessions led by all trainers.</p>
+                </motion.div>
+
+                <motion.div
+                    className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100 flex flex-col justify-between"
+                    variants={cardVariants}
+                    whileHover="hover"
+                >
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{totalCertifiedTrainers}</h3>
-                            <p className="text-gray-600">Certified Trainers</p>
+                            <h3 className="text-4xl font-bold text-gray-900 leading-tight">{totalCertifiedTrainers}</h3>
+                            <p className="text-lg text-gray-600">Certified Trainers</p>
                         </div>
-                        <CheckCircle className="h-8 w-8 text-indigo-600" /> {/* Changed icon and color */}
+                        <div className="p-4 bg-indigo-50 rounded-full">
+                            <CheckCircle className="h-10 w-10 text-indigo-600" />
+                        </div>
                     </div>
-                </div>
-            </div>
+                    <p className="text-sm text-gray-500 mt-2">Trainers with verified certifications.</p>
+                </motion.div>
+            </motion.div>
 
             {/* Search */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <motion.div
+                className="bg-white rounded-2xl shadow-lg p-8 mb-12 border border-gray-100"
+                variants={itemVariants}
+            >
+                <div className="relative w-full mx-auto"> 
+                    <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search trainers by name, specialization, or email..."
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
-                            setCurrentPage(1);
+                            setCurrentPage(1); // Reset pagination on search
                         }}
-                        className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="pl-14 pr-6 py-3.5 border border-gray-300 rounded-xl w-full text-lg text-gray-700 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 ease-in-out"
                     />
                 </div>
-            </div>
+            </motion.div>
 
-            {/* Trainers Grid */}
-            {currentTrainers.length === 0 && filteredTrainers.length > 0 && (
-                <div className="text-center text-gray-600 py-10">
-                    No trainers found on this page. Try adjusting your search or pagination.
-                </div>
-            )}
+            {/* Conditional Messages for No Data */}
             {filteredTrainers.length === 0 && searchTerm && (
-                <div className="text-center text-gray-600 py-10">
-                    No trainers match your search term "{searchTerm}".
-                </div>
+                <motion.div
+                    className="text-center p-20 text-gray-500 text-xl flex flex-col items-center justify-center bg-white rounded-2xl shadow-lg border border-gray-100 min-h-[300px] mb-12"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <Search className="h-16 w-16 mb-6 text-gray-400" />
+                    <p>No trainers found matching "{searchTerm}".</p>
+                </motion.div>
             )}
             {acceptedTrainers.length === 0 && !searchTerm && (
-                <div className="text-center text-gray-600 py-10">
-                    No accepted trainers available at the moment.
-                </div>
+                <motion.div
+                    className="text-center p-20 text-gray-500 text-xl flex flex-col items-center justify-center bg-white rounded-2xl shadow-lg border border-gray-100 min-h-[300px] mb-12"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <Mail className="h-16 w-16 mb-6 text-gray-400" /> {/* Using Mail icon as a placeholder for general no data */}
+                    <p>No accepted trainers available at the moment.</p>
+                </motion.div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {currentTrainers.map((trainer) => (
-                    <div key={trainer._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                        <div className="relative">
-                            <img
-                                src={trainer.photoURL}
-                                alt={trainer.name}
-                                className="w-full h-48 object-cover"
-                            />
-                            <div className="absolute top-4 left-4 bg-green-600 text-white px-2 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
-                                <Star className="h-3 w-3 fill-current" />
-                                <span>{trainer.rating?.toFixed(1) || '0.0'}</span>
-                            </div>
-                        </div>
-
-                        <div className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-1">{trainer.name}</h3>
-                            <p className="text-orange-600 font-medium text-sm mb-3">{trainer.specialization}</p>
-
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center text-sm text-gray-500">
-                                    <Calendar className="h-4 w-4 mr-2" />
-                                    <span>{trainer.experience}</span>
-                                </div>
-                                <div className="flex items-center text-sm text-gray-500">
-                                    <Award className="h-4 w-4 mr-2" />
-                                    <span>{trainer.sessions || 0}+ sessions</span>
+            {/* Trainers Grid */}
+            {filteredTrainers.length > 0 && (
+                <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" variants={containerVariants}>
+                    {currentTrainers.map((trainer) => (
+                        <motion.div
+                            key={trainer._id}
+                            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 flex flex-col"
+                            variants={trainerCardVariants}
+                            whileHover="hover"
+                        >
+                            <div className="relative h-56 w-full"> {/* Fixed height for images */}
+                                <img
+                                    src={trainer.photoURL}
+                                    alt={trainer.name}
+                                    className="w-full h-full object-cover object-center"
+                                />
+                                <div className="absolute top-5 left-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1.5 rounded-full text-sm font-semibold flex items-center space-x-1 shadow-md">
+                                    <Star className="h-4 w-4 fill-current text-white" />
+                                    <span>{trainer.rating?.toFixed(1) || '0.0'}</span>
                                 </div>
                             </div>
 
-                            <div className="mb-4">
-                                <div className="text-sm text-gray-600 mb-2">Certifications:</div>
-                                <div className="flex flex-wrap gap-1">
-                                    {(trainer.certifications || []).slice(0, 2).map((cert, index) => (
-                                        <span key={index} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                                            {cert}
-                                        </span>
-                                    ))}
-                                    {(trainer.certifications || []).length > 2 && (
-                                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                                            +{(trainer.certifications.length - 2)} more
-                                        </span>
-                                    )}
+                            <div className="p-6 flex flex-col flex-grow">
+                                <h3 className="text-xl font-bold text-gray-900 mb-1">{trainer.name}</h3>
+                                <p className="text-orange-600 font-semibold text-base mb-4">{trainer.specialization}</p>
+
+                                <div className="space-y-3 mb-5 text-gray-700">
+                                    <div className="flex items-center text-sm">
+                                        <Calendar className="h-5 w-5 mr-3 text-gray-500" />
+                                        <span>{trainer.experience || 'N/A'} of Experience</span>
+                                    </div>
+                                    <div className="flex items-center text-sm">
+                                        <Award className="h-5 w-5 mr-3 text-gray-500" />
+                                        <span>{trainer.sessions || 0} Sessions Conducted</span>
+                                    </div>
+                                </div>
+
+                                <div className="mb-5 flex-grow"> {/* Allows certification section to grow */}
+                                    <div className="text-sm font-medium text-gray-600 mb-2">Certifications:</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(trainer.certifications || []).slice(0, 2).map((cert, index) => (
+                                            <span key={index} className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium">
+                                                {cert}
+                                            </span>
+                                        ))}
+                                        {(trainer.certifications || []).length > 2 && (
+                                            <span className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-medium">
+                                                +{(trainer.certifications.length - 2)} more
+                                            </span>
+                                        )}
+                                        {(trainer.certifications || []).length === 0 && (
+                                            <span className="text-gray-500 text-xs">No certifications listed</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                                    <span className="text-sm text-gray-600 font-medium">{trainer.email}</span>
+                                    <motion.button
+                                        onClick={() => handleDeleteTrainer(trainer._id, trainer.name, trainer.email)}
+                                        className="text-red-600 hover:text-red-800 p-3 rounded-full
+                                                   hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2
+                                                   transition-all duration-200 ease-in-out"
+                                        title="Remove Trainer Role"
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        disabled={demoteTrainerMutation.isLoading}
+                                    >
+                                        <Trash2 className="h-5 w-5" />
+                                    </motion.button>
                                 </div>
                             </div>
-
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500">{trainer.email}</span>
-                                <button
-                                    onClick={() => handleDeleteTrainer(trainer._id, trainer.name, trainer.email)}
-                                    className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Remove Trainer Role"
-                                    disabled={demoteTrainerMutation.isLoading}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex justify-center mt-8 space-x-2">
+                <div className="flex justify-center mt-12 space-x-3">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
+                        <motion.button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-4 py-2 rounded-lg ${currentPage === page
-                                    ? 'bg-blue-700 text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                                } border border-gray-300 transition-colors duration-200`}
+                            className={`px-5 py-2.5 rounded-lg font-medium transition-all duration-200 ease-in-out
+                                ${currentPage === page
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {page}
-                        </button>
+                        </motion.button>
                     ))}
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

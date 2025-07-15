@@ -189,13 +189,6 @@ const Navbar = () => {
                                             variants={dropdownVariants}
                                             className="absolute right-0 w-48 bg-white border border-gray-100 rounded-lg shadow-lg z-50 mt-2 py-1"
                                         >
-                                            <NavLink
-                                                to="/profile"
-                                                onClick={() => setIsDropdownOpen(false)}
-                                                className={({ isActive }) => `w-full flex items-center space-x-2 px-4 py-2 text-sm ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition duration-300'}`}
-                                            >
-                                                <User className="h-4 w-4" /> <span>Profile</span>
-                                            </NavLink>
                                             <button
                                                 onClick={handleLogout}
                                                 className="w-full flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 font-medium transition duration-300 text-sm"
@@ -324,7 +317,7 @@ const Navbar = () => {
                                                 variants={navItemVariants}
                                                 whileTap={{ scale: 0.95 }}
                                             >
-                                                <Link to="/profile" className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-blue-50" onClick={() => setIsMenuOpen(false)}>
+                                                <div className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-blue-50">
                                                     {user.photoURL ? (
                                                         <img src={user.photoURL} alt={user.displayName || user.name} className="w-10 h-10 rounded-full object-cover" />
                                                     ) : (
@@ -334,7 +327,7 @@ const Navbar = () => {
                                                         <div className="text-sm font-semibold text-gray-800">{user.displayName || user.name}</div>
                                                         <div className="text-xs text-gray-500 capitalize">{user.role || 'User'}</div>
                                                     </div>
-                                                </Link>
+                                                </div>
                                             </motion.div>
                                             <motion.button
                                                 onClick={handleLogout}

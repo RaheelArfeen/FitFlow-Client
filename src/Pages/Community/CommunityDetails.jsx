@@ -486,7 +486,7 @@ const CommunityDetails = () => {
                                             onChange={(e) => setNewComment(e.target.value)}
                                             placeholder="Share your thoughts..."
                                             rows={3}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none resize-none"
                                             disabled={addCommentMutation.isPending} // Disable while commenting
                                         />
                                         <div className="flex justify-end mt-3">

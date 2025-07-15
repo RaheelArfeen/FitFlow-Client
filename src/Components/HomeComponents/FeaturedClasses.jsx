@@ -1,114 +1,141 @@
 import React from 'react';
-import { Users, Clock, Star } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import useAxiosSecure from '../../Provider/UseAxiosSecure';
+import { motion } from 'framer-motion';
+import { Users, Award, AlertCircle, Loader, Clock } from 'lucide-react';
 import { Link } from 'react-router';
 
 const FeaturedClasses = () => {
-    const classes = [
-        {
-            id: 1,
-            name: "HIIT Power Hour",
-            description: "High-intensity interval training to maximize calorie burn and build strength.",
-            image: "https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg?auto=compress&cs=tinysrgb&w=600",
-            bookings: 1250,
-            duration: "45 min",
-            rating: 4.9,
-            instructor: "Sarah Johnson"
-        },
-        {
-            id: 2,
-            name: "Zen Yoga Flow",
-            description: "Mindful yoga practice focusing on flexibility, balance, and inner peace.",
-            image: "https://images.pexels.com/photos/1051838/pexels-photo-1051838.jpeg?auto=compress&cs=tinysrgb&w=600",
-            bookings: 980,
-            duration: "60 min",
-            rating: 4.8,
-            instructor: "David Chen"
-        },
-        {
-            id: 3,
-            name: "Strength & Conditioning",
-            description: "Build lean muscle and improve overall strength with progressive resistance training.",
-            image: "https://images.pexels.com/photos/1552252/pexels-photo-1552252.jpeg?auto=compress&cs=tinysrgb&w=600",
-            bookings: 890,
-            duration: "50 min",
-            rating: 4.9,
-            instructor: "Mike Rodriguez"
-        },
-        {
-            id: 4,
-            name: "Cardio Dance Fusion",
-            description: "Fun, energetic dance workouts that combine cardio with rhythm and movement.",
-            image: "https://images.pexels.com/photos/1552103/pexels-photo-1552103.jpeg?auto=compress&cs=tinysrgb&w=600",
-            bookings: 756,
-            duration: "40 min",
-            rating: 4.7,
-            instructor: "Lisa Thompson"
-        },
-        {
-            id: 5,
-            name: "Pilates Core",
-            description: "Strengthen your core and improve posture with precise, controlled movements.",
-            image: "https://images.pexels.com/photos/1552108/pexels-photo-1552108.jpeg?auto=compress&cs=tinysrgb&w=600",
-            bookings: 634,
-            duration: "45 min",
-            rating: 4.8,
-            instructor: "Emma Wilson"
-        },
-        {
-            id: 6,
-            name: "Boxing Bootcamp",
-            description: "High-energy boxing-inspired workout that builds strength, speed, and confidence.",
-            image: "https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg?auto=compress&cs=tinysrgb&w=600",
-            bookings: 567,
-            duration: "55 min",
-            rating: 4.9,
-            instructor: "Alex Martinez"
-        }
+    const axiosSecure = useAxiosSecure();
+
+    const categories = [
+        { id: 'HIIT', name: 'HIIT' },
+        { id: 'Yoga', name: 'Yoga & Mindfulness' },
+        { id: 'Strength', name: 'Strength Training' },
+        { id: 'Cardio', name: 'Cardio' },
+        { id: 'Pilates', name: 'Pilates' },
+        { id: 'Dance', name: 'Dance Fitness' },
+        { id: 'Boxing', name: 'Boxing' },
+        { id: 'CrossFit', name: 'CrossFit' },
+        { id: 'Meditation', name: 'Meditation' },
+        { id: 'Nutrition', name: 'Nutrition Coaching' }
     ];
 
-    return (
-        <section className="py-20 bg-gray-50">
-            <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
-                        Featured Classes
-                    </h2>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Discover our most popular and highly-rated classes that our community loves most.
-                    </p>
-                </div>
+    const { data: classesData = [], isLoading, isError } = useQuery({
+        queryKey: ['featuredClasses'],
+        queryFn: async () => {
+            const res = await axiosSecure.get('/classes');
+            return res.data.map(cls => ({ ...cls, _id: cls._id || cls.id }));
+        },
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
+    });
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {classes.map((classItem) => (
-                        <div key={classItem.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
-                            <div className="relative">
-                                <img
+    const featuredClasses = React.useMemo(() => {
+        return [...classesData]
+            .sort((a, b) => b.bookings - a.bookings)
+            .slice(0, 6);
+    }, [classesData]);
+
+    const containerVariants = {
+        hidden: { opacity: 0, y: 50 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut",
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const cardVariants = {
+        hidden: { opacity: 0, y: 50, scale: 0.9 },
+        visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+        hover: { scale: 1.03, boxShadow: '0 15px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.08)' }
+    };
+
+    const imageVariants = {
+        hover: { scale: 1.08, transition: { duration: 0.3 } }
+    };
+
+    if (isLoading) {
+        return <Loader />;
+    }
+
+    if (isError) {
+        return (
+            <div className="min-h-[300px] flex items-center justify-center bg-gray-50 py-12">
+                <div className="text-center text-red-600">
+                    <AlertCircle className="h-16 w-16 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold mb-2">Error Loading Featured Classes</h2>
+                    <p>There was an issue fetching featured classes. Please try again later.</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (featuredClasses.length === 0) {
+        return (
+            <div className="min-h-[300px] flex items-center justify-center bg-gray-50 py-12">
+                <div className="text-center text-gray-600">
+                    <AlertCircle className="h-16 w-16 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold mb-2">No Featured Classes Available</h2>
+                    <p>It looks like there are no classes to feature at the moment.</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <section className="py-16 bg-gray-50">
+            <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                    className="text-center mb-12"
+                >
+                    <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
+                        Our Most Popular Classes
+                    </h2>
+                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        Join the classes everyone is talking about! These are our top-booked sessions.
+                    </p>
+                </motion.div>
+
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                >
+                    {featuredClasses.map((classItem) => (
+                        <motion.div
+                            key={classItem._id}
+                            variants={cardVariants}
+                            whileHover="hover"
+                            className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300"
+                        >
+                            <div className="relative overflow-hidden">
+                                <motion.img
                                     src={classItem.image}
                                     alt={classItem.name}
-                                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                                    className="w-full h-56 object-cover transition-transform duration-300"
+                                    variants={imageVariants}
                                 />
                                 <div className="absolute top-4 right-4 bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
-                                    <span>#{classes.indexOf(classItem) + 1}</span>
-                                </div>
-                                <div className="absolute top-4 left-4 bg-black/50 text-white px-2 py-1 rounded-full text-xs">
-                                    {classItem.category}
+                                    <Award className="h-3 w-3" />
+                                    <span>{categories.find(cat => cat.id === classItem.category)?.name || classItem.category}</span>
                                 </div>
                             </div>
-
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-xl font-semibold text-gray-800">{classItem.name}</h3>
-                                    <div className="flex items-center space-x-1">
-                                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                        <span className="text-sm text-gray-600">{classItem.rating}</span>
-                                    </div>
-                                </div>
-
-                                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                            <div className="p-6 flex-grow flex flex-col">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-3">{classItem.name}</h3>
+                                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4 flex-grow">
                                     {classItem.description}
                                 </p>
-
-                                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                                <div className="flex items-center justify-between space-x-4 text-gray-500 text-sm mb-5">
                                     <div className="flex items-center space-x-1">
                                         <Users className="h-4 w-4" />
                                         <span>{classItem.bookings} joined</span>
@@ -118,31 +145,10 @@ const FeaturedClasses = () => {
                                         <span>{classItem.duration}</span>
                                     </div>
                                 </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-gray-600">
-
-                                    </div>
-                                    <Link
-                                        to={`/join-class/${classItem.id}`}
-                                        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 inline-block group-hover:bg-blue-800"
-                                    >
-                                        Join Class
-                                    </Link>
-                                </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
-
-                <div className="text-center mt-12">
-                    <Link
-                        to="/classes"
-                        className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 inline-block"
-                    >
-                        View All Classes
-                    </Link>
-                </div>
+                </motion.div>
             </div>
         </section>
     );

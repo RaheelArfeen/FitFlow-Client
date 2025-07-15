@@ -193,7 +193,7 @@ const SidebarContent = ({ user, menuItems, setIsDrawerOpen }) => {
 // Desktop Sidebar Component
 const DesktopSidebar = ({ user, menuItems }) => (
     <motion.div
-        className="hidden lg:block lg:w-64 bg-white shadow-xl border-r border-gray-200 h-screen sticky top-0"
+        className="hidden lg:block lg:w-64 bg-white shadow-xl border-r overflow-y-auto border-gray-200 h-screen sticky top-0"
         initial={{ x: -64 }}
         animate={{ x: 0 }}
         exit={{ x: -64 }}

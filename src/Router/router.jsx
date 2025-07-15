@@ -11,7 +11,6 @@ import ErrorPage from "../Pages/Error/ErrorPage";
 import Trainers from "../Pages/Trainers/Trainers";
 import TrainerDetail from "../Pages/Trainers/TrainerDetail";
 import BookTrainerPage from "../Pages/Trainers/BookTrainer";
-import Payment from "../Pages/Trainers/Payment";
 import DashboardLayout from "../Root/DashboardLayout";
 import { ProtectedRoute } from "../Provider/ProtectedRoute";
 import AdminRoute from "../Provider/AdminRoute";
@@ -27,12 +26,13 @@ import DashboardOverview from "../Pages/Dashboard/DashboardOverview";
 import AddCommunity from "../Pages/Dashboard/AddCommunity";
 import forbidden from "../Pages/Dashboard/forbidden";
 import Community from "../Pages/Community/Community";
-import Classes from "../Pages/Classes";
+import Classes from "../Pages/Classes/Classes";
 import CommunityDetails from "../Pages/Community/CommunityDetails";
 import AddSlot from "../Pages/Dashboard/Trainer/AddSlot";
 import ManageSlot from "../Pages/Dashboard/Trainer/ManageSlots";
 import Profile from "../Pages/Dashboard/Member/Profile";
 import AddNewClass from "../Pages/Dashboard/Admin/AddClass";
+import Payment from "../Pages/Trainers/Payment";
 
 
 export const router = createBrowserRouter([
@@ -44,7 +44,6 @@ export const router = createBrowserRouter([
             { index: true, path: '/', Component: Home },
             { path: '/be-trainer', element: <ProtectedRoute><BeTrainer /></ProtectedRoute> },
             { path: '/classes', Component: Classes },
-            { path: '/join-class/:id', Component: Classes },
             { path: '/trainers', Component: Trainers },
             { path: '/trainer/:id', Component: TrainerDetail },
             { path: '/book-trainer/:trainerId/:slotId', element: <ProtectedRoute><BookTrainerPage /></ProtectedRoute> },
