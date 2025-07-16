@@ -81,8 +81,11 @@ Set the following environment variables in both frontend and backend environment
 ### Backend (`.env`)
 
 PORT=
+
 MONGODB_URI=
+
 STRIPE_SECRET_KEY=
+
 FIREBASE_ADMIN_KEY= (or service account path if used)
 
 Copy
@@ -91,11 +94,17 @@ Edit
 ### Frontend (`.env`)
 
 VITE_API_URL=
+
 VITE_FIREBASE_API_KEY=
+
 VITE_FIREBASE_AUTH_DOMAIN=
+
 VITE_FIREBASE_PROJECT_ID=
+
 VITE_FIREBASE_APP_ID=
+
 VITE_FIREBASE_MEASUREMENT_ID=
+
 VITE_STRIPE_PUBLISHABLE_KEY=
 
 Copy
