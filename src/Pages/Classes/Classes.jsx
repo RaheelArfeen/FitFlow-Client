@@ -118,6 +118,7 @@ const Classes = () => {
         queryKey: ['classes'],
         queryFn: async () => {
             const res = await axiosSecure.get('/classes');
+            console.log("Fetched Classes Data:", res.data); // DEBUG: Inspect this data
             return res.data.map(cls => ({ ...cls, _id: cls._id || cls.id }));
         },
         enabled: !!axiosSecure,
@@ -129,6 +130,7 @@ const Classes = () => {
         queryKey: ['trainers'],
         queryFn: async () => {
             const res = await axiosSecure.get('/trainers');
+            console.log("Fetched Trainers Data:", res.data); // DEBUG: Inspect this data
             return res.data.map(trainer => ({ ...trainer, _id: trainer._id || trainer.id }));
         },
         enabled: !!axiosSecure,
@@ -178,22 +180,45 @@ const Classes = () => {
     const totalPages = Math.ceil(filteredAndSortedClasses.length / classesPerPage);
 
     const getTrainersForClass = useCallback((classItemTrainers) => {
-        if (!classItemTrainers || !Array.isArray(classItemTrainers)) return [];
+        if (!classItemTrainers || !Array.isArray(classItemTrainers)) {
+            console.warn("classItemTrainers is not an array or is null/undefined:", classItemTrainers);
+            return [];
+        }
 
         const assignedTrainersDetails = classItemTrainers.map(assignedTrainer => {
+            console.log("Attempting to find trainer for ID:", assignedTrainer.id);
+            // Ensure that allTrainers is not empty before attempting to find
+            if (!allTrainers || allTrainers.length === 0) {
+                console.warn("allTrainers array is empty or null, cannot find trainer.");
+                return null;
+            }
+
             const fullTrainer = allTrainers.find(
                 t => t._id === assignedTrainer.id || t.id === assignedTrainer.id
             );
-            return fullTrainer ? {
+
+            if (!fullTrainer) {
+                console.warn("Trainer not found for ID:", assignedTrainer.id);
+                return null;
+            }
+
+            const imageUrl = fullTrainer.photoURL || fullTrainer.image;
+            if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
+                console.warn(`Invalid or missing image URL for trainer ${fullTrainer.name} (ID: ${fullTrainer._id}):`, imageUrl);
+                return null;
+            }
+
+            console.log(`Found trainer ${fullTrainer.name} with image:`, imageUrl);
+            return {
                 id: fullTrainer._id,
                 name: fullTrainer.name,
-                image: fullTrainer.photoURL,
-            } : null;
-        }).filter(Boolean);
+                image: imageUrl,
+            };
+        }).filter(Boolean); // Filter out any nulls
 
+        console.log("Assigned Trainers Details:", assignedTrainersDetails);
         return assignedTrainersDetails.slice(0, 5);
     }, [allTrainers]);
-
 
     useEffect(() => {
         setCurrentPage(1);
@@ -202,7 +227,6 @@ const Classes = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [currentPage]);
-
 
     const isLoading = classesLoading || trainersLoading;
     const isError = classesError || trainersError;
@@ -300,34 +324,27 @@ const Classes = () => {
             }
         } else {
             range.push(1);
-
             if (left > 2) {
                 range.push('...');
             }
-
             for (let i = left; i <= right; i++) {
                 if (i !== 1 && i !== totalPages) {
                     range.push(i);
                 }
             }
-
             if (right < totalPages - 1) {
                 range.push('...');
             }
-
             if (totalPages > 1) {
                 range.push(totalPages);
             }
         }
-
         return [...new Set(range)].sort((a, b) => {
             if (a === '...') return -1;
             if (b === '...') return 1;
             return a - b;
         });
-
     }, [currentPage, totalPages]);
-
 
     if (isLoading) {
         return <Loader />;
@@ -350,6 +367,23 @@ const Classes = () => {
         );
     }
 
+    if (!isLoading && !isError && classesData.length === 0) {
+        return (
+            <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+            >
+                <motion.div variants={textVariants} className="text-center text-gray-600">
+                    <AlertCircle className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                    <h2 className="text-2xl font-bold mb-2">No Classes Available</h2>
+                    <p>It looks like there are no fitness classes added yet. Please check back later!</p>
+                </motion.div>
+            </motion.div>
+        );
+    }
+
     return (
         <motion.div
             initial="hidden"
@@ -366,7 +400,6 @@ const Classes = () => {
                     <motion.p variants={textVariants} className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
                         Discover our comprehensive range of fitness classes designed for all levels and interests. Join thousands of members on their fitness journey.
                     </motion.p>
-
                     <motion.div variants={controlsContainerVariants} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                         <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-blue-700">{filteredAndSortedClasses.length}</div>
@@ -380,7 +413,6 @@ const Classes = () => {
                             <div className="text-2xl font-bold text-orange-700">{classesData.reduce((sum, c) => sum + c.bookings, 0)}</div>
                             <div className="text-sm text-gray-600">Total Bookings</div>
                         </motion.div>
-                        {/* Removed Avg Rating Stat Box */}
                         <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-purple-700">
                                 {allTrainers.length}
@@ -419,7 +451,7 @@ const Classes = () => {
                                 variants={controlItemVariants}
                                 className="flex items-center space-x-2 w-full sm:w-auto"
                             >
-                                <Filter className="h-5 w-5 text-gray-500" />
+                                <Filter className="h-5 w-5 text-gray-500 md:block hidden" />
                                 <CustomDropdown
                                     options={[
                                         { label: 'All Categories', value: '' },
@@ -507,7 +539,6 @@ const Classes = () => {
                                 className="mt-4 flex flex-wrap gap-2 items-center"
                             >
                                 <span className="text-sm text-gray-600">Active filters:</span>
-
                                 {selectedCategory && (
                                     <motion.span
                                         variants={badgeVariants}
@@ -530,7 +561,6 @@ const Classes = () => {
                                         </motion.button>
                                     </motion.span>
                                 )}
-
                                 {selectedDifficulty && (
                                     <motion.span
                                         variants={badgeVariants}
@@ -550,7 +580,6 @@ const Classes = () => {
                                         </motion.button>
                                     </motion.span>
                                 )}
-
                                 {searchTerm && (
                                     <motion.span
                                         variants={badgeVariants}
@@ -570,7 +599,6 @@ const Classes = () => {
                                         </motion.button>
                                     </motion.span>
                                 )}
-
                                 <motion.button
                                     onClick={() => {
                                         setSearchTerm('');
@@ -591,7 +619,7 @@ const Classes = () => {
 
                 {!isLoading && (
                     <motion.div
-                        key={viewMode}
+                        key={viewMode} // Key change will re-animate children on view mode change
                         initial="hidden"
                         animate="visible"
                         variants={{
@@ -651,12 +679,16 @@ const Classes = () => {
                                                                 className="relative"
                                                             >
                                                                 <motion.img
-                                                                    src={trainer.image}
+                                                                    src={trainer.image} // Use trainer.image from getTrainersForClass
                                                                     alt={trainer.name}
                                                                     className="w-8 h-8 rounded-full border-2 object-cover border-white"
                                                                     title={trainer.name}
                                                                     variants={trainerImageVariants}
                                                                     whileHover="hover"
+                                                                    onError={(e) => {
+                                                                        console.error("Failed to load trainer image:", trainer.image, e);
+                                                                        e.target.src = "https://via.placeholder.com/40?text=No+Img"; // Fallback placeholder
+                                                                    }}
                                                                 />
                                                             </Link>
                                                         ))}
@@ -717,12 +749,16 @@ const Classes = () => {
                                                             >
                                                                 <div className='flex items-center gap-2 bg-gray-100 pr-2.5 pl-1 py-1 rounded-lg'>
                                                                     <motion.img
-                                                                        src={trainer.image}
+                                                                        src={trainer.image} // Use trainer.image from getTrainersForClass
                                                                         alt={trainer.name}
                                                                         className="w-8 h-8 rounded-full border-2 object-cover border-white"
                                                                         title={trainer.name}
                                                                         variants={trainerImageVariants}
                                                                         whileHover="hover"
+                                                                        onError={(e) => {
+                                                                            console.error("Failed to load trainer image:", trainer.image, e);
+                                                                            e.target.src = "https://via.placeholder.com/40?text=No+Img"; // Fallback placeholder
+                                                                        }}
                                                                     />
                                                                     <span>{trainer.name}</span>
                                                                 </div>

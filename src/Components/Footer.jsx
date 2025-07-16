@@ -81,10 +81,6 @@ const Footer = () => {
                             <li>
                                 <NavLink to="/register" className={getNavLinkClass}>Register</NavLink>
                             </li>
-                            <li>
-                                {/* Assuming '/profile' is where a user's profile is, similar to the dropdown */}
-                                <NavLink to="/profile" className={getNavLinkClass}>Profile</NavLink>
-                            </li>
                         </ul>
                     </div>
 

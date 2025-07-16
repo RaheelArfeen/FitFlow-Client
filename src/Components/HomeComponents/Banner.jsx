@@ -90,16 +90,16 @@ const Banner = () => {
                             </p>
                         </motion.div>
 
-                        <motion.div className="flex flex-col sm:flex-row gap-4" variants={itemVariants}>
+                        <motion.div className="flex flex-row gap-4" variants={itemVariants}>
                             <Link to={'/classes'}>
-                                <button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 transform hover:scale-105">
+                                <button className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 md:px-8 md:py-4 rounded-lg md:text-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 transform hover:scale-105">
                                     <span>Explore Classes</span>
                                     <ArrowRight className="h-5 w-5" />
                                 </button>
                             </Link>
 
                             <Link to={'/dashboard'}>
-                                <button className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 border border-white/30">
+                                <button className="bg-white/20 hover:bg-white/30 text-white py-2 px-4 md:px-8 md:py-4 rounded-lg md:text-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 border border-white/30">
                                     <span>Go to Dashboard</span>
                                 </button>
                             </Link>

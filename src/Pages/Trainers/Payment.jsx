@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { motion } from "framer-motion";
-import Loading from "../../Pages/Loader";
+import Loading from "../Loader";
 import { loadStripe } from "@stripe/stripe-js";
 import {
     Elements,
@@ -172,7 +172,7 @@ const PaymentForm = () => {
                     Swal.fire("Payment Successful", "Your booking is confirmed!", "success");
                     queryClient.invalidateQueries(['trainerData', trainer?.email]);
                     queryClient.invalidateQueries(['trainers']);
-                    navigate("/");
+                    navigate("/trainers");
                 } else {
                     Swal.fire(
                         "Booking Issue",

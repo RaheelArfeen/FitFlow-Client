@@ -131,7 +131,7 @@ const TestimonialsSection = () => {
                                 {({ isActive }) => (
                                     <div
                                         className={`relative px-2 py-8 transition-all duration-500 ease-in-out ${isActive
-                                            ? 'scale-105 z-20 -translate-y-4'
+                                            ? 'scale-105 z-20 md:-translate-y-4 translate-y-4'
                                             : 'scale-95 translate-y-8 z-10'
                                             }`}
                                     >
@@ -174,7 +174,7 @@ const TestimonialsSection = () => {
                         ))}
                     </Swiper>
 
-                    <div className="flex items-center mt-8 w-fit mx-auto space-x-4">
+                    <div className="flex items-center md:mt-8 w-fit mx-auto space-x-4">
                         <button
                             ref={prevRef}
                             className="bg-white p-2 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-200 text-gray-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"

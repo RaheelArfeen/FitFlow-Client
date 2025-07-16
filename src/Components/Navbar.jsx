@@ -252,26 +252,45 @@ const Navbar = () => {
                             className="lg:hidden bg-white border-t border-gray-100 overflow-hidden py-4"
                         >
                             <div className="px-4 space-y-2">
-                                {/* Navigation Links for Mobile */}
-                                {['/', '/trainers', '/classes', '/community'].map((path) => {
-                                    const label = path === '/' ? 'Home' :
-                                        path.replace('/', '').charAt(0).toUpperCase() + path.slice(1);
-                                    return (
-                                        <motion.div
-                                            key={path}
-                                            variants={navItemVariants}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            <NavLink
-                                                to={path}
-                                                className={({ isActive }) => getMobileNavLinkClass(isActive)}
-                                                onClick={() => setIsMenuOpen(false)}
-                                            >
-                                                {label}
-                                            </NavLink>
-                                        </motion.div>
-                                    );
-                                })}
+                                <motion.div key="/" variants={navItemVariants} whileTap={{ scale: 0.95 }}>
+                                    <NavLink
+                                        to="/"
+                                        className={({ isActive }) => getMobileNavLinkClass(isActive)}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Home
+                                    </NavLink>
+                                </motion.div>
+
+                                <motion.div key="/trainers" variants={navItemVariants} whileTap={{ scale: 0.95 }}>
+                                    <NavLink
+                                        to="/trainers"
+                                        className={({ isActive }) => getMobileNavLinkClass(isActive)}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Trainers
+                                    </NavLink>
+                                </motion.div>
+
+                                <motion.div key="/classes" variants={navItemVariants} whileTap={{ scale: 0.95 }}>
+                                    <NavLink
+                                        to="/classes"
+                                        className={({ isActive }) => getMobileNavLinkClass(isActive)}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Classes
+                                    </NavLink>
+                                </motion.div>
+
+                                <motion.div key="/community" variants={navItemVariants} whileTap={{ scale: 0.95 }}>
+                                    <NavLink
+                                        to="/community"
+                                        className={({ isActive }) => getMobileNavLinkClass(isActive)}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Community
+                                    </NavLink>
+                                </motion.div>
                                 {user?.role === 'member' && (
                                     <motion.div
                                         variants={navItemVariants}

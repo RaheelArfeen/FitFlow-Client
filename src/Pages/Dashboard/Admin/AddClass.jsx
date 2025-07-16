@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Plus, Image, FileText, Users, Clock, Target, Award, AlertCircle, Info, LayoutList } from 'lucide-react'; // Added Info and LayoutList
+import { Plus, Image, FileText, Users, Clock, Target, Award, AlertCircle, Info, LayoutList, CalendarClock, Calendar, Dumbbell } from 'lucide-react'; // Added CalendarClock
 import { AuthContext } from '../../../Provider/AuthProvider';
 import useAxiosSecure from '../../../Provider/UseAxiosSecure';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +17,8 @@ const AddClass = () => {
         duration: '',
         difficulty: 'Beginner',
         category: '',
-        maxParticipants: '',
+        startTime: '', // New field for start time
+        endTime: '',   // New field for end time
         equipment: '',
         prerequisites: '',
         benefits: '',
@@ -29,14 +30,16 @@ const AddClass = () => {
     const totalSteps = 3;
 
     const categories = [
+        { id: 'Yoga & Mindfulness', name: 'Yoga & Mindfulness', description: 'Focuses on Yoga & Mindfulness.' },
+        { id: 'Pilates', name: 'Pilates', description: 'Core strength and stability' },
         { id: 'HIIT', name: 'HIIT', description: 'High-Intensity Interval Training' },
-        { id: 'Yoga', name: 'Yoga', description: 'Flexibility and mindfulness' },
         { id: 'Strength', name: 'Strength Training', description: 'Build muscle and power' },
         { id: 'Cardio', name: 'Cardio', description: 'Cardiovascular fitness' },
-        { id: 'Pilates', name: 'Pilates', description: 'Core strength and stability' },
+        { id: 'Boxing', name: 'Combat Sports', description: 'Combat sports training' },
         { id: 'Dance', name: 'Dance Fitness', description: 'Fun rhythmic workouts' },
-        { id: 'Boxing', name: 'Boxing', description: 'Combat sports training' },
-        { id: 'CrossFit', name: 'CrossFit', description: 'Functional fitness' }
+        { id: 'CrossFit', name: 'CrossFit', description: 'Functional fitness' },
+        { id: 'Meditation', name: 'Meditation', description: 'Focuses on Meditation.' },
+        { id: 'Nutrition Coaching', name: 'Nutrition Coaching', description: 'Focuses on Nutrition Coaching.' }
     ];
 
     const difficultyLevels = [
@@ -96,7 +99,8 @@ const AddClass = () => {
                 duration: '',
                 difficulty: 'Beginner',
                 category: '',
-                maxParticipants: '',
+                startTime: '',
+                endTime: '',
                 equipment: '',
                 prerequisites: '',
                 benefits: '',
@@ -114,6 +118,12 @@ const AddClass = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // Basic validation for time range
+        if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
+            toast.error("Start time must be before end time.");
+            return;
+        }
+
         const selectedTrainersData = formData.trainers.map(trainer => ({
             id: trainer._id,
             name: trainer.name,
@@ -123,7 +133,6 @@ const AddClass = () => {
             bookingsCount: trainer.slots?.reduce((acc, slot) => acc + (slot.bookingCount || 0), 0) || 0
         }));
 
-
         const newClass = {
             name: formData.name,
             image: formData.image,
@@ -131,7 +140,8 @@ const AddClass = () => {
             duration: formData.duration,
             difficulty: formData.difficulty,
             category: formData.category,
-            maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
+            startTime: formData.startTime || null, // Include new time fields
+            endTime: formData.endTime || null,     // Include new time fields
             equipment: formData.equipment || null,
             prerequisites: formData.prerequisites || null,
             benefits: formData.benefits || null,
@@ -162,7 +172,10 @@ const AddClass = () => {
             case 1:
                 return formData.name && formData.category && formData.difficulty;
             case 2:
-                return formData.description && formData.duration && formData.trainers.length > 0;
+                // Ensure description, duration, and at least one trainer are selected.
+                // Also, if start/end times are provided, ensure start is before end.
+                const isTimeValid = (!formData.startTime || !formData.endTime) || (formData.startTime < formData.endTime);
+                return formData.description && formData.duration && formData.trainers.length > 0 && isTimeValid;
             case 3:
                 return formData.image;
             default:
@@ -215,7 +228,7 @@ const AddClass = () => {
                     {currentStep === 1 && (
                         <div className="space-y-6">
                             <div className="text-center mb-8">
-                                <Info className="h-12 w-12 text-blue-700 mx-auto mb-4" /> {/* Changed from Target */}
+                                <Info className="h-12 w-12 text-blue-700 mx-auto mb-4" />
                                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Basic Class Information</h2>
                                 <p className="text-gray-600">Let's start with the fundamentals of your class</p>
                             </div>
@@ -287,7 +300,7 @@ const AddClass = () => {
                     {currentStep === 2 && (
                         <div className="space-y-6">
                             <div className="text-center mb-8">
-                                <LayoutList className="h-12 w-12 text-blue-700 mx-auto mb-4" /> {/* Changed from FileText */}
+                                <LayoutList className="h-12 w-12 text-blue-700 mx-auto mb-4" />
                                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Class Details & Trainers</h2>
                                 <p className="text-gray-600">Provide comprehensive information about your class</p>
                             </div>
@@ -329,24 +342,40 @@ const AddClass = () => {
                                     </div>
                                 </div>
 
+                                {/* New Time Range Fields */}
                                 <div>
-                                    <label htmlFor="maxParticipants" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Max Participants
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Class Time Range
                                     </label>
-                                    <div className="relative">
-                                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                        <input
-                                            type="number"
-                                            id="maxParticipants"
-                                            name="maxParticipants"
-                                            value={formData.maxParticipants}
-                                            onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="e.g., 20"
-                                            min="1"
-                                            max="100"
-                                        />
+                                    <div className="flex space-x-2">
+                                        <div className="relative flex-1">
+                                            <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                            <input
+                                                type="time"
+                                                id="startTime"
+                                                name="startTime"
+                                                value={formData.startTime}
+                                                onChange={handleChange}
+                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                title="Start Time"
+                                            />
+                                        </div>
+                                        <div className="relative flex-1">
+                                            <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                            <input
+                                                type="time"
+                                                id="endTime"
+                                                name="endTime"
+                                                value={formData.endTime}
+                                                onChange={handleChange}
+                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                title="End Time"
+                                            />
+                                        </div>
                                     </div>
+                                    {formData.startTime && formData.endTime && formData.startTime >= formData.endTime && (
+                                        <p className="text-red-500 text-xs mt-1">Start time must be before end time.</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -459,7 +488,7 @@ const AddClass = () => {
 
                             <div>
                                 <label htmlFor="schedule" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Schedule Information
+                                    Additional Schedule Information
                                 </label>
                                 <textarea
                                     id="schedule"
@@ -468,7 +497,7 @@ const AddClass = () => {
                                     onChange={handleChange}
                                     rows={2}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="When will this class be available? (e.g., Mondays and Wednesdays at 7 PM, Daily at 6 AM)"
+                                    placeholder="Any other recurring schedule details? (e.g., Every Monday, First Tuesday of the month)"
                                 />
                             </div>
 
@@ -507,9 +536,9 @@ const AddClass = () => {
                                                 )}
                                                 <p className="text-gray-600 text-sm mb-3">{formData.description}</p>
                                                 <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                                                    {formData.duration && <span>⏱️ {formData.duration}</span>}
-                                                    {formData.maxParticipants && <span>👥 Max {formData.maxParticipants}</span>}
-                                                    {formData.equipment && <span>🏋️ {formData.equipment}</span>}
+                                                    {formData.duration && <span className='flex items-center gap-1'><Clock size={18}/> {formData.duration}</span>}
+                                                    {(formData.startTime && formData.endTime) && <span className='flex items-center gap-1'><Calendar size={18}/> {formData.startTime} - {formData.endTime}</span>}
+                                                    {formData.equipment && <span className='flex items-center gap-1'><Dumbbell size={18}/> {formData.equipment}</span>}
                                                 </div>
                                                 {formData.trainers.length > 0 && (
                                                     <div className="text-sm text-gray-600">
@@ -556,36 +585,20 @@ const AddClass = () => {
                                 >
                                     {addClassMutation.isLoading ? (
                                         <>
-                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            <span>Creating...</span>
+                                            <span>Adding Class...</span>
                                         </>
                                     ) : (
                                         <>
                                             <Plus className="h-5 w-5" />
-                                            <span>Create Class</span>
+                                            <span>Add Class</span>
                                         </>
                                     )}
                                 </button>
                             )}
-                        </div>
-                    </div>
-
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start space-x-2">
-                            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                            <div className="text-sm text-blue-800">
-                                <p className="font-medium mb-1">Tips for creating a successful class:</p>
-                                <ul className="space-y-1 text-blue-700">
-                                    <li>• Use clear, engaging descriptions that highlight benefits</li>
-                                    <li>• Choose appropriate difficulty levels for your target audience</li>
-                                    <li>• Include high-quality images that represent the class accurately</li>
-                                    <li>• Assign qualified trainers who specialize in this type of workout</li>
-                                    <li>• Be specific about equipment and prerequisites</li>
-                                </ul>
-                            </div>
                         </div>
                     </div>
                 </form>
