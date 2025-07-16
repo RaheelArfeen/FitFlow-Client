@@ -7,6 +7,7 @@ import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { AuthContext } from '../../Provider/AuthProvider';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query'; // Import useQuery
+import { Title } from 'react-head';
 
 const membershipPackages = [
     {
@@ -180,6 +181,7 @@ const BookTrainerPage = () => {
             animate="visible"
             variants={containerVariants}
         >
+            <Title>{trainer?.name ? `Book ${trainer.name} | FitFlow` : 'Book Trainer | FitFlow'}</Title>
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     className="bg-white rounded-xl shadow-lg overflow-hidden"

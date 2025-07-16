@@ -15,6 +15,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { toast } from 'sonner';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
+import { Title } from 'react-head';
 
 const postsPerPage = 6;
 const MAX_VISIBLE_PAGES = 5; // Define how many page numbers to show before ellipsis
@@ -175,6 +176,7 @@ const Community = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
+            <Title>Community | FitFlow</Title>
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
                 <div className="text-center mb-12 px-2 sm:px-0">
                     <motion.h1

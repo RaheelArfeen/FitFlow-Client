@@ -6,6 +6,7 @@ import { AuthContext } from '../Provider/AuthProvider';
 import { deleteUser } from 'firebase/auth';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { Title } from 'react-head';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -107,6 +108,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-orange-600 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <Title>Register | FitLife</Title>
             <motion.div className="max-w-md w-full space-y-8" variants={containerVariants} initial="hidden" animate="visible">
                 <motion.div className="bg-white rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}

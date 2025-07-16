@@ -7,9 +7,9 @@ import TestimonialsSection from '../Components/HomeComponents/TestimonialsSectio
 import CommunitySection from '../Components/HomeComponents/CommunitySection';
 import NewsletterSection from '../Components/HomeComponents/NewsletterSection';
 import TeamSection from '../Components/HomeComponents/TeamSection';
+import { Meta, Title } from 'react-head';
 
 const Home = () => {
-
     useEffect(() => {
         const timer = setTimeout(() => {
             window.scrollTo(0, 0);
@@ -18,16 +18,18 @@ const Home = () => {
     }, []);
 
     return (
-        <div>
+        <>
+            <Title>Home | FitLife</Title>
+
             <Banner />
             <FeaturedSection />
-            <AboutSection/>
-            <FeaturedClasses/>
-            <TestimonialsSection/>
-            <CommunitySection/>
-            <TeamSection/>
-            <NewsletterSection/>
-        </div>
+            <AboutSection />
+            <FeaturedClasses />
+            <TestimonialsSection />
+            <CommunitySection />
+            <TeamSection />
+            <NewsletterSection />
+        </>
     );
 };
 

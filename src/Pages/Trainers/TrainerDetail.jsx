@@ -15,6 +15,7 @@ import Loader from '../../Pages/Loader';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../../Provider/AuthProvider';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Title } from 'react-head';
 
 const TrainerDetail = () => {
     const { id } = useParams();
@@ -166,6 +167,8 @@ const TrainerDetail = () => {
             animate="visible"
             variants={containerVariants}
         >
+            <Title>{trainer?.name ? `${trainer.name} | FitFlow` : 'Trainer | FitFlow'}</Title>
+
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <motion.div

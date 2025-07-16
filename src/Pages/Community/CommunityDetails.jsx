@@ -22,6 +22,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import TanStack Query hooks
+import { Title } from 'react-head';
 
 const CommunityDetails = () => {
     const { id } = useParams();
@@ -293,6 +294,7 @@ const CommunityDetails = () => {
                 initial="hidden"
                 animate="visible"
             >
+                <Title>Community Post | FitFlow</Title>
                 <motion.button
                     onClick={() => navigate('/community')}
                     className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"

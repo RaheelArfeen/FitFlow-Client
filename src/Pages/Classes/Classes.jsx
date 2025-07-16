@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { motion, AnimatePresence } from 'framer-motion';
 import Loader from '../Loader';
+import { Title } from 'react-head';
 
 const Classes = () => {
     const axiosSecure = useAxiosSecure();
@@ -357,6 +358,7 @@ const Classes = () => {
             className="min-h-screen bg-gray-50 py-12"
         >
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
+                <Title>Classes | FitFlow</Title>
                 <div className="text-center mb-12">
                     <motion.h1 variants={textVariants} className="text-4xl font-bold text-gray-800 mb-4">
                         Fitness Classes

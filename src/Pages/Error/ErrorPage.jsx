@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router';
 import { AlertTriangle, Home, ArrowLeft, RefreshCw, Activity } from 'lucide-react';
+import { Title } from 'react-head';
 
 const ErrorPage = ({
     title = "Oops! Something went wrong",
@@ -22,6 +23,7 @@ const ErrorPage = ({
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center px-4">
             <div className="max-w-md w-full text-center">
+                <Title>Not Found | FitFlow</Title>
 
                 {/* Error Icon and Message */}
                 <div className="mb-8">

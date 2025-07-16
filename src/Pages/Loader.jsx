@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Activity } from 'lucide-react';
+import { Title } from 'react-head';
 
 const Loader = ({ message = 'Loading...', size = 'large' }) => {
     useEffect(() => {
@@ -12,6 +13,7 @@ const Loader = ({ message = 'Loading...', size = 'large' }) => {
 
     return (
         <div className="flex flex-col items-center justify-center bg-[#f9fafb] fixed top-0 left-0 z-50 min-h-screen h-full w-full">
+            <Title>FitFlow</Title>
             <div className="relative mb-10 scale-125">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <div className="relative bg-gradient-to-r from-blue-700 to-orange-600 p-4 rounded-2xl">

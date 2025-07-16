@@ -13,6 +13,7 @@ import { auth } from '../Firebase/firebase.init';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { AuthContext } from '../Provider/AuthProvider';
+import { Title } from 'react-head';
 
 const Login = ({ onRegister }) => { // onRegister prop is not used in this component
     const [email, setEmail] = useState('');
@@ -180,6 +181,7 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                 initial="hidden"
                 animate="visible"
             >
+                <Title>Login | FitLife</Title>
                 <motion.div className="bg-white rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}
                     <div className="text-center mb-8">

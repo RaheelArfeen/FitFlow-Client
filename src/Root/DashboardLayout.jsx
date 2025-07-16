@@ -6,6 +6,7 @@ import {
     Mail, UserCheck, DollarSign, Clock, Home, Crown, Trophy, Menu, X, CalendarPlus
 } from 'lucide-react';
 import { AuthContext } from '../Provider/AuthProvider';
+import { Title } from 'react-head';
 
 const DashboardLayout = () => {
     const { user } = useContext(AuthContext);
@@ -95,6 +96,7 @@ const SidebarContent = ({ user, menuItems, setIsDrawerOpen }) => {
         <>
             {/* Sidebar Header */}
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <Title>Dashboard | FitFlow</Title>
                 <Link to="/" className="flex items-center space-x-3 group">
                     <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>

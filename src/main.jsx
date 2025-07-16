@@ -9,16 +9,19 @@ import { router } from './Router/router';
 import AuthProvider from './Provider/AuthProvider';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HeadProvider } from 'react-head';
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Toaster />
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <HeadProvider>
+        <AuthProvider>
+          <Toaster />
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </HeadProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

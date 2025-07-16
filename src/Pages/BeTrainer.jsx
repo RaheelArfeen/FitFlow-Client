@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useAxiosSecure from '../Provider/UseAxiosSecure';
 import { AuthContext } from '../Provider/AuthProvider';
 import Select from 'react-select';
+import { Title } from 'react-head';
 
 const containerVariants = {
     hidden: {},
@@ -238,6 +239,7 @@ const BeTrainer = () => {
             animate="visible"
             className="min-h-screen py-12"
         >
+            <Title>Be A Trainer | FitFlow</Title>
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div variants={childVariants} className="bg-white rounded-xl shadow-lg p-8">
                     <motion.div variants={childVariants} className="text-center mb-8">

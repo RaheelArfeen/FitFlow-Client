@@ -6,6 +6,7 @@ import { AuthContext } from '../../Provider/AuthProvider';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
 import { useQuery } from '@tanstack/react-query';
+import { Title } from 'react-head';
 
 const Trainers = () => {
     const { user } = useContext(AuthContext);
@@ -52,7 +53,7 @@ const Trainers = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
-
+                <Title>Trainers | FitLife</Title>
                 {/* Header */}
                 <motion.header
                     className="text-center mb-16"
