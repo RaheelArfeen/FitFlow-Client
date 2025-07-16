@@ -103,18 +103,20 @@ const ActivityLog = () => {
 
     if (authLoading) {
         return (
-            <></>
+            <Loader />
         );
     }
 
     if (!user) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen text-gray-700">
+            <div className="flex flex-col justify-center items-center h-screen text-gray-700 p-4">
                 <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-lg mb-4">Please log in to view your activity log.</p>
-                <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg transition-colors duration-200">
-                    Go to Login
-                </button>
+                <p className="text-lg mb-4 text-center">Please log in to view your activity log.</p>
+                <Link to="/login">
+                    <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+                        Go to Login
+                    </button>
+                </Link>
             </div>
         );
     }
@@ -127,8 +129,10 @@ const ActivityLog = () => {
 
     if (isError) {
         return (
-            <div className="flex justify-center items-center h-screen text-red-600">
-                <p className="text-lg">Error loading applications: {error.message}</p>
+            <div className="flex flex-col justify-center items-center h-screen text-red-600 p-4">
+                <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <p className="text-lg text-center">Error loading applications: {error.message}</p>
+                <p className="text-md text-gray-600 mt-2">Please try refreshing the page.</p>
             </div>
         );
     }
@@ -150,7 +154,7 @@ const ActivityLog = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-2xl font-bold text-gray-800">{applications.length}</h3>
-                            <p className="text-gray-600">Total Applications</p>
+                            <p className="text-gray-600">Total Relevant Applications</p>
                         </div>
                         <AlertCircle className="h-8 w-8 text-blue-600" />
                     </div>
@@ -184,7 +188,7 @@ const ActivityLog = () => {
                     <motion.div variants={sectionVariants} initial="hidden" animate="visible" className="divide-y divide-gray-200">
                         {applications.map((application) => (
                             <motion.div
-                                key={application.id}
+                                key={application._id} // Using _id as the unique key
                                 variants={itemVariants}
                                 className="p-6 hover:bg-gray-50 transition-colors duration-200"
                             >
@@ -192,8 +196,10 @@ const ActivityLog = () => {
                                     <div className="flex items-center space-x-4">
                                         {getStatusIcon(application.status)}
                                         <div>
-                                            <h3 className="font-semibold text-gray-800">Trainer Application #{application.id}</h3>
-                                            <p className="text-sm text-gray-600">Applied on {application.appliedAt}</p>
+                                            <h3 className="font-semibold text-gray-800">Trainer Application {application.name ? `for ${application.name}` : `ID: ${application._id}`}</h3>
+                                            <p className="text-sm text-gray-600">
+                                                Applied on {application.appliedAt ? new Date(application.appliedAt).toLocaleDateString() : 'N/A'}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -202,9 +208,9 @@ const ActivityLog = () => {
                                             {application.status}
                                         </span>
 
-                                        {application.status === 'rejected' && application.feedback && (
+                                        {application.status === 'rejected' && application.adminFeedback && (
                                             <motion.button
-                                                onClick={() => handleViewFeedback(application.feedback)}
+                                                onClick={() => handleViewFeedback(application.adminFeedback)}
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                                 className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 transition-colors duration-200"
@@ -237,8 +243,8 @@ const ActivityLog = () => {
                 ) : (
                     <motion.div variants={itemVariants} className="p-12 text-center">
                         <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">No Applications Found</h3>
-                        <p className="text-gray-600 mb-6">You haven't submitted any trainer applications yet.</p>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">No Relevant Applications Found</h3>
+                        <p className="text-gray-600 mb-6">You haven't submitted any pending or rejected trainer applications yet.</p>
                         <Link to={'/be-trainer'}>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
@@ -255,7 +261,7 @@ const ActivityLog = () => {
             <AnimatePresence>
                 {showModal && (
                     <motion.div
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -299,13 +305,15 @@ const ActivityLog = () => {
                                     >
                                         Close
                                     </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors duration-200"
-                                    >
-                                        Apply Again
-                                    </motion.button>
+                                    <Link to={'/be-trainer'}>
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors duration-200"
+                                        >
+                                            Apply Again
+                                        </motion.button>
+                                    </Link>
                                 </div>
                             </div>
                         </motion.div>
