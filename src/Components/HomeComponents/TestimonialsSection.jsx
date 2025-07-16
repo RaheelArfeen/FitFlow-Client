@@ -126,7 +126,7 @@ const TestimonialsSection = () => {
                         }}
                         className="pb-16"
                     >
-                        {testimonials.map((testimonial) => (
+                        {testimonials.slice(0, 9).map((testimonial) => (
                             <SwiperSlide key={testimonial.id}>
                                 {({ isActive }) => (
                                     <div
