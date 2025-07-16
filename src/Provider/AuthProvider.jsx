@@ -32,7 +32,7 @@ const AuthProvider = ({ children }) => {
 
             const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
 
-            const res = await axios.post("http://localhost:3000/register", {
+            const res = await axios.post("https://fitflow-server-red.vercel.app/register", {
                 email,
                 displayName: firebaseUser.displayName,
                 photoURL,
@@ -69,7 +69,7 @@ const AuthProvider = ({ children }) => {
 
             const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
 
-            const res = await axios.post("http://localhost:3000/login", { email });
+            const res = await axios.post("https://fitflow-server-red.vercel.app/login", { email });
 
             const token = res.data.token;
             localStorage.setItem("FitFlow-token", token);
@@ -100,7 +100,7 @@ const AuthProvider = ({ children }) => {
 
             const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
 
-            const res = await axios.post("http://localhost:3000/login", {
+            const res = await axios.post("https://fitflow-server-red.vercel.app/login", {
                 email: firebaseUser.email,
             });
 
@@ -165,7 +165,7 @@ const AuthProvider = ({ children }) => {
                     localStorage.setItem("FitFlow-token", token);
 
                     const roleRes = await axios.get(
-                        `http://localhost:3000/users/role/${currentUser.email}`,
+                        `https://fitflow-server-red.vercel.app/users/role/${currentUser.email}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,

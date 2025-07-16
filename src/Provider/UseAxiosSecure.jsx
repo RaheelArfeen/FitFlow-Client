@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { AuthContext } from './AuthProvider';
 
 const axiosSecure = axios.create({
-    baseURL: `http://localhost:3000`,
+    baseURL: `https://fitflow-server-red.vercel.app`,
 });
 
 // Flag to avoid attaching interceptors multiple times

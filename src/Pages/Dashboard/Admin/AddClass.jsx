@@ -1,9 +1,10 @@
 import React, { useContext, useState } from 'react';
-import { Plus, Image, FileText, Users, Clock, Target, Award, AlertCircle, Info, LayoutList, CalendarClock, Calendar, Dumbbell } from 'lucide-react'; // Added CalendarClock
+import { Plus, Image, FileText, Users, Clock, Target, Award, AlertCircle, Info, LayoutList, CalendarClock, Calendar, Dumbbell } from 'lucide-react';
 import { AuthContext } from '../../../Provider/AuthProvider';
 import useAxiosSecure from '../../../Provider/UseAxiosSecure';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AddClass = () => {
     const { user } = useContext(AuthContext);
@@ -17,8 +18,8 @@ const AddClass = () => {
         duration: '',
         difficulty: 'Beginner',
         category: '',
-        startTime: '', // New field for start time
-        endTime: '',   // New field for end time
+        startTime: '',
+        endTime: '',
         equipment: '',
         prerequisites: '',
         benefits: '',
@@ -118,6 +119,11 @@ const AddClass = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        if (currentStep < totalSteps) {
+            nextStep(); // Allow submitting by going to the next step if not on the last step
+            return;
+        }
+
         // Basic validation for time range
         if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
             toast.error("Start time must be before end time.");
@@ -140,8 +146,8 @@ const AddClass = () => {
             duration: formData.duration,
             difficulty: formData.difficulty,
             category: formData.category,
-            startTime: formData.startTime || null, // Include new time fields
-            endTime: formData.endTime || null,     // Include new time fields
+            startTime: formData.startTime || null,
+            endTime: formData.endTime || null,
             equipment: formData.equipment || null,
             prerequisites: formData.prerequisites || null,
             benefits: formData.benefits || null,
@@ -156,8 +162,10 @@ const AddClass = () => {
     };
 
     const nextStep = () => {
-        if (currentStep < totalSteps) {
+        if (isStepValid(currentStep) && currentStep < totalSteps) {
             setCurrentStep(currentStep + 1);
+        } else if (!isStepValid(currentStep)) {
+            toast.error("Please fill in all required fields for this step.");
         }
     };
 
@@ -172,8 +180,6 @@ const AddClass = () => {
             case 1:
                 return formData.name && formData.category && formData.difficulty;
             case 2:
-                // Ensure description, duration, and at least one trainer are selected.
-                // Also, if start/end times are provided, ensure start is before end.
                 const isTimeValid = (!formData.startTime || !formData.endTime) || (formData.startTime < formData.endTime);
                 return formData.description && formData.duration && formData.trainers.length > 0 && isTimeValid;
             case 3:
@@ -183,18 +189,44 @@ const AddClass = () => {
         }
     };
 
+    const formVariants = {
+        hidden: { opacity: 0, x: -100 },
+        visible: { opacity: 1, x: 0 },
+        exit: { opacity: 0, x: 100 },
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
+            >
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Add New Class</h1>
                 <p className="text-gray-600">Create an engaging fitness class for your members to enjoy.</p>
-            </div>
+            </motion.div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="bg-white rounded-xl shadow-lg p-6 mb-8"
+            >
                 <div className="flex items-center justify-between mb-6">
                     {[1, 2, 3].map((step) => (
                         <React.Fragment key={step}>
-                            <div className="flex items-center">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: step * 0.1 }}
+                                className="flex items-center"
+                            >
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= step
                                     ? 'bg-blue-700 text-white'
                                     : 'bg-gray-200 text-gray-600'
@@ -213,374 +245,458 @@ const AddClass = () => {
                                         {step === 3 && 'Images and final review'}
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
                             {step < totalSteps && (
-                                <div className={`flex-1 h-1 mx-4 ${currentStep > step ? 'bg-blue-700' : 'bg-gray-200'
-                                    }`}></div>
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: 'auto' }}
+                                    transition={{ duration: 0.5, delay: step * 0.1 + 0.2 }}
+                                    className={`flex-1 h-1 mx-4 ${currentStep > step ? 'bg-blue-700' : 'bg-gray-200'
+                                        }`}
+                                ></motion.div>
                             )}
                         </React.Fragment>
                     ))}
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-white rounded-xl shadow-lg p-8">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-white rounded-xl shadow-lg p-8"
+            >
                 <form onSubmit={handleSubmit}>
-                    {currentStep === 1 && (
-                        <div className="space-y-6">
-                            <div className="text-center mb-8">
-                                <Info className="h-12 w-12 text-blue-700 mx-auto mb-4" />
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Basic Class Information</h2>
-                                <p className="text-gray-600">Let's start with the fundamentals of your class</p>
-                            </div>
+                    <AnimatePresence mode="wait">
+                        {currentStep === 1 && (
+                            <motion.div
+                                key="step1"
+                                variants={formVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                transition={{ duration: 0.5 }}
+                                className="space-y-6"
+                            >
+                                <motion.div variants={itemVariants} transition={{ delay: 0.1 }} className="text-center mb-8">
+                                    <Info className="h-12 w-12 text-blue-700 mx-auto mb-4" />
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Basic Class Information</h2>
+                                    <p className="text-gray-600">Let's start with the fundamentals of your class</p>
+                                </motion.div>
 
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Class Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="e.g., Morning Power Yoga, HIIT Bootcamp"
-                                    required
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Choose a catchy, descriptive name that attracts members</p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Category *
-                                </label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {categories.map((cat) => (
-                                        <div
-                                            key={cat.id}
-                                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${formData.category === cat.id
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
-                                                }`}
-                                            onClick={() => setFormData({ ...formData, category: cat.id, trainers: [] })}
-                                        >
-                                            <div className="font-medium text-gray-800">{cat.name}</div>
-                                            <div className="text-xs text-gray-500 mt-1">{cat.description}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Difficulty Level *
-                                </label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {difficultyLevels.map((level) => (
-                                        <div
-                                            key={level.id}
-                                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${formData.difficulty === level.id
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
-                                                }`}
-                                            onClick={() => setFormData({ ...formData, difficulty: level.id })}
-                                        >
-                                            <div className="font-medium text-gray-800">{level.name}</div>
-                                            <div className="text-xs text-gray-500 mt-1">{level.description}</div>
-                                            <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${level.color}`}>
-                                                {level.name}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {currentStep === 2 && (
-                        <div className="space-y-6">
-                            <div className="text-center mb-8">
-                                <LayoutList className="h-12 w-12 text-blue-700 mx-auto mb-4" />
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Class Details & Trainers</h2>
-                                <p className="text-gray-600">Provide comprehensive information about your class</p>
-                            </div>
-
-                            <div>
-                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Class Description *
-                                </label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Describe what participants can expect, the workout style, and what makes this class special..."
-                                    required
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Be detailed and engaging to attract the right participants</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Duration *
+                                <motion.div variants={itemVariants} transition={{ delay: 0.2 }}>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Class Name *
                                     </label>
-                                    <div className="relative">
-                                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            id="duration"
-                                            name="duration"
-                                            value={formData.duration}
-                                            onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="e.g., 45 minutes, 1 hour"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* New Time Range Fields */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Class Time Range
-                                    </label>
-                                    <div className="flex space-x-2">
-                                        <div className="relative flex-1">
-                                            <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                            <input
-                                                type="time"
-                                                id="startTime"
-                                                name="startTime"
-                                                value={formData.startTime}
-                                                onChange={handleChange}
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                title="Start Time"
-                                            />
-                                        </div>
-                                        <div className="relative flex-1">
-                                            <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                            <input
-                                                type="time"
-                                                id="endTime"
-                                                name="endTime"
-                                                value={formData.endTime}
-                                                onChange={handleChange}
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                title="End Time"
-                                            />
-                                        </div>
-                                    </div>
-                                    {formData.startTime && formData.endTime && formData.startTime >= formData.endTime && (
-                                        <p className="text-red-500 text-xs mt-1">Start time must be before end time.</p>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-3 border ${!formData.name && currentStep === 1 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                        placeholder="e.g., Morning Power Yoga, HIIT Bootcamp"
+                                        required
+                                    />
+                                    {!formData.name && currentStep === 1 && (
+                                        <p className="text-red-500 text-xs mt-1">Class Name is required.</p>
                                     )}
-                                </div>
-                            </div>
+                                    <p className="text-xs text-gray-500 mt-1">Choose a catchy, descriptive name that attracts members</p>
+                                </motion.div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Assign Trainers * (Select at least one)
-                                    {formData.category && <span className="ml-2 text-xs text-gray-500">(Filtered by "{formData.category}" specialization)</span>}
-                                </label>
-                                {trainersLoading && <p className="text-gray-500">Loading trainers...</p>}
-                                {trainersError && <p className="text-red-500">Error loading trainers.</p>}
-                                {!formData.category && <p className="text-gray-500">Please select a category first to see relevant trainers.</p>}
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {filteredTrainers.length > 0 ? (
-                                        filteredTrainers.map((trainer) => (
-                                            <div
-                                                key={trainer._id}
-                                                className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${formData.trainers.some(t => t._id === trainer._id)
+                                <motion.div variants={itemVariants} transition={{ delay: 0.3 }}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        Category *
+                                    </label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {categories.map((cat) => (
+                                            <motion.div
+                                                key={cat.id}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${formData.category === cat.id
                                                     ? 'border-blue-500 bg-blue-50'
                                                     : 'border-gray-200 hover:border-gray-300'
                                                     }`}
-                                                onClick={() => handleTrainerToggle(trainer)}
+                                                onClick={() => setFormData({ ...formData, category: cat.id, trainers: [] })}
                                             >
-                                                <div className="font-medium text-gray-800 text-sm">{trainer.name}</div>
-                                                <div className="text-xs text-gray-500 mt-1">Specialization: {trainer.specialization}</div>
-                                                {formData.trainers.some(t => t._id === trainer._id) && (
-                                                    <div className="text-xs text-blue-600 mt-1">✓ Selected</div>
-                                                )}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        formData.category && !trainersLoading && <p className="text-gray-500">No trainers found for this category.</p>
+                                                <div className="font-medium text-gray-800">{cat.name}</div>
+                                                <div className="text-xs text-gray-500 mt-1">{cat.description}</div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                    {!formData.category && currentStep === 1 && (
+                                        <p className="text-red-500 text-xs mt-1">Please select a category.</p>
                                     )}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Selected trainers: {formData.trainers.length > 0 ? formData.trainers.map(t => t.name).join(', ') : 'None'}
-                                </p>
-                            </div>
+                                </motion.div>
 
-                            <div>
-                                <label htmlFor="equipment" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Equipment Needed
-                                </label>
-                                <input
-                                    type="text"
-                                    id="equipment"
-                                    name="equipment"
-                                    value={formData.equipment}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="e.g., Yoga mat, dumbbells, resistance bands (or 'None' if no equipment needed)"
-                                />
-                            </div>
+                                <motion.div variants={itemVariants} transition={{ delay: 0.4 }}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        Difficulty Level *
+                                    </label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {difficultyLevels.map((level) => (
+                                            <motion.div
+                                                key={level.id}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${formData.difficulty === level.id
+                                                    ? 'border-blue-500 bg-blue-50'
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                                onClick={() => setFormData({ ...formData, difficulty: level.id })}
+                                            >
+                                                <div className="font-medium text-gray-800">{level.name}</div>
+                                                <div className="text-xs text-gray-500 mt-1">{level.description}</div>
+                                                <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${level.color}`}>
+                                                    {level.name}
+                                                </span>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                    {!formData.difficulty && currentStep === 1 && (
+                                        <p className="text-red-500 text-xs mt-1">Please select a difficulty level.</p>
+                                    )}
+                                </motion.div>
+                            </motion.div>
+                        )}
 
-                            <div>
-                                <label htmlFor="prerequisites" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Prerequisites
-                                </label>
-                                <textarea
-                                    id="prerequisites"
-                                    name="prerequisites"
-                                    value={formData.prerequisites}
-                                    onChange={handleChange}
-                                    rows={2}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Any requirements or recommendations for participants (e.g., basic fitness level, previous experience)"
-                                />
-                            </div>
+                        {currentStep === 2 && (
+                            <motion.div
+                                key="step2"
+                                variants={formVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                transition={{ duration: 0.5 }}
+                                className="space-y-6"
+                            >
+                                <motion.div variants={itemVariants} transition={{ delay: 0.1 }} className="text-center mb-8">
+                                    <LayoutList className="h-12 w-12 text-blue-700 mx-auto mb-4" />
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Class Details & Trainers</h2>
+                                    <p className="text-gray-600">Provide comprehensive information about your class</p>
+                                </motion.div>
 
-                            <div>
-                                <label htmlFor="benefits" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Class Benefits
-                                </label>
-                                <textarea
-                                    id="benefits"
-                                    name="benefits"
-                                    value={formData.benefits}
-                                    onChange={handleChange}
-                                    rows={3}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="What will participants gain from this class? (e.g., improved strength, flexibility, stress relief)"
-                                />
-                            </div>
-                        </div>
-                    )}
+                                <motion.div variants={itemVariants} transition={{ delay: 0.2 }}>
+                                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Class Description *
+                                    </label>
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        rows={4}
+                                        className={`w-full px-4 py-3 border ${!formData.description && currentStep === 2 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                        placeholder="Describe what participants can expect, the workout style, and what makes this class special..."
+                                        required
+                                    />
+                                    {!formData.description && currentStep === 2 && (
+                                        <p className="text-red-500 text-xs mt-1">Class description is required.</p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">Be detailed and engaging to attract the right participants</p>
+                                </motion.div>
 
-                    {currentStep === 3 && (
-                        <div className="space-y-6">
-                            <div className="text-center mb-8">
-                                <Image className="h-12 w-12 text-blue-700 mx-auto mb-4" />
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Media & Final Review</h2>
-                                <p className="text-gray-600">Add visuals and review your class details</p>
-                            </div>
-
-                            <div>
-                                <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Class Image URL *
-                                </label>
-                                <input
-                                    type="url"
-                                    id="image"
-                                    name="image"
-                                    value={formData.image}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="https://example.com/class-image.jpg"
-                                    required
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Use a high-quality image that represents your class</p>
-                            </div>
-
-                            <div>
-                                <label htmlFor="schedule" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Additional Schedule Information
-                                </label>
-                                <textarea
-                                    id="schedule"
-                                    name="schedule"
-                                    value={formData.schedule}
-                                    onChange={handleChange}
-                                    rows={2}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Any other recurring schedule details? (e.g., Every Monday, First Tuesday of the month)"
-                                />
-                            </div>
-
-                            {formData.name && (
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                        <Award className="h-5 w-5 mr-2 text-orange-600" />
-                                        Class Preview
-                                    </h3>
-                                    <div className="bg-gray-50 rounded-lg p-6">
-                                        <div className="flex items-start space-x-4">
-                                            {formData.image && (
-                                                <img
-                                                    src={formData.image}
-                                                    alt={formData.name}
-                                                    className="w-32 h-32 object-cover rounded-lg"
-                                                    onError={(e) => {
-                                                        e.target.src = 'https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg?auto=compress&cs=tinysrgb&w=200';
-                                                    }}
-                                                />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <motion.div variants={itemVariants} transition={{ delay: 0.3 }}>
+                                        <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Duration *
+                                        </label>
+                                        <div className="relative">
+                                            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                id="duration"
+                                                name="duration"
+                                                value={formData.duration}
+                                                onChange={handleChange}
+                                                className={`w-full pl-10 pr-4 py-3 border ${!formData.duration && currentStep === 2 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                                placeholder="e.g., 45 minutes, 1 hour"
+                                                required
+                                            />
+                                            {!formData.duration && currentStep === 2 && (
+                                                <p className="text-red-500 text-xs mt-1">Duration is required.</p>
                                             )}
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-3 mb-2">
-                                                    <h4 className="text-xl font-semibold text-gray-800">{formData.name}</h4>
-                                                    {formData.difficulty && (
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${difficultyLevels.find(d => d.id === formData.difficulty)?.color
-                                                            }`}>
-                                                            {formData.difficulty}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {formData.category && (
-                                                    <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm mb-2">
-                                                        {categories.find(c => c.id === formData.category)?.name}
-                                                    </span>
-                                                )}
-                                                <p className="text-gray-600 text-sm mb-3">{formData.description}</p>
-                                                <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                                                    {formData.duration && <span className='flex items-center gap-1'><Clock size={18}/> {formData.duration}</span>}
-                                                    {(formData.startTime && formData.endTime) && <span className='flex items-center gap-1'><Calendar size={18}/> {formData.startTime} - {formData.endTime}</span>}
-                                                    {formData.equipment && <span className='flex items-center gap-1'><Dumbbell size={18}/> {formData.equipment}</span>}
-                                                </div>
-                                                {formData.trainers.length > 0 && (
-                                                    <div className="text-sm text-gray-600">
-                                                        <strong>Trainers:</strong> {formData.trainers.map(t => t.name).join(', ')}
-                                                    </div>
-                                                )}
+                                        </div>
+                                    </motion.div>
+
+                                    <motion.div variants={itemVariants} transition={{ delay: 0.4 }}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Class Time Range
+                                        </label>
+                                        <div className="flex space-x-2">
+                                            <div className="relative flex-1">
+                                                <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                                <input
+                                                    type="time"
+                                                    id="startTime"
+                                                    name="startTime"
+                                                    value={formData.startTime}
+                                                    onChange={handleChange}
+                                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    title="Start Time"
+                                                />
+                                            </div>
+                                            <div className="relative flex-1">
+                                                <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                                <input
+                                                    type="time"
+                                                    id="endTime"
+                                                    name="endTime"
+                                                    value={formData.endTime}
+                                                    onChange={handleChange}
+                                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    title="End Time"
+                                                />
                                             </div>
                                         </div>
-                                    </div>
+                                        {formData.startTime && formData.endTime && formData.startTime >= formData.endTime && (
+                                            <p className="text-red-500 text-xs mt-1">Start time must be before end time.</p>
+                                        )}
+                                    </motion.div>
                                 </div>
-                            )}
-                        </div>
-                    )}
+
+                                <motion.div variants={itemVariants} transition={{ delay: 0.5 }}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        Assign Trainers * (Select at least one)
+                                        {formData.category && <span className="ml-2 text-xs text-gray-500">(Filtered by "{formData.category}" specialization)</span>}
+                                    </label>
+                                    {trainersLoading && (
+                                        <div className="flex items-center justify-center py-4 text-gray-500">
+                                            <svg className="animate-spin h-5 w-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Loading trainers...
+                                        </div>
+                                    )}
+                                    {trainersError && <p className="text-red-500 flex items-center"><AlertCircle className="h-4 w-4 mr-1" /> Error loading trainers. Please try again.</p>}
+                                    {!formData.category && <p className="text-gray-500">Please select a category first to see relevant trainers.</p>}
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {filteredTrainers.length > 0 ? (
+                                            filteredTrainers.map((trainer) => (
+                                                <motion.div
+                                                    key={trainer._id}
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${formData.trainers.some(t => t._id === trainer._id)
+                                                        ? 'border-blue-500 bg-blue-50'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    onClick={() => handleTrainerToggle(trainer)}
+                                                >
+                                                    <div className="font-medium text-gray-800 text-sm">{trainer.name}</div>
+                                                    <div className="text-xs text-gray-500 mt-1">Specialization: {trainer.specialization}</div>
+                                                    {formData.trainers.some(t => t._id === trainer._id) && (
+                                                        <div className="text-xs text-blue-600 mt-1">✓ Selected</div>
+                                                    )}
+                                                </motion.div>
+                                            ))
+                                        ) : (
+                                            formData.category && !trainersLoading && <p className="text-gray-500">No trainers found for this category.</p>
+                                        )}
+                                    </div>
+                                    {!formData.trainers.length && currentStep === 2 && (
+                                        <p className="text-red-500 text-xs mt-1">Please assign at least one trainer.</p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Selected trainers: {formData.trainers.length > 0 ? formData.trainers.map(t => t.name).join(', ') : 'None'}
+                                    </p>
+                                </motion.div>
+
+                                <motion.div variants={itemVariants} transition={{ delay: 0.6 }}>
+                                    <label htmlFor="equipment" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Equipment Needed
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="equipment"
+                                        name="equipment"
+                                        value={formData.equipment}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="e.g., Yoga mat, dumbbells, resistance bands (or 'None' if no equipment needed)"
+                                    />
+                                </motion.div>
+
+                                <motion.div variants={itemVariants} transition={{ delay: 0.7 }}>
+                                    <label htmlFor="prerequisites" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Prerequisites
+                                    </label>
+                                    <textarea
+                                        id="prerequisites"
+                                        name="prerequisites"
+                                        value={formData.prerequisites}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Any requirements or recommendations for participants (e.g., basic fitness level, previous experience)"
+                                    />
+                                </motion.div>
+
+                                <motion.div variants={itemVariants} transition={{ delay: 0.8 }}>
+                                    <label htmlFor="benefits" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Class Benefits
+                                    </label>
+                                    <textarea
+                                        id="benefits"
+                                        name="benefits"
+                                        value={formData.benefits}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="What will participants gain from this class? (e.g., improved strength, flexibility, stress relief)"
+                                    />
+                                </motion.div>
+                            </motion.div>
+                        )}
+
+                        {currentStep === 3 && (
+                            <motion.div
+                                key="step3"
+                                variants={formVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                transition={{ duration: 0.5 }}
+                                className="space-y-6"
+                            >
+                                <motion.div variants={itemVariants} transition={{ delay: 0.1 }} className="text-center mb-8">
+                                    <Image className="h-12 w-12 text-blue-700 mx-auto mb-4" />
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Media & Final Review</h2>
+                                    <p className="text-gray-600">Add visuals and review your class details</p>
+                                </motion.div>
+
+                                <motion.div variants={itemVariants} transition={{ delay: 0.2 }}>
+                                    <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Class Image URL *
+                                    </label>
+                                    <input
+                                        type="url"
+                                        id="image"
+                                        name="image"
+                                        value={formData.image}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-3 border ${!formData.image && currentStep === 3 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                        placeholder="https://example.com/class-image.jpg"
+                                        required
+                                    />
+                                    {!formData.image && currentStep === 3 && (
+                                        <p className="text-red-500 text-xs mt-1">Class image URL is required.</p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">Use a high-quality image that represents your class</p>
+                                </motion.div>
+
+                                <motion.div variants={itemVariants} transition={{ delay: 0.3 }}>
+                                    <label htmlFor="schedule" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Additional Schedule Information
+                                    </label>
+                                    <textarea
+                                        id="schedule"
+                                        name="schedule"
+                                        value={formData.schedule}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Any other recurring schedule details? (e.g., Every Monday, First Tuesday of the month)"
+                                    />
+                                </motion.div>
+
+                                {formData.name && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.4 }}
+                                        className="border-t pt-6"
+                                    >
+                                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                            <Award className="h-5 w-5 mr-2 text-orange-600" />
+                                            Class Preview
+                                        </h3>
+                                        <div className="bg-gray-50 rounded-lg p-6">
+                                            <div className="flex items-start space-x-4">
+                                                {formData.image && (
+                                                    <motion.img
+                                                        src={formData.image}
+                                                        alt={formData.name}
+                                                        className="w-32 h-32 object-cover rounded-lg"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        transition={{ duration: 0.5 }}
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg?auto=compress&cs=tinysrgb&w=200'; // Default fallback
+                                                        }}
+                                                    />
+                                                )}
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-3 mb-2">
+                                                        <h4 className="text-xl font-semibold text-gray-800">{formData.name}</h4>
+                                                        {formData.difficulty && (
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${difficultyLevels.find(d => d.id === formData.difficulty)?.color
+                                                                }`}>
+                                                                {formData.difficulty}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {formData.category && (
+                                                        <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm mb-2">
+                                                            {categories.find(c => c.id === formData.category)?.name}
+                                                        </span>
+                                                    )}
+                                                    <p className="text-gray-600 text-sm mb-3">{formData.description}</p>
+                                                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
+                                                        {formData.duration && <span className='flex items-center gap-1'><Clock size={18} /> {formData.duration}</span>}
+                                                        {(formData.startTime && formData.endTime) && <span className='flex items-center gap-1'><Calendar size={18} /> {formData.startTime} - {formData.endTime}</span>}
+                                                        {formData.equipment && <span className='flex items-center gap-1'><Dumbbell size={18} /> {formData.equipment}</span>}
+                                                    </div>
+                                                    {formData.trainers.length > 0 && (
+                                                        <div className="text-sm text-gray-600">
+                                                            <strong>Trainers:</strong> {formData.trainers.map(t => t.name).join(', ')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="flex justify-between items-center mt-8 pt-6 border-t">
                         <div>
                             {currentStep > 1 && (
-                                <button
+                                <motion.button
                                     type="button"
                                     onClick={prevStep}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                     className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                                 >
                                     Previous
-                                </button>
+                                </motion.button>
                             )}
                         </div>
 
                         <div className="flex items-center space-x-4">
                             {currentStep < totalSteps ? (
-                                <button
+                                <motion.button
                                     type="button"
                                     onClick={nextStep}
                                     disabled={!isStepValid(currentStep)}
+                                    whileHover={{ scale: isStepValid(currentStep) ? 1.05 : 1 }}
+                                    whileTap={{ scale: isStepValid(currentStep) ? 0.95 : 1 }}
                                     className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
                                 >
                                     <span>Next Step</span>
                                     <span>→</span>
-                                </button>
+                                </motion.button>
                             ) : (
-                                <button
+                                <motion.button
                                     type="submit"
-                                    disabled={addClassMutation.isLoading}
+                                    disabled={addClassMutation.isLoading || !isStepValid(currentStep)}
+                                    whileHover={{ scale: (addClassMutation.isLoading || !isStepValid(currentStep)) ? 1 : 1.05 }}
+                                    whileTap={{ scale: (addClassMutation.isLoading || !isStepValid(currentStep)) ? 1 : 0.95 }}
                                     className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 disabled:bg-gray-400"
                                 >
                                     {addClassMutation.isLoading ? (
@@ -597,12 +713,12 @@ const AddClass = () => {
                                             <span>Add Class</span>
                                         </>
                                     )}
-                                </button>
+                                </motion.button>
                             )}
                         </div>
                     </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 };

@@ -1,47 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, Check, X, Users, Package, Shield } from 'lucide-react'; 
+import React from 'react';
+import { DollarSign, Check, Users, Package, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Loader from '../../../Pages/Loader'
+import { useQuery } from '@tanstack/react-query';
+import useAxiosSecure from '../../../Provider/UseAxiosSecure';
+import Loader from '../../../Pages/Loader';
 
 const Balance = () => {
-    const [bookingData, setBookingData] = useState({
-        bookings: [],
-        totalRevenue: 0,
+    const axiosSecure = useAxiosSecure();
+
+    const { data: bookingData, isLoading, isError, error } = useQuery({
+        queryKey: ['bookingsData'],
+        queryFn: async () => {
+            const response = await axiosSecure.get('/bookings');
+            return response.data;
+        },
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000,
     });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const response = await fetch('http://localhost:3000/bookings');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                setBookingData(data);
-            } catch (err) {
-                console.error("Failed to fetch booking data:", err);
-                setError("Failed to load financial data. Please try again later.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchBookings();
-    }, []);
-
-    const { bookings, totalRevenue } = bookingData;
+    const bookings = bookingData?.bookings || [];
+    const totalRevenue = bookingData?.totalRevenue || 0;
     const recentTransactions = bookings.slice(0, 6);
 
-    // Calculate metrics for the new header cards
     const uniquePaidMembers = new Set(
         bookings.filter(b => b.paymentStatus === 'Completed').map(b => b.userEmail)
     ).size;
 
     const averageBookingPrice = bookings.length > 0 ? (totalRevenue / bookings.length).toFixed(2) : 0;
 
-    // Data for "Bookings by Package Type" chart
     const packageTypeCounts = bookings.reduce((acc, booking) => {
         const packageName = booking.packageName || 'Unknown Package';
         acc[packageName] = (acc[packageName] || 0) + 1;
@@ -50,7 +36,6 @@ const Balance = () => {
 
     const totalPackagesBooked = Object.values(packageTypeCounts).reduce((sum, count) => sum + count, 0);
 
-    // Framer Motion Variants
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
@@ -66,22 +51,21 @@ const Balance = () => {
         show: { y: 0, opacity: 1 },
     };
 
-    if (loading) {
-        return <Loader/>;
+    if (isLoading) {
+        return <Loader />;
     }
 
-    if (error) {
-        return <div className="text-center py-12 text-red-600 text-lg">Error: {error}</div>;
+    if (isError) {
+        return <div className="text-center py-12 text-red-600 text-lg">Error: {error.message}</div>;
     }
 
     return (
-        <div className="p-6"> {/* Added padding to the main container */}
+        <div className="p-6">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Financial Overview</h1>
                 <p className="text-gray-600">Track your platform's financial performance and transactions.</p>
             </div>
 
-            {/* Stats Cards with Framer Motion */}
             <motion.div
                 className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6 mb-10"
                 variants={containerVariants}
@@ -114,7 +98,6 @@ const Balance = () => {
             </motion.div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {/* Recent Transactions */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Transactions</h2>
                     <div className="space-y-4">
@@ -176,7 +159,6 @@ const Balance = () => {
                     </div>
                 </div>
 
-                {/* Bookings by Package Type Chart */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Bookings by Package Type</h2>
                     <div className="space-y-4">
