@@ -14,7 +14,6 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         name: '',
         avatar: '',
-        phone: '',
         bio: '',
         location: '',
         fitnessGoals: '',
@@ -32,10 +31,9 @@ const Profile = () => {
             const fetchData = async () => {
                 try {
                     const res = await axiosSecure.get(`/users/${user.email}`);
-                    const { phone, bio, location, fitnessGoals } = res.data || {};
+                    const { bio, location, fitnessGoals } = res.data || {};
                     setFormData(prev => ({
                         ...prev,
-                        phone: phone || '',
                         bio: bio || '',
                         location: location || '',
                         fitnessGoals: fitnessGoals || '',
@@ -74,7 +72,6 @@ const Profile = () => {
             const updatedUser = {
                 name: formData.name,
                 avatar: formData.avatar,
-                phone: formData.phone,
                 bio: formData.bio,
                 location: formData.location,
                 fitnessGoals: formData.fitnessGoals,
@@ -84,7 +81,6 @@ const Profile = () => {
                 email: firebaseUser.email,
                 displayName: updatedUser.name,
                 photoURL: updatedUser.avatar,
-                phone: updatedUser.phone,
                 bio: updatedUser.bio,
                 location: updatedUser.location,
                 fitnessGoals: updatedUser.fitnessGoals,
@@ -114,7 +110,6 @@ const Profile = () => {
         setFormData({
             name: user.displayName || '',
             avatar: user.photoURL || '',
-            phone: '',
             bio: '',
             location: '',
             fitnessGoals: '',
@@ -141,7 +136,7 @@ const Profile = () => {
                                     className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
                                 />
                             ) : (
-                                <div className="w-32 h-32 flex items-center justify-center mx-auto rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-4xl font-bold border-4 border-white shadow-lg">
+                                <div className="w-32 h-32 flex items-center justify-center mx-auto rounded-full bg-gradient-to-r from-blue-400 to-orange-400 text-white text-4xl font-bold border-4 border-white shadow-lg">
                                     {formData.name?.charAt(0).toUpperCase() || 'U'}
                                 </div>
                             )}
@@ -225,29 +220,17 @@ const Profile = () => {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
-                                    />
-                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                <input
+                                    type="text"
+                                    name="location"
+                                    value={formData.location}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
+                                />
                             </div>
 
                             <div>

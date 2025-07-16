@@ -10,11 +10,12 @@ import {
     useStripe,
 } from "@stripe/react-stripe-js";
 import { AuthContext } from "../../Provider/AuthProvider";
-import { CreditCard, Lock } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // useQueryClient is correctly imported
+import { CreditCard, Lock } from "lucide-react"; // <-- CORRECTED: Lock is now explicitly imported
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
-import useAxiosSecure from "../../Provider/UseAxiosSecure";
+import useAxiosSecure from '../../Provider/UseAxiosSecure'
 
+// Load Stripe outside of component render
 const stripePromise = loadStripe(import.meta.env.VITE_PAYMENT_KEY);
 
 const membershipPackages = [
@@ -68,7 +69,7 @@ const PaymentForm = () => {
     const stripe = useStripe();
     const elements = useElements();
     const axiosSecure = useAxiosSecure();
-    const queryClient = useQueryClient(); // Correctly initialize useQueryClient here
+    const queryClient = useQueryClient();
 
     const [clientSecret, setClientSecret] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
@@ -86,6 +87,7 @@ const PaymentForm = () => {
             const res = await axiosSecure.get("/trainers");
             return res.data;
         },
+        enabled: !!trainerId,
     });
 
     const trainer = trainers.find((t) => t._id === trainerId);
@@ -96,7 +98,9 @@ const PaymentForm = () => {
     }, []);
 
     useEffect(() => {
-        if (!selectedPackage?.price) return;
+        if (!selectedPackage?.price) {
+            return;
+        }
 
         const fetchClientSecret = async () => {
             try {
@@ -106,7 +110,7 @@ const PaymentForm = () => {
                 setClientSecret(res.data.clientSecret);
             } catch (error) {
                 console.error("Payment intent error:", error);
-                Swal.fire("Error", "Failed to initiate payment.", "error");
+                Swal.fire("Error", "Failed to initiate payment. Please try again.", "error");
                 navigate(-1);
             }
         };
@@ -116,13 +120,14 @@ const PaymentForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!stripe || !elements) return;
+        if (!stripe || !elements || !clientSecret || isProcessing) {
+            return;
+        }
 
         setIsProcessing(true);
+        const card = elements.getElement(CardElement);
 
         try {
-            const card = elements.getElement(CardElement);
-
             const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
                 payment_method: {
                     card,
@@ -152,28 +157,39 @@ const PaymentForm = () => {
                     transactionId: paymentIntent.id,
                     paymentStatus: "Completed",
                     createdAt: new Date().toISOString(),
+                    memberInfo: {
+                        name: user?.displayName,
+                        email: user?.email,
+                        phone: user?.phoneNumber || "N/A",
+                        package: selectedPackage?.name,
+                    },
                 };
 
-                try {
-                    await axiosSecure.post("/bookings", bookingData);
+                const bookingResponse = await axiosSecure.post("/bookings", bookingData);
 
+                if (bookingResponse.data.message === 'Booking successful and slot booking count updated!') {
                     Swal.fire("Payment Successful", "Your booking is confirmed!", "success");
                     queryClient.invalidateQueries(['trainerData', trainer?.email]);
-                    navigate("/dashboard");
-                } catch (err) {
-                    console.error("Booking error:", err);
+                    queryClient.invalidateQueries(['trainers']);
+                    navigate("/");
+                } else {
                     Swal.fire(
-                        "Booking Error",
-                        "Payment succeeded, but booking failed. Please contact support.",
+                        "Booking Issue",
+                        bookingResponse.data.message || "Payment succeeded, but there was an issue confirming your booking.",
                         "warning"
                     );
                 }
+
             } else {
-                Swal.fire("Payment Status", `Payment not succeeded: ${paymentIntent.status}`, "info");
+                Swal.fire("Payment Status", "Payment did not succeed. Please try again.", "info");
             }
-        } catch (overallError) {
-            console.error("An unexpected error occurred during payment:", overallError);
-            Swal.fire("Error", "An unexpected error occurred. Please try again.", "error");
+        } catch (err) {
+            console.error("Payment or Booking submission error:", err);
+            Swal.fire(
+                "Error",
+                err.response?.data?.message || "An unexpected error occurred during booking. Please try again.",
+                "error"
+            );
         } finally {
             setIsProcessing(false);
         }
@@ -190,12 +206,17 @@ const PaymentForm = () => {
     if (fetchError || !trainer || !slot || !selectedPackage) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
-                <h2 className="text-xl font-semibold text-red-600 mb-4">Something went wrong</h2>
+                <h2 className="text-xl font-semibold text-red-600 mb-4">
+                    Error loading booking details.
+                </h2>
+                <p className="text-gray-700 mb-4">
+                    Trainer, slot, or package information could not be found.
+                </p>
                 <button
-                    onClick={() => refetch()}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    onClick={() => navigate(-1)}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                 >
-                    Retry
+                    Go Back
                 </button>
             </div>
         );
@@ -229,13 +250,17 @@ const PaymentForm = () => {
                             </div>
                             <button
                                 type="submit"
-                                disabled={!stripe || isProcessing}
-                                className="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold"
+                                disabled={!stripe || isProcessing || !clientSecret}
+                                className={`w-full py-3 rounded-lg font-semibold ${!stripe || isProcessing || !clientSecret
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-blue-700 text-white hover:bg-blue-800"
+                                    }`}
                             >
                                 {isProcessing ? "Processing..." : `Pay $${selectedPackage.price}`}
                             </button>
                         </form>
                         <p className="mt-4 text-center text-sm text-gray-500">
+                            <Lock className="inline-block h-4 w-4 mr-1 mb-1 text-gray-400" /> {/* This is where <Lock> is used */}
                             Your payment is secured with Stripe.
                         </p>
                     </motion.div>
@@ -248,7 +273,7 @@ const PaymentForm = () => {
                             <div className="flex justify-between"><span>Slot:</span><span>{slot.slotName}</span></div>
                             <div className="flex justify-between"><span>Time:</span><span>{slot.slotTime}</span></div>
                             <div className="flex justify-between"><span>Duration:</span><span>{slot.duration}</span></div>
-                            <div className="flex justify-between"><span>Day:</span><span>{slot.days}</span></div>
+                            <div className="flex justify-between"><span>Day:</span><span>{Array.isArray(slot.days) ? slot.days.join(', ') : slot.days}</span></div>
                             <div className="flex justify-between"><span>Package:</span><span>{selectedPackage.name}</span></div>
                         </div>
                         <div className="flex justify-between text-lg font-semibold border-t pt-4">

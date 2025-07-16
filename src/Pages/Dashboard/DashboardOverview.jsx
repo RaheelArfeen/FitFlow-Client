@@ -4,17 +4,17 @@ import {
     Users,
     Calendar,
     DollarSign,
-    TrendingUp,
     Star,
     MessageSquare,
     Plus,
-    Award,
     Briefcase,
     CheckSquare,
+    UserCheck,
+    FileText,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { AuthContext } from '../../Provider/AuthProvider';
-import { Link } from 'react-router'; // Corrected import for Link (assuming react-router-dom)
+import { Link } from 'react-router';
 import { formatDistanceToNowStrict } from 'date-fns';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import Loader from '../Loader';
@@ -23,7 +23,6 @@ const DashboardOverview = () => {
     const { user } = useContext(AuthContext);
     const axiosSecure = useAxiosSecure();
 
-    // Fetch users (needed for admin role, and general user data)
     const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
@@ -35,7 +34,6 @@ const DashboardOverview = () => {
         enabled: !!user,
     });
 
-    // Fetch community posts
     const { data: community = [], isLoading: communityLoading, error: communityError } = useQuery({
         queryKey: ['community'],
         queryFn: async () => {
@@ -47,7 +45,6 @@ const DashboardOverview = () => {
         enabled: !!user,
     });
 
-    // Fetch bookings (for admin total revenue and trainer earnings)
     const { data: bookingsData = { bookings: [], totalRevenue: 0 }, isLoading: bookingsLoading, error: bookingsError } = useQuery({
         queryKey: ['bookings'],
         queryFn: async () => {
@@ -56,16 +53,25 @@ const DashboardOverview = () => {
         },
         staleTime: 5 * 60 * 1000,
         cacheTime: 30 * 60 * 1000,
-        // Only fetch bookings if user is admin OR trainer (to calculate earnings)
-        enabled: !!user && (user?.role === 'admin' || user?.role === 'trainer'),
+        enabled: !!user,
     });
 
-    const { data: trainerData, isLoading: trainerLoading, error: trainerError } = useQuery({
-        queryKey: ['trainerData', user?.email],
+    const { data: allApplicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useQuery({
+        queryKey: ['allTrainerApplications'],
+        queryFn: async () => {
+            const res = await axiosSecure.get('/trainers');
+            return res.data;
+        },
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
+        enabled: !!user,
+    });
+
+    const { data: trainerData, isLoading: trainerProfileLoading, error: trainerProfileError } = useQuery({
+        queryKey: ['trainerProfile', user?.email],
         queryFn: async () => {
             if (user?.role === 'trainer' && user?.email) {
                 const res = await axiosSecure.get(`/trainers?email=${user.email}`);
-                console.log(res.data[0].slots);
                 return res.data[0] || null;
             }
             return null;
@@ -75,11 +81,12 @@ const DashboardOverview = () => {
         enabled: user?.role === 'trainer' && !!user?.email,
     });
 
+
     const trainers = users.filter((u) => u.role === 'trainer');
     const members = users.filter((u) => u.role === 'member');
     const recentUpdates = [...community]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 3); 
+        .slice(0, 3);
 
     const trainerEarnings = user?.role === 'trainer'
         ? bookingsData.bookings
@@ -87,21 +94,34 @@ const DashboardOverview = () => {
             .reduce((sum, booking) => sum + (booking.price || 0), 0)
         : 0;
 
+    const memberTotalSpent = user?.role === 'member'
+        ? bookingsData.bookings
+            .filter(booking => booking.userEmail === user.email)
+            .reduce((sum, booking) => sum + (booking.price || 0), 0)
+        : 0;
+
+    const memberApplicationsSubmitted = allApplicationsData.filter(app =>
+        (app.status === 'pending' || app.status === 'rejected') &&
+        app.email === user?.email
+    ).length;
+
+
     const trainerRating = trainerData?.rating ? trainerData.rating.toFixed(1) : '0';
 
-    const totalSlots = trainerData?.slots.length;
+    const totalSlots = trainerData?.slots ? trainerData.slots.length : 0;
 
-    const totalSessions = trainerData?.sessions;
+    const totalSessions = trainerData?.sessions || 0;
 
-    const isLoading = usersLoading || communityLoading || bookingsLoading || trainerLoading;
-    const error = usersError || communityError || bookingsError || trainerError;
+    const isLoading = usersLoading || communityLoading || bookingsLoading || applicationsLoading || trainerProfileLoading;
+    const error = usersError || communityError || bookingsError || applicationsError || trainerProfileError;
+
 
     const getStatsForRole = () => {
         if (user?.role === 'admin') {
             return [
                 { icon: Users, label: 'Total Trainers', value: trainers.length, color: 'blue' },
                 { icon: Users, label: 'Total Members', value: members.length, color: 'green' },
-                { icon: DollarSign, label: 'Total Revenue', value: `$${(bookingsData.totalRevenue || 0).toFixed(2)}`, color: 'purple' },
+                { icon: DollarSign, label: 'Total Revenue', value: `$${(bookingsData.totalRevenue || 0).toFixed(2)}`, color: 'indigo' },
                 { icon: MessageSquare, label: 'Community Posts', value: community.length, color: 'orange' },
             ];
         }
@@ -109,17 +129,18 @@ const DashboardOverview = () => {
             return [
                 { icon: Calendar, label: 'Total Sessions', value: totalSessions, color: 'blue' },
                 { icon: CheckSquare, label: 'Total Slots', value: totalSlots, color: 'green' },
-                { icon: Star, label: 'Average Rating', value: trainerRating, color: 'yellow' }, 
-                { icon: DollarSign, label: 'Total Earnings', value: `$${trainerEarnings.toFixed(2)}`, color: 'purple' },
+                { icon: Star, label: 'Average Rating', value: trainerRating, color: 'yellow' },
+                { icon: DollarSign, label: 'Total Earnings', value: `$${trainerEarnings.toFixed(2)}`, color: 'indigo' },
             ];
         }
         // Member role
         return [
-            { icon: Calendar, label: 'Sessions Booked', value: '12', color: 'blue' },
-            { icon: DollarSign, label: 'Total Spent', value: '$240', color: 'teal' },
-            { icon: Briefcase, label: 'Completed Programs', value: '3', color: 'purple' },
+            { icon: Calendar, label: 'Sessions Booked', value: bookingsData.bookings.filter(booking => booking.userEmail === user.email).length, color: 'blue' },
+            { icon: DollarSign, label: 'Total Spent', value: `$${memberTotalSpent.toFixed(2)}`, color: 'green' },
+            { icon: FileText, label: 'Applications Submitted', value: memberApplicationsSubmitted, color: 'indigo' }, // Used the pre-calculated value
             { icon: MessageSquare, label: 'Community Posts', value: community.length, color: 'orange' },
         ];
+
     };
 
     const categoryColors = {
@@ -170,7 +191,7 @@ const DashboardOverview = () => {
 
     const updateItemVariants = {
         hidden: { opacity: 0, x: 20 },
-        visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 100, damping: 10 } },
+        visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 20 } },
     };
 
     const ctaVariants = {

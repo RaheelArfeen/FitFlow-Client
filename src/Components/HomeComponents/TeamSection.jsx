@@ -11,7 +11,7 @@ const TeamSection = () => {
     const { data: trainers, isLoading, isError, error } = useQuery({
         queryKey: ['trainers'],
         queryFn: async () => {
-            const response = await axiosSecure.get('/trainers');
+            const response = await axiosSecure.get('/trainers?status=accepted');
             return response.data;
         },
     });
@@ -49,7 +49,7 @@ const TeamSection = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {trainers.map((trainer, index) => (
+                    {trainers.slice(0,6).map((trainer, index) => (
                         <motion.article
                             key={trainer.email} // Using email as key, assuming it's unique
                             className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col"
@@ -97,13 +97,12 @@ const TeamSection = () => {
                                     <div className="flex flex-wrap gap-2">
                                         {(trainer.slots && trainer.slots.length > 0)
                                             ? trainer.slots
-                                                .filter(slot => !slot.isBooked) // Filter for available (not booked) slots
                                                 .map((slot) => (
                                                     <span
-                                                        key={slot.id} // Assuming each slot has a unique ID
+                                                        key={slot.id}
                                                         className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
                                                     >
-                                                        {`${slot.day}, ${slot.timeRange}`}
+                                                        {`${slot.days}, ${slot.slotTime}`}
                                                     </span>
                                                 ))
                                             : <span className="text-gray-400 text-xs italic">No slots available</span>

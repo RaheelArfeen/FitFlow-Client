@@ -16,7 +16,7 @@ import { ProtectedRoute } from "../Provider/ProtectedRoute";
 import AdminRoute from "../Provider/AdminRoute";
 import TrainersRoute from "../Provider/TrainersRoute";
 import MemberRoute from "../Provider/MemberRoute";
-import ActiveLog from "../Pages/Dashboard/Member/ActiveLog";
+import ActivityLog from "../Pages/Dashboard/Member/ActivityLog";
 import BookedTrainers from "../Pages/Dashboard/Member/BookedTrainers";
 import Subscribers from "../Pages/Dashboard/Admin/Subscribers";
 import AllTrainers from "../Pages/Dashboard/Admin/AllTrainers";
@@ -62,7 +62,7 @@ export const router = createBrowserRouter([
             { index: true, path: '/dashboard', Component: DashboardOverview },
             { path: 'add-community', element: <ProtectedRoute> <AddCommunity /> </ProtectedRoute> },
             // member routes
-            { path: 'activity-log', element: <MemberRoute><ActiveLog /></MemberRoute> },
+            { path: 'activity-log', element: <MemberRoute><ActivityLog /></MemberRoute> },
             { path: 'profile', element: <MemberRoute><Profile /></MemberRoute> },
             { path: 'booked-trainers', element: <MemberRoute><BookedTrainers /></MemberRoute> },
             // admin routes
