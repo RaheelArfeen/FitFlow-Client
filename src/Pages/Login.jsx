@@ -181,7 +181,7 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                 initial="hidden"
                 animate="visible"
             >
-                <Title>Login | FitLife</Title>
+                <Title>Login | FitFlow</Title>
                 <motion.div className="bg-white rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}
                     <div className="text-center mb-8">

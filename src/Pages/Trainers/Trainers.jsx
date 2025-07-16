@@ -53,7 +53,7 @@ const Trainers = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
-                <Title>Trainers | FitLife</Title>
+                <Title>Trainers | FitFlow</Title>
                 {/* Header */}
                 <motion.header
                     className="text-center mb-16"

@@ -19,7 +19,7 @@ const Home = () => {
 
     return (
         <>
-            <Title>Home | FitLife</Title>
+            <Title>Home | FitFlow</Title>
 
             <Banner />
             <FeaturedSection />
