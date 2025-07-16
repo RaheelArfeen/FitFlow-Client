@@ -118,7 +118,6 @@ const Classes = () => {
         queryKey: ['classes'],
         queryFn: async () => {
             const res = await axiosSecure.get('/classes');
-            console.log("Fetched Classes Data:", res.data); // DEBUG: Inspect this data
             return res.data.map(cls => ({ ...cls, _id: cls._id || cls.id }));
         },
         enabled: !!axiosSecure,
@@ -130,7 +129,6 @@ const Classes = () => {
         queryKey: ['trainers'],
         queryFn: async () => {
             const res = await axiosSecure.get('/trainers');
-            console.log("Fetched Trainers Data:", res.data); // DEBUG: Inspect this data
             return res.data.map(trainer => ({ ...trainer, _id: trainer._id || trainer.id }));
         },
         enabled: !!axiosSecure,
@@ -186,7 +184,6 @@ const Classes = () => {
         }
 
         const assignedTrainersDetails = classItemTrainers.map(assignedTrainer => {
-            console.log("Attempting to find trainer for ID:", assignedTrainer.id);
             // Ensure that allTrainers is not empty before attempting to find
             if (!allTrainers || allTrainers.length === 0) {
                 console.warn("allTrainers array is empty or null, cannot find trainer.");
@@ -208,7 +205,6 @@ const Classes = () => {
                 return null;
             }
 
-            console.log(`Found trainer ${fullTrainer.name} with image:`, imageUrl);
             return {
                 id: fullTrainer._id,
                 name: fullTrainer.name,
@@ -216,7 +212,6 @@ const Classes = () => {
             };
         }).filter(Boolean); // Filter out any nulls
 
-        console.log("Assigned Trainers Details:", assignedTrainersDetails);
         return assignedTrainersDetails.slice(0, 5);
     }, [allTrainers]);
 
