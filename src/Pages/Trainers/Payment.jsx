@@ -11,7 +11,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { AuthContext } from "../../Provider/AuthProvider";
 import { CreditCard, Lock } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // useQueryClient is correctly imported
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../Provider/UseAxiosSecure";
 
@@ -68,6 +68,7 @@ const PaymentForm = () => {
     const stripe = useStripe();
     const elements = useElements();
     const axiosSecure = useAxiosSecure();
+    const queryClient = useQueryClient(); // Correctly initialize useQueryClient here
 
     const [clientSecret, setClientSecret] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
@@ -111,62 +112,70 @@ const PaymentForm = () => {
         };
 
         fetchClientSecret();
-    }, [selectedPackage?.price]);
+    }, [selectedPackage?.price, axiosSecure, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!stripe || !elements) return;
 
         setIsProcessing(true);
-        const card = elements.getElement(CardElement);
 
-        const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-            payment_method: {
-                card,
-                billing_details: {
-                    name: user?.name || "Unknown",
-                    email: user?.email || "noemail@example.com",
+        try {
+            const card = elements.getElement(CardElement);
+
+            const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card,
+                    billing_details: {
+                        name: user?.displayName || "Unknown",
+                        email: user?.email || "noemail@example.com",
+                    },
                 },
-            },
-        });
+            });
 
-        if (error) {
-            Swal.fire("Payment Failed", error.message, "error");
-            setIsProcessing(false);
-        } else if (paymentIntent.status === "succeeded") {
-            const bookingData = {
-                email: user?.email,
-                trainerId,
-                slotId,
-                slotName: slot?.slotName || "",
-                slotDay: slot?.days || "",
-                slotDuration: slot?.duration || "",
-                slotTime: slot?.slotTime || "",
-                packageId,
-                packageName: selectedPackage?.name || "",
-                packagePrice: selectedPackage?.price || 0,
-                sessionType: selectedPackage?.name?.toLowerCase().includes("personal") ? "personal" : "group",
-                price: selectedPackage.price,
-                transactionId: paymentIntent.id,
-                paymentStatus: "Completed",
-                createdAt: new Date().toISOString(),
-            };
+            if (error) {
+                Swal.fire("Payment Failed", error.message, "error");
+            } else if (paymentIntent.status === "succeeded") {
+                const bookingData = {
+                    email: user?.email,
+                    trainerId,
+                    slotId,
+                    slotName: slot?.slotName || "",
+                    slotDay: slot?.days || [],
+                    slotDuration: slot?.duration || "",
+                    slotTime: slot?.slotTime || "",
+                    packageId,
+                    packageName: selectedPackage?.name || "",
+                    packagePrice: selectedPackage?.price || 0,
+                    sessionType: selectedPackage?.name?.toLowerCase().includes("personal") ? "personal" : "group",
+                    price: selectedPackage.price,
+                    transactionId: paymentIntent.id,
+                    paymentStatus: "Completed",
+                    createdAt: new Date().toISOString(),
+                };
 
-            try {
-                await axiosSecure.post("/bookings", bookingData);
-                Swal.fire("Payment Successful", "Your booking is confirmed!", "success");
-                refetch(); // Optionally refresh trainer data
-                navigate("/dashboard");
-            } catch (err) {
-                console.error("Booking error:", err);
-                Swal.fire(
-                    "Booking Error",
-                    "Payment succeeded, but booking failed. Please contact support.",
-                    "warning"
-                );
-            } finally {
-                setIsProcessing(false);
+                try {
+                    await axiosSecure.post("/bookings", bookingData);
+
+                    Swal.fire("Payment Successful", "Your booking is confirmed!", "success");
+                    queryClient.invalidateQueries(['trainerData', trainer?.email]);
+                    navigate("/dashboard");
+                } catch (err) {
+                    console.error("Booking error:", err);
+                    Swal.fire(
+                        "Booking Error",
+                        "Payment succeeded, but booking failed. Please contact support.",
+                        "warning"
+                    );
+                }
+            } else {
+                Swal.fire("Payment Status", `Payment not succeeded: ${paymentIntent.status}`, "info");
             }
+        } catch (overallError) {
+            console.error("An unexpected error occurred during payment:", overallError);
+            Swal.fire("Error", "An unexpected error occurred. Please try again.", "error");
+        } finally {
+            setIsProcessing(false);
         }
     };
 

@@ -79,7 +79,7 @@ const Register = () => {
             );
 
             const token = await user.getIdToken();
-            localStorage.setItem('access-token', token);
+            localStorage.setItem('FitFlow-token', token);
 
             await sendUserToBackend(user);
 

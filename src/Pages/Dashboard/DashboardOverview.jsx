@@ -8,21 +8,22 @@ import {
     Star,
     MessageSquare,
     Plus,
-    Award, // Added Award icon for total users
-    Briefcase, // Icon for 'Become a Trainer' CTA
+    Award,
+    Briefcase,
+    CheckSquare,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { AuthContext } from '../../Provider/AuthProvider';
-import { Link } from 'react-router'; // Corrected import for Link if it's React Router DOM
+import { Link } from 'react-router'; // Corrected import for Link (assuming react-router-dom)
 import { formatDistanceToNowStrict } from 'date-fns';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
-import Loader from '../Loader'; // Assuming your Loader component is styled similarly
+import Loader from '../Loader';
 
 const DashboardOverview = () => {
     const { user } = useContext(AuthContext);
     const axiosSecure = useAxiosSecure();
 
-    // Fetch users
+    // Fetch users (needed for admin role, and general user data)
     const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
@@ -31,7 +32,7 @@ const DashboardOverview = () => {
         },
         staleTime: 5 * 60 * 1000,
         cacheTime: 30 * 60 * 1000,
-        enabled: !!user, // Ensure user exists before fetching
+        enabled: !!user,
     });
 
     // Fetch community posts
@@ -46,7 +47,7 @@ const DashboardOverview = () => {
         enabled: !!user,
     });
 
-    // Fetch bookings to get total revenue
+    // Fetch bookings (for admin total revenue and trainer earnings)
     const { data: bookingsData = { bookings: [], totalRevenue: 0 }, isLoading: bookingsLoading, error: bookingsError } = useQuery({
         queryKey: ['bookings'],
         queryFn: async () => {
@@ -55,18 +56,45 @@ const DashboardOverview = () => {
         },
         staleTime: 5 * 60 * 1000,
         cacheTime: 30 * 60 * 1000,
-        enabled: user?.role === 'admin', // Only fetch bookings for admin role
+        // Only fetch bookings if user is admin OR trainer (to calculate earnings)
+        enabled: !!user && (user?.role === 'admin' || user?.role === 'trainer'),
+    });
+
+    const { data: trainerData, isLoading: trainerLoading, error: trainerError } = useQuery({
+        queryKey: ['trainerData', user?.email],
+        queryFn: async () => {
+            if (user?.role === 'trainer' && user?.email) {
+                const res = await axiosSecure.get(`/trainers?email=${user.email}`);
+                console.log(res.data[0].slots);
+                return res.data[0] || null;
+            }
+            return null;
+        },
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
+        enabled: user?.role === 'trainer' && !!user?.email,
     });
 
     const trainers = users.filter((u) => u.role === 'trainer');
     const members = users.filter((u) => u.role === 'member');
     const recentUpdates = [...community]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 3); // Get top 3 recent posts
+        .slice(0, 3); 
 
-    // Combine loading and error states from all useQuery hooks
-    const isLoading = usersLoading || communityLoading || bookingsLoading;
-    const error = usersError || communityError || bookingsError;
+    const trainerEarnings = user?.role === 'trainer'
+        ? bookingsData.bookings
+            .filter(booking => booking.trainerEmail === user.email)
+            .reduce((sum, booking) => sum + (booking.price || 0), 0)
+        : 0;
+
+    const trainerRating = trainerData?.rating ? trainerData.rating.toFixed(1) : '0';
+
+    const totalSlots = trainerData?.slots.length;
+
+    const totalSessions = trainerData?.sessions;
+
+    const isLoading = usersLoading || communityLoading || bookingsLoading || trainerLoading;
+    const error = usersError || communityError || bookingsError || trainerError;
 
     const getStatsForRole = () => {
         if (user?.role === 'admin') {
@@ -78,12 +106,11 @@ const DashboardOverview = () => {
             ];
         }
         if (user?.role === 'trainer') {
-            // These values are placeholders; you'd replace them with actual data from your backend
             return [
-                { icon: Calendar, label: 'Total Sessions', value: '89', color: 'blue' },
-                { icon: Users, label: 'Active Clients', value: '23', color: 'green' },
-                { icon: Star, label: 'Average Rating', value: '4.8', color: 'yellow' },
-                { icon: DollarSign, label: 'Earnings', value: '$2,340', color: 'purple' },
+                { icon: Calendar, label: 'Total Sessions', value: totalSessions, color: 'blue' },
+                { icon: CheckSquare, label: 'Total Slots', value: totalSlots, color: 'green' },
+                { icon: Star, label: 'Average Rating', value: trainerRating, color: 'yellow' }, 
+                { icon: DollarSign, label: 'Total Earnings', value: `$${trainerEarnings.toFixed(2)}`, color: 'purple' },
             ];
         }
         // Member role
@@ -107,7 +134,7 @@ const DashboardOverview = () => {
     };
 
     const getCategoryClass = (base, category, shade) => {
-        const color = categoryColors[category] || 'gray'; // Fallback to gray if category color not found
+        const color = categoryColors[category] || 'gray';
         return `${base}-${color}-${shade}`;
     };
 
@@ -130,23 +157,23 @@ const DashboardOverview = () => {
         visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 10 } },
     };
 
-    const cardVariants = { // For stat cards and main section containers
+    const cardVariants = {
         hidden: { opacity: 0, scale: 0.95 },
         visible: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 100, damping: 10 } },
         hover: { scale: 1.03, boxShadow: "0 15px 25px rgba(0, 0, 0, 0.15)" },
     };
 
-    const actionItemVariants = { // For individual quick action links
+    const actionItemVariants = {
         hidden: { opacity: 0, x: -20 },
         visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 100, damping: 10 } },
     };
 
-    const updateItemVariants = { // For individual recent update cards
+    const updateItemVariants = {
         hidden: { opacity: 0, x: 20 },
         visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 100, damping: 10 } },
     };
 
-    const ctaVariants = { // For 'Become a Trainer' CTA
+    const ctaVariants = {
         hidden: { opacity: 0, y: 50 },
         visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 10, delay: 0.5 } },
     };
@@ -172,7 +199,7 @@ const DashboardOverview = () => {
         >
             {/* Welcome Header */}
             <motion.div className="mb-12 text-center md:text-left" variants={itemVariants}>
-                <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Welcome back, {user?.name}!</h1>
+                <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Welcome back, {user?.displayName || user?.name || 'User'}!</h1>
                 <p className="text-lg text-gray-600">
                     Here's what's happening with your{' '}
                     <span className="font-semibold text-blue-600">

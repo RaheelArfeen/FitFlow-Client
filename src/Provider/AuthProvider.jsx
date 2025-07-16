@@ -32,7 +32,6 @@ const AuthProvider = ({ children }) => {
 
             const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
 
-            // Send user data to backend for registration & get JWT + role
             const res = await axios.post("http://localhost:3000/register", {
                 email,
                 displayName: firebaseUser.displayName,
@@ -53,13 +52,14 @@ const AuthProvider = ({ children }) => {
             });
 
             setLoading(false);
-            return true;
+            return firebaseUser;
         } catch (err) {
             console.error("Register error:", err);
             setLoading(false);
-            return false;
+            return null;
         }
     };
+
 
     const login = async (email, password) => {
         setLoading(true);

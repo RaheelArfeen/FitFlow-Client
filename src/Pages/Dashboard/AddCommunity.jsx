@@ -118,7 +118,7 @@ const AddCommunity = () => {
 
     return (
         <motion.div
-            className="pb-10"
+            className="pb-10 p-6 md:p-8"
             variants={containerVariants}
             initial="hidden"
             animate="visible"

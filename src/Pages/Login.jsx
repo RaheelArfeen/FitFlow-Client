@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Eye, EyeOff, Activity, Mail, Lock } from 'lucide-react';
-import { useNavigate, useLocation, Link } from 'react-router'; 
+import { useNavigate, useLocation, Link } from 'react-router';
 import { motion } from 'framer-motion'; // Import motion
 import {
     deleteUser,
@@ -12,6 +12,7 @@ import {
 import { auth } from '../Firebase/firebase.init';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { AuthContext } from '../Provider/AuthProvider';
 
 const Login = ({ onRegister }) => { // onRegister prop is not used in this component
     const [email, setEmail] = useState('');
@@ -20,6 +21,7 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
     const [error, setError] = useState(''); // single error string
     const [isLoading, setIsLoading] = useState(false);
     const [role, setRole] = useState('member'); // store role if needed
+    const { user } = useContext(AuthContext)
 
     const navigate = useNavigate();
     const location = useLocation();

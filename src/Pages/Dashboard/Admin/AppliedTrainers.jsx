@@ -15,7 +15,6 @@ const AppliedTrainers = () => {
     const [modalType, setModalType] = useState('details');
     const [rejectFeedback, setRejectFeedback] = useState('');
 
-    // Fetch only pending trainers directly from the backend
     const { data: pendingTrainers = [], isLoading } = useQuery({
         queryKey: ['pendingTrainerApplications'],
         queryFn: async () => {
@@ -24,7 +23,6 @@ const AppliedTrainers = () => {
         },
     });
 
-    // Fetch accepted trainers for stats/display
     const { data: acceptedTrainers = [], isLoading: isLoadingAccepted } = useQuery({
         queryKey: ['acceptedTrainers'],
         queryFn: async () => {
@@ -33,7 +31,6 @@ const AppliedTrainers = () => {
         },
     });
 
-    // Fetch rejected trainers for stats/display
     const { data: rejectedTrainers = [], isLoading: isLoadingRejected } = useQuery({
         queryKey: ['rejectedTrainers'],
         queryFn: async () => {
@@ -42,18 +39,22 @@ const AppliedTrainers = () => {
         },
     });
 
-    // Total trainers for stats, combine all fetched lists
     const allTrainersCount = pendingTrainers.length + acceptedTrainers.length + rejectedTrainers.length;
 
-
-    // Mutation to approve a trainer (change status to 'accepted')
     const approveTrainerMutation = useMutation({
         mutationFn: async (trainerId) => {
-            await axiosSecure.patch(`/trainers/${trainerId}/status`, { status: 'accepted' });
+            const res = await axiosSecure.patch(`/trainers/${trainerId}/status`, { status: 'accepted' });
+            return res.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['pendingTrainerApplications']); // Invalidate specific pending query
-            queryClient.invalidateQueries(['acceptedTrainers']); // Invalidate accepted query
+        onSuccess: (data, trainerId) => {
+            queryClient.invalidateQueries(['pendingTrainerApplications']);
+            queryClient.invalidateQueries(['acceptedTrainers']);
+
+            if (selectedTrainer?.email) {
+                queryClient.invalidateQueries(['currentUser', selectedTrainer.email]);
+                queryClient.invalidateQueries(['userRole', selectedTrainer.email]);
+            }
+
             setShowModal(false);
             Swal.fire({
                 icon: 'success',
@@ -77,14 +78,20 @@ const AppliedTrainers = () => {
         },
     });
 
-    // Mutation to reject a trainer (change status to 'rejected' with feedback)
     const rejectTrainerMutation = useMutation({
         mutationFn: async ({ id, feedback }) => {
-            await axiosSecure.patch(`/trainers/${id}/status`, { status: 'rejected', feedback });
+            const res = await axiosSecure.patch(`/trainers/${id}/status`, { status: 'rejected', feedback });
+            return res.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['pendingTrainerApplications']); // Invalidate specific pending query
-            queryClient.invalidateQueries(['rejectedTrainers']); // Invalidate rejected query
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries(['pendingTrainerApplications']);
+            queryClient.invalidateQueries(['rejectedTrainers']);
+
+            if (selectedTrainer?.email) {
+                queryClient.invalidateQueries(['currentUser', selectedTrainer.email]);
+                queryClient.invalidateQueries(['userRole', selectedTrainer.email]);
+            }
+
             setShowModal(false);
             setRejectFeedback('');
             Swal.fire({
@@ -164,9 +171,8 @@ const AppliedTrainers = () => {
         }
     };
 
-    if (isLoading || isLoadingAccepted || isLoadingRejected) return <Loader />; // Check all loading states
+    if (isLoading || isLoadingAccepted || isLoadingRejected) return <Loader />;
 
-    // Framer Motion Variants
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -306,7 +312,6 @@ const AppliedTrainers = () => {
             <motion.h1 className="text-3xl font-bold text-gray-800 mb-4" variants={cardVariants}>Manage Trainer Applications</motion.h1>
             <motion.p className="text-gray-600 mb-8" variants={cardVariants}>Review and manage trainer applications.</motion.p>
 
-            {/* Stats */}
             <motion.div
                 className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10"
                 variants={containerVariants}
@@ -336,7 +341,6 @@ const AppliedTrainers = () => {
                 ))}
             </motion.div>
 
-            {/* Pending Applications Section */}
             <section className="mb-10">
                 <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Pending Applications</motion.h2>
                 {pendingTrainers.length === 0 ? (
@@ -361,7 +365,6 @@ const AppliedTrainers = () => {
                 )}
             </section>
 
-            {/* Accepted Applications Section */}
             <section className="mb-10">
                 <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Accepted Trainers</motion.h2>
                 {acceptedTrainers.length === 0 ? (
@@ -386,7 +389,6 @@ const AppliedTrainers = () => {
                 )}
             </section>
 
-            {/* Rejected Applications Section */}
             <section className="mb-10">
                 <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Rejected Trainers</motion.h2>
                 {rejectedTrainers.length === 0 ? (
@@ -411,7 +413,6 @@ const AppliedTrainers = () => {
                 )}
             </section>
 
-            {/* Modal */}
             <AnimatePresence>
                 {showModal && selectedTrainer && (
                     <motion.div
