@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import {
@@ -363,9 +363,6 @@ const TrainerDetail = () => {
                                     const isDisabled = isTrainerSelf || isAlreadyBookedByUser || isSlotFull;
 
                                     return (
-                                        // You might need to import the Hourglass icon or a similar one
-                                        // import { Hourglass } from 'lucide-react'; // Example import
-
                                         <motion.div
                                             key={index}
                                             className={`border rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between transition-colors duration-200 ${isDisabled
@@ -451,6 +448,48 @@ const TrainerDetail = () => {
                         </motion.div>
                     </motion.section>
                 </div>
+                {(user?.role === 'member' || !user) && (
+                    <motion.section
+                        className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true }}
+                    >
+                        <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
+                        <p className="text-xl mb-6 text-blue-100">
+                            Join our team of expert trainers and help others achieve their fitness goals
+                            {user?.role === 'member' ? ' while earning extra income.' : '.'}
+                        </p>
+
+                        <div className="space-x-4">
+                            {!user && (
+                                <>
+                                    <Link
+                                        to="/register"
+                                        className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
+                                    >
+                                        Sign Up First
+                                    </Link>
+                                    <Link
+                                        to="/login"
+                                        className="bg-blue-800 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors duration-200 inline-block border border-white/30"
+                                    >
+                                        Login
+                                    </Link>
+                                </>
+                            )}
+                            {user?.role === 'member' && (
+                                <Link
+                                    to="/be-trainer"
+                                    className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
+                                >
+                                    Become a Trainer
+                                </Link>
+                            )}
+                        </div>
+                    </motion.section>
+                )}
             </div>
         </motion.div>
     );

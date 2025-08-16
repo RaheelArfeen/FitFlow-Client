@@ -195,7 +195,7 @@ const SidebarContent = ({ user, menuItems, setIsDrawerOpen }) => {
 // Desktop Sidebar Component
 const DesktopSidebar = ({ user, menuItems }) => (
     <motion.div
-        className="hidden lg:block lg:w-64 bg-white shadow-xl border-r overflow-y-auto border-gray-200 h-screen sticky top-0"
+        className="hidden lg:block lg:w-72 bg-white shadow-xl border-r overflow-y-auto border-gray-200 h-screen sticky top-0"
         initial={{ x: -64 }}
         animate={{ x: 0 }}
         exit={{ x: -64 }}
@@ -210,7 +210,7 @@ const MobileSidebar = ({ user, menuItems, isDrawerOpen, setIsDrawerOpen }) => (
         {isDrawerOpen && (
             <>
                 <motion.div
-                    className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-50 border-r border-gray-200 overflow-y-auto lg:hidden"
+                    className="fixed inset-y-0 left-0 w-72 bg-white shadow-xl z-50 border-r border-gray-200 overflow-y-auto lg:hidden"
                     initial={{ x: '-100%' }}
                     animate={{ x: 0 }}
                     exit={{ x: '-100%' }}

@@ -16,7 +16,7 @@ const AddClass = () => {
         image: '',
         description: '',
         duration: '',
-        difficulty: 'Beginner',
+        difficulty: 'Beginner', // Default selected
         category: '',
         startTime: '',
         endTime: '',
@@ -29,6 +29,11 @@ const AddClass = () => {
 
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 3;
+
+    // --- NEW STATE FOR VALIDATION ---
+    const [submittedAttempt, setSubmittedAttempt] = useState(false); // Tracks if form submission was attempted
+    const [errors, setErrors] = useState({}); // Stores validation error messages for fields
+
 
     const categories = [
         { id: 'Yoga & Mindfulness', name: 'Yoga & Mindfulness', description: 'Focuses on Yoga & Mindfulness.' },
@@ -67,20 +72,31 @@ const AddClass = () => {
         : [];
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        // If an error exists for this field and user starts typing, clear that specific error
+        if (submittedAttempt && errors[name]) {
+            setErrors(prevErrors => ({ ...prevErrors, [name]: undefined }));
+        }
     };
 
     const handleTrainerToggle = (trainer) => {
         setFormData(prev => {
             const isSelected = prev.trainers.some(t => t._id === trainer._id);
+            const newTrainers = isSelected
+                ? prev.trainers.filter(t => t._id !== trainer._id)
+                : [...prev.trainers, trainer];
+
+            // If trainers error exists and now trainers are selected, clear the error
+            if (submittedAttempt && errors.trainers && newTrainers.length > 0) {
+                setErrors(prevErrors => ({ ...prevErrors, trainers: undefined }));
+            }
             return {
                 ...prev,
-                trainers: isSelected
-                    ? prev.trainers.filter(t => t._id !== trainer._id)
-                    : [...prev.trainers, trainer]
+                trainers: newTrainers
             };
         });
     };
@@ -93,6 +109,7 @@ const AddClass = () => {
         onSuccess: () => {
             toast.success('New class added successfully!');
             queryClient.invalidateQueries(['classes']);
+            // Reset form data and current step after successful submission
             setFormData({
                 name: '',
                 image: '',
@@ -109,6 +126,8 @@ const AddClass = () => {
                 trainers: []
             });
             setCurrentStep(1);
+            setSubmittedAttempt(false); // Reset validation attempt
+            setErrors({}); // Clear all errors
         },
         onError: (error) => {
             console.error('Failed to add class:', error.response?.data || error.message);
@@ -116,20 +135,122 @@ const AddClass = () => {
         }
     });
 
-    const handleSubmit = (e) => {
+    // --- REFINED validateCurrentStep FUNCTION ---
+    const validateCurrentStep = () => {
+        let currentStepErrors = {};
+        let isValid = true;
+
+        switch (currentStep) {
+            case 1:
+                if (!formData.name.trim()) {
+                    currentStepErrors.name = "Class Name is required.";
+                    isValid = false;
+                }
+                if (!formData.category.trim()) {
+                    currentStepErrors.category = "Category is required.";
+                    isValid = false;
+                }
+                // Difficulty has a default, so it's unlikely to be empty unless manually cleared
+                // if (!formData.difficulty.trim()) {
+                //     currentStepErrors.difficulty = "Difficulty is required.";
+                //     isValid = false;
+                // }
+                break;
+            case 2:
+                if (!formData.description.trim()) {
+                    currentStepErrors.description = "Class description is required.";
+                    isValid = false;
+                }
+                if (!formData.duration.trim()) {
+                    currentStepErrors.duration = "Duration is required.";
+                    isValid = false;
+                } else if (isNaN(formData.duration) || parseFloat(formData.duration) <= 0) {
+                    currentStepErrors.duration = "Duration must be a positive number (e.g., minutes).";
+                    isValid = false;
+                }
+                // Time validation
+                if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
+                    currentStepErrors.timeRange = "Start time must be before end time.";
+                    toast.error("Start time must be before end time."); // Keep toast for immediate feedback
+                    isValid = false;
+                }
+                // Trainer validation
+                if (formData.trainers.length === 0) {
+                    currentStepErrors.trainers = "At least one trainer must be selected.";
+                    isValid = false;
+                }
+                // Assuming schedule might be a string or object for now,
+                // adjust if it's an array of specific days/times.
+                // if (!formData.schedule?.trim()) {
+                //     currentStepErrors.schedule = "Schedule information is required.";
+                //     isValid = false;
+                // }
+                break;
+            case 3:
+                if (!formData.image.trim()) {
+                    currentStepErrors.image = "Class image URL is required.";
+                    isValid = false;
+                }
+                // You could add URL format validation here if desired
+                // const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+                // if (formData.image && !urlRegex.test(formData.image)) {
+                //     currentStepErrors.image = "Please enter a valid URL.";
+                //     isValid = false;
+                // }
+                break;
+            default:
+                break;
+        }
+
+        setErrors(currentStepErrors); // Update the errors state for rendering
+        return isValid;
+    };
+
+    // --- UPDATED nextStep and prevStep FUNCTIONS ---
+    const nextStep = () => {
+        // When 'Next Step' is clicked, always mark a submission attempt
+        setSubmittedAttempt(true);
+        if (validateCurrentStep()) {
+            if (currentStep < totalSteps) {
+                setCurrentStep(currentStep + 1);
+                setSubmittedAttempt(false); // Reset for the next step
+                setErrors({}); // Clear errors from previous step
+            }
+        }
+    };
+
+    const prevStep = () => {
+        if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+            setSubmittedAttempt(false); // Reset when going back
+            setErrors({}); // Clear errors
+        }
+    };
+
+    // --- UPDATED handleSubmit FUNCTION ---
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmittedAttempt(true); // Mark that an attempt to submit has been made
 
+        const isValid = validateCurrentStep(); // Validate the current step
+
+        if (!isValid) {
+            console.log(`Validation failed for Step ${currentStep}.`);
+            // Errors are already set by validateCurrentStep, so UI will update
+            return; // Stop the submission process if validation fails
+        }
+
+        // If validation passes for the current step
         if (currentStep < totalSteps) {
-            nextStep(); // Allow submitting by going to the next step if not on the last step
-            return;
+            nextStep(); // Move to the next step
+            // nextStep already handles setting submittedAttempt and errors
+            return; // Important: Stop here if moving to the next step
         }
 
-        // Basic validation for time range
-        if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
-            toast.error("Start time must be before end time.");
-            return;
-        }
+        // This block runs ONLY if currentStep is the totalSteps (last step) AND isValid is true
+        console.log("Validation passed for the final step. Preparing to submit class data.");
 
+        // Prepare trainer data for submission
         const selectedTrainersData = formData.trainers.map(trainer => ({
             id: trainer._id,
             name: trainer.name,
@@ -143,50 +264,23 @@ const AddClass = () => {
             name: formData.name,
             image: formData.image,
             description: formData.description,
-            duration: formData.duration,
+            duration: parseFloat(formData.duration), // Ensure duration is a number
             difficulty: formData.difficulty,
             category: formData.category,
             startTime: formData.startTime || null,
             endTime: formData.endTime || null,
-            equipment: formData.equipment || null,
-            prerequisites: formData.prerequisites || null,
-            benefits: formData.benefits || null,
-            schedule: formData.schedule || null,
+            equipment: formData.equipment.trim() || null, // Trim and set to null if empty
+            prerequisites: formData.prerequisites.trim() || null,
+            benefits: formData.benefits.trim() || null,
+            schedule: formData.schedule.trim() || null,
             bookings: 0,
             createdBy: user?.email,
             createdAt: new Date().toISOString(),
             trainers: selectedTrainersData,
         };
 
-        addClassMutation.mutate(newClass);
-    };
-
-    const nextStep = () => {
-        if (isStepValid(currentStep) && currentStep < totalSteps) {
-            setCurrentStep(currentStep + 1);
-        } else if (!isStepValid(currentStep)) {
-            toast.error("Please fill in all required fields for this step.");
-        }
-    };
-
-    const prevStep = () => {
-        if (currentStep > 1) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
-    const isStepValid = (step) => {
-        switch (step) {
-            case 1:
-                return formData.name && formData.category && formData.difficulty;
-            case 2:
-                const isTimeValid = (!formData.startTime || !formData.endTime) || (formData.startTime < formData.endTime);
-                return formData.description && formData.duration && formData.trainers.length > 0 && isTimeValid;
-            case 3:
-                return formData.image;
-            default:
-                return false;
-        }
+        console.log("Attempting to add new class:", newClass);
+        addClassMutation.mutate(newClass); // Trigger your mutation to add the class
     };
 
     const formVariants = {
@@ -294,12 +388,14 @@ const AddClass = () => {
                                         name="name"
                                         value={formData.name}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-3 border ${!formData.name && currentStep === 1 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                        // Condition for red border: submittedAttempt is true AND there's a specific error for 'name'
+                                        className={`w-full px-4 py-3 border ${submittedAttempt && errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                         placeholder="e.g., Morning Power Yoga, HIIT Bootcamp"
                                         required
                                     />
-                                    {!formData.name && currentStep === 1 && (
-                                        <p className="text-red-500 text-xs mt-1">Class Name is required.</p>
+                                    {/* Display error message if submittedAttempt is true AND there's an error for 'name' */}
+                                    {submittedAttempt && errors.name && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.name}</p>
                                     )}
                                     <p className="text-xs text-gray-500 mt-1">Choose a catchy, descriptive name that attracts members</p>
                                 </motion.div>
@@ -318,15 +414,21 @@ const AddClass = () => {
                                                     ? 'border-blue-500 bg-blue-50'
                                                     : 'border-gray-200 hover:border-gray-300'
                                                     }`}
-                                                onClick={() => setFormData({ ...formData, category: cat.id, trainers: [] })}
+                                                onClick={() => {
+                                                    setFormData({ ...formData, category: cat.id, trainers: [] });
+                                                    // Clear category error if it exists after selection
+                                                    if (submittedAttempt && errors.category) {
+                                                        setErrors(prevErrors => ({ ...prevErrors, category: undefined }));
+                                                    }
+                                                }}
                                             >
                                                 <div className="font-medium text-gray-800">{cat.name}</div>
                                                 <div className="text-xs text-gray-500 mt-1">{cat.description}</div>
                                             </motion.div>
                                         ))}
                                     </div>
-                                    {!formData.category && currentStep === 1 && (
-                                        <p className="text-red-500 text-xs mt-1">Please select a category.</p>
+                                    {submittedAttempt && errors.category && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.category}</p>
                                     )}
                                 </motion.div>
 
@@ -344,7 +446,13 @@ const AddClass = () => {
                                                     ? 'border-blue-500 bg-blue-50'
                                                     : 'border-gray-200 hover:border-gray-300'
                                                     }`}
-                                                onClick={() => setFormData({ ...formData, difficulty: level.id })}
+                                                onClick={() => {
+                                                    setFormData({ ...formData, difficulty: level.id });
+                                                    // Clear difficulty error if it exists after selection
+                                                    if (submittedAttempt && errors.difficulty) {
+                                                        setErrors(prevErrors => ({ ...prevErrors, difficulty: undefined }));
+                                                    }
+                                                }}
                                             >
                                                 <div className="font-medium text-gray-800">{level.name}</div>
                                                 <div className="text-xs text-gray-500 mt-1">{level.description}</div>
@@ -354,8 +462,8 @@ const AddClass = () => {
                                             </motion.div>
                                         ))}
                                     </div>
-                                    {!formData.difficulty && currentStep === 1 && (
-                                        <p className="text-red-500 text-xs mt-1">Please select a difficulty level.</p>
+                                    {submittedAttempt && errors.difficulty && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.difficulty}</p>
                                     )}
                                 </motion.div>
                             </motion.div>
@@ -387,12 +495,12 @@ const AddClass = () => {
                                         value={formData.description}
                                         onChange={handleChange}
                                         rows={4}
-                                        className={`w-full px-4 py-3 border ${!formData.description && currentStep === 2 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                        className={`w-full px-4 py-3 border ${submittedAttempt && errors.description ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                         placeholder="Describe what participants can expect, the workout style, and what makes this class special..."
                                         required
                                     />
-                                    {!formData.description && currentStep === 2 && (
-                                        <p className="text-red-500 text-xs mt-1">Class description is required.</p>
+                                    {submittedAttempt && errors.description && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.description}</p>
                                     )}
                                     <p className="text-xs text-gray-500 mt-1">Be detailed and engaging to attract the right participants</p>
                                 </motion.div>
@@ -400,22 +508,23 @@ const AddClass = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <motion.div variants={itemVariants} transition={{ delay: 0.3 }}>
                                         <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Duration *
+                                            Duration (in minutes) *
                                         </label>
                                         <div className="relative">
                                             <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                             <input
-                                                type="text"
+                                                type="number" // Changed to number for better input control
                                                 id="duration"
                                                 name="duration"
                                                 value={formData.duration}
                                                 onChange={handleChange}
-                                                className={`w-full pl-10 pr-4 py-3 border ${!formData.duration && currentStep === 2 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                                                placeholder="e.g., 45 minutes, 1 hour"
+                                                className={`w-full pl-10 pr-4 py-3 border ${submittedAttempt && errors.duration ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                                placeholder="e.g., 45, 60"
                                                 required
+                                                min="1" // Ensure positive duration
                                             />
-                                            {!formData.duration && currentStep === 2 && (
-                                                <p className="text-red-500 text-xs mt-1">Duration is required.</p>
+                                            {submittedAttempt && errors.duration && (
+                                                <p className="text-red-500 text-xs mt-1">{errors.duration}</p>
                                             )}
                                         </div>
                                     </motion.div>
@@ -433,7 +542,7 @@ const AddClass = () => {
                                                     name="startTime"
                                                     value={formData.startTime}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    className={`w-full pl-10 pr-4 py-3 border ${submittedAttempt && errors.timeRange ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                                     title="Start Time"
                                                 />
                                             </div>
@@ -445,13 +554,13 @@ const AddClass = () => {
                                                     name="endTime"
                                                     value={formData.endTime}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    className={`w-full pl-10 pr-4 py-3 border ${submittedAttempt && errors.timeRange ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                                     title="End Time"
                                                 />
                                             </div>
                                         </div>
-                                        {formData.startTime && formData.endTime && formData.startTime >= formData.endTime && (
-                                            <p className="text-red-500 text-xs mt-1">Start time must be before end time.</p>
+                                        {submittedAttempt && errors.timeRange && (
+                                            <p className="text-red-500 text-xs mt-1">{errors.timeRange}</p>
                                         )}
                                     </motion.div>
                                 </div>
@@ -496,8 +605,8 @@ const AddClass = () => {
                                             formData.category && !trainersLoading && <p className="text-gray-500">No trainers found for this category.</p>
                                         )}
                                     </div>
-                                    {!formData.trainers.length && currentStep === 2 && (
-                                        <p className="text-red-500 text-xs mt-1">Please assign at least one trainer.</p>
+                                    {submittedAttempt && errors.trainers && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.trainers}</p>
                                     )}
                                     <p className="text-xs text-gray-500 mt-2">
                                         Selected trainers: {formData.trainers.length > 0 ? formData.trainers.map(t => t.name).join(', ') : 'None'}
@@ -577,12 +686,14 @@ const AddClass = () => {
                                         name="image"
                                         value={formData.image}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-3 border ${!formData.image && currentStep === 3 ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                        // Apply border-red-500 if submittedAttempt is true AND there's an error for 'image'
+                                        className={`w-full px-4 py-3 border ${submittedAttempt && errors.image ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                         placeholder="https://example.com/class-image.jpg"
                                         required
                                     />
-                                    {!formData.image && currentStep === 3 && (
-                                        <p className="text-red-500 text-xs mt-1">Class image URL is required.</p>
+                                    {/* Display error message if submittedAttempt is true AND there's an error for 'image' */}
+                                    {submittedAttempt && errors.image && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.image}</p>
                                     )}
                                     <p className="text-xs text-gray-500 mt-1">Use a high-quality image that represents your class</p>
                                 </motion.div>
@@ -602,7 +713,7 @@ const AddClass = () => {
                                     />
                                 </motion.div>
 
-                                {formData.name && (
+                                {formData.name && ( // Only show preview if name is filled
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -645,13 +756,18 @@ const AddClass = () => {
                                                     )}
                                                     <p className="text-gray-600 text-sm mb-3">{formData.description}</p>
                                                     <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                                                        {formData.duration && <span className='flex items-center gap-1'><Clock size={18} /> {formData.duration}</span>}
+                                                        {formData.duration && <span className='flex items-center gap-1'><Clock size={18} /> {formData.duration} minutes</span>} {/* Added "minutes" */}
                                                         {(formData.startTime && formData.endTime) && <span className='flex items-center gap-1'><Calendar size={18} /> {formData.startTime} - {formData.endTime}</span>}
                                                         {formData.equipment && <span className='flex items-center gap-1'><Dumbbell size={18} /> {formData.equipment}</span>}
                                                     </div>
                                                     {formData.trainers.length > 0 && (
                                                         <div className="text-sm text-gray-600">
                                                             <strong>Trainers:</strong> {formData.trainers.map(t => t.name).join(', ')}
+                                                        </div>
+                                                    )}
+                                                    {formData.schedule && (
+                                                        <div className="text-sm text-gray-600 mt-2">
+                                                            <strong>Schedule Notes:</strong> {formData.schedule}
                                                         </div>
                                                     )}
                                                 </div>
@@ -681,12 +797,10 @@ const AddClass = () => {
                         <div className="flex items-center space-x-4">
                             {currentStep < totalSteps ? (
                                 <motion.button
-                                    type="button"
-                                    onClick={nextStep}
-                                    disabled={!isStepValid(currentStep)}
-                                    whileHover={{ scale: isStepValid(currentStep) ? 1.05 : 1 }}
-                                    whileTap={{ scale: isStepValid(currentStep) ? 0.95 : 1 }}
-                                    className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                                    type="submit" // Changed to 'submit' to trigger handleSubmit which handles validation before nextStep
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
                                 >
                                     <span>Next Step</span>
                                     <span>→</span>
@@ -694,9 +808,9 @@ const AddClass = () => {
                             ) : (
                                 <motion.button
                                     type="submit"
-                                    disabled={addClassMutation.isLoading || !isStepValid(currentStep)}
-                                    whileHover={{ scale: (addClassMutation.isLoading || !isStepValid(currentStep)) ? 1 : 1.05 }}
-                                    whileTap={{ scale: (addClassMutation.isLoading || !isStepValid(currentStep)) ? 1 : 0.95 }}
+                                    disabled={addClassMutation.isLoading} // Only disable if mutation is loading
+                                    whileHover={{ scale: addClassMutation.isLoading ? 1 : 1.05 }}
+                                    whileTap={{ scale: addClassMutation.isLoading ? 1 : 0.95 }}
                                     className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 disabled:bg-gray-400"
                                 >
                                     {addClassMutation.isLoading ? (

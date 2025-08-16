@@ -18,7 +18,7 @@ const TeamSection = () => {
 
     if (isLoading) {
         return (
-            <section className="py-20 bg-gray-50">
+            <section className="py-20 bg-white">
                 <div className="md:container mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <p className="text-xl text-gray-600">Loading trainers...</p>
                 </div>
@@ -28,7 +28,7 @@ const TeamSection = () => {
 
     if (isError) {
         return (
-            <section className="py-20 bg-gray-50">
+            <section className="py-20 bg-white">
                 <div className="md:container mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <p className="text-xl text-red-600">Error loading trainers: {error.message}</p>
                 </div>
@@ -37,7 +37,7 @@ const TeamSection = () => {
     }
 
     return (
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-white">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">

@@ -234,30 +234,6 @@ const AddCommunity = () => {
                         <div className="mt-2 text-sm text-gray-500">Minimum 50 characters. Markdown supported.</div>
                     </motion.div>
 
-                    <motion.div className="bg-gray-50 rounded-lg p-4" variants={itemVariants}>
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Author Information</h3>
-                        <div className="flex items-center space-x-3">
-                            <motion.img
-                                src={user?.photoURL}
-                                alt={user?.displayName}
-                                className="w-10 h-10 rounded-full object-cover"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: 'spring', stiffness: 250, damping: 18 }}
-                            />
-                            <div>
-                                <motion.div className="font-medium text-gray-800" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-                                    {user?.displayName}
-                                </motion.div>
-                                <motion.div className="text-sm text-gray-500 capitalize flex items-center space-x-1" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-                                    <span>{user?.role}</span>
-                                    {user?.role === 'admin' && <Crown size={15} />}
-                                    {user?.role === 'trainer' && <Trophy size={15} />}
-                                </motion.div>
-                            </div>
-                        </div>
-                    </motion.div>
-
                     <motion.div className="flex justify-end space-x-4" variants={itemVariants}>
                         <motion.button
                             type="button"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import bannerImg from '../../assets/banner.jpeg';
+// import bannerImg from '../../assets/banner.jpeg';
 import { Link } from 'react-router';
 import { motion } from 'framer-motion';
 
@@ -137,7 +137,7 @@ const Banner = () => {
                         ></motion.div>
                         <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
                             <img
-                                src={bannerImg}
+                                src="https://fitflow-raheel.netlify.app/assets/Banner-BNR6PyGs.jpeg"
                                 alt="Fitness Training"
                                 className="rounded-lg w-full h-[450px] object-cover"
                             />

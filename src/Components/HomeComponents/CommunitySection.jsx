@@ -99,14 +99,6 @@ const Community = () => {
         tap: { scale: 0.9 },
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <span className="loading loading-spinner text-blue-600 loading-lg" />
-            </div>
-        );
-    }
-
     if (isError) {
         return (
             <div className="min-h-screen flex items-center justify-center">

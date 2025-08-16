@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Mail, Search, Download, Trash2, Calendar, UserX } from 'lucide-react'; // Changed MousePointerClick to UserX
+import { Mail, Search, Download, Trash2, Calendar, UserX } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
+// Assuming useAxiosSecure is correctly imported and configured
 import useAxiosSecure from '../../../Provider/UseAxiosSecure';
 
 const Subscribers = () => {
@@ -13,6 +14,7 @@ const Subscribers = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const subscribersPerPage = 10;
+    const [showActiveOnly, setShowActiveOnly] = useState(false); // State to toggle between active and all subscribers
 
     // TanStack Query to fetch subscribers
     const { data: subscribers = [], isLoading, isError, error } = useQuery({
@@ -21,8 +23,8 @@ const Subscribers = () => {
             const res = await axiosSecure.get('/newsletter');
             return res.data;
         },
-        staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
-        cacheTime: 30 * 60 * 1000, // Data kept in cache for 30 minutes
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
     });
 
     // TanStack Query mutation for deleting a subscriber
@@ -32,17 +34,17 @@ const Subscribers = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['newsletterSubscribers']); // Invalidate cache to refetch data
-            Swal.fire({ // SweetAlert2 success message
+            Swal.fire({
                 icon: 'success',
                 title: 'Deleted!',
-                text: 'Subscriber has been deleted successfully.',
+                text: 'Subscriber has been permanently deleted.',
                 showConfirmButton: false,
                 timer: 1500
             });
         },
         onError: (err) => {
             console.error('Error deleting subscriber:', err);
-            Swal.fire({ // SweetAlert2 error message
+            Swal.fire({
                 icon: 'error',
                 title: 'Error!',
                 text: 'Failed to delete subscriber. Please try again.',
@@ -50,31 +52,46 @@ const Subscribers = () => {
         },
     });
 
-    // Calculate unsubscribed this month (example: assuming 'unsubscribedAt' field exists on subscriber)
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    // Calculate stats based on ALL fetched subscribers, not just filtered ones for display
+    const totalActiveSubscribers = subscribers.filter(sub => !sub.isUnsubscribed).length;
 
-    const unsubscribedThisMonth = subscribers.filter(
-        (sub) => sub.unsubscribedAt && // Check if unsubscribedAt exists
-            new Date(sub.unsubscribedAt).getMonth() === currentMonth &&
-            new Date(sub.unsubscribedAt).getFullYear() === currentYear
+    const newSubscribedThisMonth = subscribers.filter(
+        (sub) =>
+            !sub.isUnsubscribed && // Only count active subscribers
+            new Date(sub.createdAt).getMonth() === new Date().getMonth() &&
+            new Date(sub.createdAt).getFullYear() === new Date().getFullYear()
     ).length;
 
-    const filteredSubscribers = subscribers.filter(
-        (subscriber) =>
-            subscriber.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            subscriber.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const unsubscribedThisMonth = subscribers.filter(
+        (sub) =>
+            sub.isUnsubscribed && // Only count unsubscribed subscribers
+            sub.unsubscribedAt && // Ensure unsubscribedAt exists for accurate timestamp
+            new Date(sub.unsubscribedAt).getMonth() === new Date().getMonth() &&
+            new Date(sub.unsubscribedAt).getFullYear() === new Date().getFullYear()
+    ).length;
+
+    // Filter subscribers for display based on search term and active/all status toggle
+    const filteredAndStatusSubscribers = subscribers.filter(
+        (subscriber) => {
+            const matchesSearch =
+                subscriber.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                subscriber.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const isActive = !subscriber.isUnsubscribed; // Determine if subscriber is active
+
+            return matchesSearch && (showActiveOnly ? isActive : true); // Apply filter based on toggle
+        }
     );
 
     const indexOfLastSubscriber = currentPage * subscribersPerPage;
     const indexOfFirstSubscriber = indexOfLastSubscriber - subscribersPerPage;
-    const currentSubscribers = filteredSubscribers.slice(indexOfFirstSubscriber, indexOfLastSubscriber);
-    const totalPages = Math.ceil(filteredSubscribers.length / subscribersPerPage);
+    const currentSubscribers = filteredAndStatusSubscribers.slice(indexOfFirstSubscriber, indexOfLastSubscriber);
+    const totalPages = Math.ceil(filteredAndStatusSubscribers.length / subscribersPerPage);
 
     const handleDelete = (id) => {
         Swal.fire({
             title: 'Are you sure?',
-            text: "You won't be able to revert this!",
+            text: "This will permanently delete the subscriber record!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -89,12 +106,16 @@ const Subscribers = () => {
 
     const handleExport = () => {
         const csvContent = [
-            ['Name', 'Email', 'Subscribed Date', 'Role'],
-            ...filteredSubscribers.map((sub) => [
+            // CSV header: 'Role' now defaults to 'Member'
+            ['Name', 'Email', 'Status', 'Subscribed Date', 'Unsubscribed Date', 'Role'],
+            ...filteredAndStatusSubscribers.map((sub) => [
                 sub.name,
                 sub.email,
+                sub.isUnsubscribed ? 'Unsubscribed' : 'Active', // Include status in CSV
                 format(new Date(sub.createdAt), 'yyyy-MM-dd'),
-                sub.userRole || 'Subscriber',
+                sub.unsubscribedAt ? format(new Date(sub.unsubscribedAt), 'yyyy-MM-dd') : 'N/A', // Include unsub date
+                // Default role is 'Member'
+                sub.userRole || 'Member',
             ]),
         ]
             .map((e) => e.join(','))
@@ -108,7 +129,7 @@ const Subscribers = () => {
         link.click();
         document.body.removeChild(link);
 
-        Swal.fire({ // SweetAlert2 success message for export
+        Swal.fire({
             icon: 'success',
             title: 'Exported!',
             text: 'Subscribers data exported successfully!',
@@ -171,14 +192,14 @@ const Subscribers = () => {
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-4xl font-bold text-gray-900 leading-tight">{subscribers.length}</h3>
-                            <p className="text-lg text-gray-600">Total Subscribers</p>
+                            <h3 className="text-4xl font-bold text-gray-900 leading-tight">{totalActiveSubscribers}</h3>
+                            <p className="text-lg text-gray-600">Total Active Subscribers</p>
                         </div>
                         <div className="p-4 bg-blue-50 rounded-full">
                             <Mail className="h-10 w-10 text-blue-600" />
                         </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">All time active subscribers.</p>
+                    <p className="text-sm text-gray-500 mt-2">Currently active subscribers receiving emails.</p>
                 </motion.div>
 
                 <motion.div
@@ -189,24 +210,17 @@ const Subscribers = () => {
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-4xl font-bold text-gray-900 leading-tight">
-                                {
-                                    subscribers.filter(
-                                        (sub) =>
-                                            new Date(sub.createdAt).getMonth() === new Date().getMonth() &&
-                                            new Date(sub.createdAt).getFullYear() === new Date().getFullYear()
-                                    ).length
-                                }
+                                {newSubscribedThisMonth}
                             </h3>
-                            <p className="text-lg text-gray-600">New This Month</p>
+                            <p className="text-lg text-gray-600">New Active This Month</p>
                         </div>
                         <div className="p-4 bg-green-50 rounded-full">
                             <Calendar className="h-10 w-10 text-green-600" />
                         </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">Subscribers joined in the current month.</p>
+                    <p className="text-sm text-gray-500 mt-2">New active subscribers joined in the current month.</p>
                 </motion.div>
 
-                {/* New stat: Unsubscribed This Month */}
                 <motion.div
                     className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100 flex flex-col justify-between"
                     variants={cardVariants}
@@ -214,11 +228,10 @@ const Subscribers = () => {
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            {/* Display calculated unsubscribed count */}
                             <h3 className="text-4xl font-bold text-gray-900 leading-tight">{unsubscribedThisMonth}</h3>
                             <p className="text-lg text-gray-600">Unsubscribed This Month</p>
                         </div>
-                        <div className="p-4 bg-red-50 rounded-full"> 
+                        <div className="p-4 bg-red-50 rounded-full">
                             <UserX className="h-10 w-10 text-red-600" />
                         </div>
                     </div>
@@ -238,24 +251,46 @@ const Subscribers = () => {
                             type="text"
                             placeholder="Search by name or email..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1); // Reset to first page on search
+                            }}
                             className="pl-14 pr-6 py-3.5 border border-gray-300 rounded-xl w-full text-lg text-gray-700
                                        focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 ease-in-out"
                         />
                     </div>
-                    <motion.button
-                        onClick={handleExport}
-                        className="flex items-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl
+                    <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                        <motion.button
+                            onClick={handleExport}
+                            className="flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl
                                    shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                                    transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={isLoading || subscribers.length === 0}
-                        title={isLoading || subscribers.length === 0 ? "No data to export" : "Export CSV"}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <Download className="h-5 w-5" />
-                        <span className="font-semibold text-lg">Export to CSV</span>
-                    </motion.button>
+                            disabled={isLoading || subscribers.length === 0}
+                            title={isLoading || subscribers.length === 0 ? "No data to export" : "Export CSV"}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Download className="h-5 w-5" />
+                            <span className="font-semibold text-lg">Export to CSV</span>
+                        </motion.button>
+                        <motion.button
+                            onClick={() => {
+                                setShowActiveOnly(!showActiveOnly);
+                                setCurrentPage(1); // Reset page when toggling filter
+                            }}
+                            className={`flex items-center justify-center space-x-3 px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out
+                                ${showActiveOnly
+                                    ? 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500'
+                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-300'
+                                }`}
+                            title={showActiveOnly ? "Show All Subscribers" : "Show Active Subscribers Only"}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            {showActiveOnly ? <UserX className="h-5 w-5" /> : <Mail className="h-5 w-5" />}
+                            <span className="font-semibold text-lg">{showActiveOnly ? "Show All" : "Show Active"}</span>
+                        </motion.button>
+                    </div>
                 </div>
             </motion.div>
 
@@ -283,10 +318,10 @@ const Subscribers = () => {
                             Retry
                         </button>
                     </div>
-                ) : filteredSubscribers.length === 0 ? (
+                ) : filteredAndStatusSubscribers.length === 0 ? (
                     <div className="text-center p-20 text-gray-500 text-xl flex flex-col items-center justify-center">
                         <Mail className="h-16 w-16 mb-6 text-gray-400" />
-                        <p>No subscribers found matching your search.</p>
+                        <p>No subscribers found matching your criteria.</p>
                     </div>
                 ) : (
                     <>
@@ -296,6 +331,7 @@ const Subscribers = () => {
                                     <tr>
                                         <th className="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Subscriber</th>
                                         <th className="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                                        <th className="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                         <th className="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Subscribed Date</th>
                                         <th className="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
                                         <th className="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
@@ -305,7 +341,7 @@ const Subscribers = () => {
                                     {currentSubscribers.map((subscriber) => (
                                         <motion.tr
                                             key={subscriber._id}
-                                            className="hover:bg-gray-50 transition-colors duration-150"
+                                            className="hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100"
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ duration: 0.3 }}
@@ -313,7 +349,7 @@ const Subscribers = () => {
                                         >
                                             <td className="px-8 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
+                                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-orange-400 text-white rounded-full flex items-center justify-center border-2 border-white  font-bold text-lg shadow-md flex-shrink-0">
                                                         {subscriber.name?.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="ml-5">
@@ -322,18 +358,31 @@ const Subscribers = () => {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-4 whitespace-nowrap text-base text-gray-800">{subscriber.email}</td>
+                                            <td className="px-8 py-4 whitespace-nowrap">
+                                                <span
+                                                    className={`inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-full
+                                                        ${subscriber.isUnsubscribed
+                                                            ? 'bg-red-100 text-red-800' // Red for unsubscribed
+                                                            : 'bg-green-100 text-green-800' // Green for active
+                                                        }`}
+                                                >
+                                                    {subscriber.isUnsubscribed ? 'Unsubscribed' : 'Active'}
+                                                </span>
+                                            </td>
                                             <td className="px-8 py-4 whitespace-nowrap text-base text-gray-800">
                                                 {format(new Date(subscriber.createdAt), 'MMM dd, yyyy')}
                                             </td>
                                             <td className="px-8 py-4 whitespace-nowrap">
                                                 <span
                                                     className={`inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-full
-                                                        ${subscriber.userRole && subscriber.userRole.toLowerCase() !== 'subscriber'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-indigo-100 text-indigo-800'
+                                                        ${subscriber.userRole && ['member', 'trainer', 'admin'].includes(subscriber.userRole.toLowerCase())
+                                                            ? (subscriber.userRole.toLowerCase() === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                                                subscriber.userRole.toLowerCase() === 'trainer' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-indigo-100 text-indigo-800')
+                                                            : 'bg-indigo-100 text-indigo-800' // Default to Member styling
                                                         }`}
                                                 >
-                                                    {subscriber.userRole || 'Subscriber'}
+                                                    {subscriber.userRole || 'Member'} {/* Changed default to 'Member' */}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-4 whitespace-nowrap text-sm font-medium">
@@ -342,7 +391,7 @@ const Subscribers = () => {
                                                     className="text-red-600 hover:text-red-800 p-2.5 rounded-full
                                                                hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2
                                                                transition-all duration-200 ease-in-out"
-                                                    title="Delete Subscriber"
+                                                    title="Permanently Delete Subscriber"
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     disabled={deleteSubscriberMutation.isLoading}
@@ -361,8 +410,8 @@ const Subscribers = () => {
                             <div className="bg-white px-8 py-5 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center text-sm">
                                 <div className="text-gray-700 mb-4 sm:mb-0">
                                     Showing <span className="font-semibold">{indexOfFirstSubscriber + 1}</span> to{' '}
-                                    <span className="font-semibold">{Math.min(indexOfLastSubscriber, filteredSubscribers.length)}</span> of{' '}
-                                    <span className="font-semibold">{filteredSubscribers.length}</span> results
+                                    <span className="font-semibold">{Math.min(indexOfLastSubscriber, filteredAndStatusSubscribers.length)}</span> of{' '}
+                                    <span className="font-semibold">{filteredAndStatusSubscribers.length}</span> results
                                 </div>
                                 <div className="flex space-x-3">
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

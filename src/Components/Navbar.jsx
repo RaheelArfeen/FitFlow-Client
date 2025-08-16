@@ -162,24 +162,42 @@ const Navbar = () => {
                             </div>
                         ) : user ? (
                             <div className="relative" ref={dropdownRef}>
-                                <button
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="flex items-center space-x-3 bg-gray-50 rounded-full pl-1 pr-4 py-1 cursor-pointer hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                    aria-expanded={isDropdownOpen}
-                                    aria-haspopup="true"
+                                <div
+                                    className={`p-0.5 rounded-full inline-block transition-all duration-300 ${isDropdownOpen
+                                            ? 'bg-gradient-to-r from-blue-400 to-orange-400'
+                                            : 'bg-gradient-to-r from-blue-400 to-orange-400'
+                                        }`}
                                 >
-                                    {user.photoURL ? (
-                                        <img src={user.photoURL} alt={user.displayName || user.name} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full  bg-gradient-to-r from-blue-400 to-orange-400 flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-sm">
-                                            {getUserInitial(user)}
-                                        </div>
-                                    )}
-                                    <div className="text-left">
-                                        <div className="text-sm font-semibold text-gray-800 truncate max-w-[100px]">{user.displayName || user.name}</div>
-                                        <div className="text-xs text-gray-500 capitalize">{user.role || 'User'}</div>
+                                    <div className="bg-white rounded-full overflow-hidden">
+                                        <button
+                                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                            className="flex items-center space-x-3 bg-gray-100 rounded-full pl-1 pr-4 py-1 cursor-pointer hover:shadow transition-all duration-200 focus:outline-none focus:ring-0"
+                                            aria-expanded={isDropdownOpen}
+                                            aria-haspopup="true"
+                                        >
+                                            {user.photoURL ? (
+                                                <img
+                                                    src={user.photoURL}
+                                                    alt={user.displayName || user.name}
+                                                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-orange-400 flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-sm">
+                                                    {getUserInitial(user)}
+                                                </div>
+                                            )}
+                                            <div className="text-left">
+                                                <div className="text-sm font-semibold text-gray-800 truncate max-w-[100px]">
+                                                    {user.displayName || user.name}
+                                                </div>
+                                                <div className="text-xs text-gray-500 capitalize">
+                                                    {user.role || 'User'}
+                                                </div>
+                                            </div>
+                                        </button>
                                     </div>
-                                </button>
+                                </div>
+
                                 <AnimatePresence>
                                     {isDropdownOpen && (
                                         <motion.div
@@ -187,7 +205,7 @@ const Navbar = () => {
                                             animate="visible"
                                             exit="exit"
                                             variants={dropdownVariants}
-                                            className="absolute right-0 w-48 bg-white border border-gray-100 rounded-lg shadow-lg z-50 mt-2 py-1"
+                                            className="absolute right-0 w-48 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1"
                                         >
                                             <button
                                                 onClick={handleLogout}

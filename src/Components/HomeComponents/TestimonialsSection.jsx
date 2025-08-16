@@ -63,7 +63,7 @@ const TestimonialsSection = () => {
 
     if (isError) {
         return (
-            <section className="py-20 bg-gradient-to-br from-blue-50 to-orange-50 text-center">
+            <section className="py-20 bg-white text-center">
                 <div className="container mx-auto px-4">
                     <p className="text-red-600 text-lg">Error loading testimonials: {error?.message || "Please try again later."}</p>
                 </div>
@@ -73,7 +73,7 @@ const TestimonialsSection = () => {
 
     if (!testimonials || testimonials.length === 0) {
         return (
-            <section className="py-20 bg-gradient-to-br from-blue-50 to-orange-50 text-center">
+            <section className="py-20 bg-white text-center">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
                         No Testimonials Yet
@@ -88,7 +88,7 @@ const TestimonialsSection = () => {
 
 
     return (
-        <section className="py-20 bg-gradient-to-br from-blue-50 to-orange-50">
+        <section className="py-20 bg-white">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">

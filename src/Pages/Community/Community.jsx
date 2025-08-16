@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
 import { Title } from 'react-head';
+import Loader from '../../Pages/Loader';
 
 const postsPerPage = 6;
 const MAX_VISIBLE_PAGES = 5; // Define how many page numbers to show before ellipsis
@@ -160,9 +161,7 @@ const Community = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <span className="loading loading-spinner loading-lg text-blue-700"></span>
-            </div>
+            <Loader/>
         );
     }
 
