@@ -13,7 +13,7 @@ const TrainersRoute = ({ children }) => {
     }
 
     if (!user || role !== 'trainer') {
-        return <Navigate state={{ from: location.pathname }} to="/forbidden"></Navigate>
+        return <Navigate state={{ from: location.pathname }} to="/dashboard/forbidden"></Navigate>
     }
 
     return children;

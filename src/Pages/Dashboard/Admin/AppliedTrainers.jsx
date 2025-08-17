@@ -209,7 +209,7 @@ const AppliedTrainers = () => {
                     '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
             }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition duration-300"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-2xl dark:hover:shadow-lg dark:hover:shadow-gray-700 transition duration-300"
         >
             <div className="relative">
                 <img
@@ -219,10 +219,10 @@ const AppliedTrainers = () => {
                 />
                 <div
                     className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold shadow-md ${trainer.status === 'pending'
-                        ? 'bg-orange-600 text-white'
+                        ? 'bg-orange-600 dark:bg-orange-500 text-white'
                         : trainer.status === 'accepted'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-red-600 text-white'
+                            ? 'bg-green-600 dark:bg-green-500 text-white'
+                            : 'bg-red-600 dark:bg-red-500 text-white'
                         }`}
                 >
                     {trainer.status.charAt(0).toUpperCase() + trainer.status.slice(1)}
@@ -230,23 +230,23 @@ const AppliedTrainers = () => {
             </div>
 
             <div className="p-5 space-y-2">
-                <h3 className="text-xl font-semibold text-gray-800">{trainer.name}</h3>
-                <p className="text-sm text-gray-500">{trainer.email}</p>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{trainer.name}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{trainer.email}</p>
 
-                <div className="grid grid-cols-2 text-sm text-gray-600 gap-y-1 pt-2">
+                <div className="grid grid-cols-2 text-sm text-gray-600 dark:text-gray-400 gap-y-1 pt-2">
                     <p>
-                        <span className="font-medium text-gray-700">Age:</span> {trainer.age}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Age:</span> {trainer.age}
                     </p>
                     <p>
-                        <span className="font-medium text-gray-700">Experience:</span>{' '}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Experience:</span>{' '}
                         {trainer.experience}
                     </p>
                     <p>
-                        <span className="font-medium text-gray-700">Specialization:</span>{' '}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Specialization:</span>{' '}
                         {trainer.specialization}
                     </p>
                     <p>
-                        <span className="font-medium text-gray-700">Sessions:</span>{' '}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Sessions:</span>{' '}
                         {trainer.sessions}
                     </p>
                 </div>
@@ -255,7 +255,7 @@ const AppliedTrainers = () => {
                     {(trainer.certifications || []).slice(0, 5).map((cert, i) => (
                         <span
                             key={i}
-                            className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium border border-blue-200"
+                            className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full font-medium border border-blue-200 dark:border-blue-800"
                         >
                             {cert}
                         </span>
@@ -263,7 +263,7 @@ const AppliedTrainers = () => {
                 </div>
 
                 {trainer.status === 'rejected' && trainer.adminFeedback && (
-                    <p className="mt-3 text-sm text-red-700 italic">
+                    <p className="mt-3 text-sm text-red-700 dark:text-red-400 italic">
                         <strong>Rejection Feedback:</strong>{' '}
                         {trainer.adminFeedback.length > 100
                             ? trainer.adminFeedback.slice(0, 100) + '...'
@@ -274,7 +274,7 @@ const AppliedTrainers = () => {
                 <div className="flex gap-2 pt-4 flex-wrap">
                     <button
                         onClick={() => handleViewDetails(trainer)}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-50 px-3 py-1.5 rounded-lg"
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium bg-blue-50 dark:bg-blue-900 px-3 py-1.5 rounded-lg transition-colors duration-200"
                     >
                         <Eye className="h-4 w-4" /> View
                     </button>
@@ -283,14 +283,14 @@ const AppliedTrainers = () => {
                         <>
                             <button
                                 onClick={() => handleApprove(trainer)}
-                                className="flex items-center gap-1 text-green-600 hover:text-green-800 text-sm font-medium bg-green-50 px-3 py-1.5 rounded-lg"
+                                className="flex items-center gap-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 text-sm font-medium bg-green-50 dark:bg-green-900 px-3 py-1.5 rounded-lg transition-colors duration-200"
                                 disabled={approveTrainerMutation.isLoading}
                             >
                                 <Check className="h-4 w-4" /> Approve
                             </button>
                             <button
                                 onClick={() => handleReject(trainer)}
-                                className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-medium bg-red-50 px-3 py-1.5 rounded-lg"
+                                className="flex items-center gap-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-sm font-medium bg-red-50 dark:bg-red-900 px-3 py-1.5 rounded-lg transition-colors duration-200"
                                 disabled={rejectTrainerMutation.isLoading}
                             >
                                 <X className="h-4 w-4" /> Reject
@@ -304,13 +304,13 @@ const AppliedTrainers = () => {
 
     return (
         <motion.div
-            className="p-6"
+            className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
         >
-            <motion.h1 className="text-3xl font-bold text-gray-800 mb-4" variants={cardVariants}>Manage Trainer Applications</motion.h1>
-            <motion.p className="text-gray-600 mb-8" variants={cardVariants}>Review and manage trainer applications.</motion.p>
+            <motion.h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4" variants={cardVariants}>Manage Trainer Applications</motion.h1>
+            <motion.p className="text-gray-600 dark:text-gray-400 mb-8" variants={cardVariants}>Review and manage trainer applications.</motion.p>
 
             <motion.div
                 className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10"
@@ -324,7 +324,7 @@ const AppliedTrainers = () => {
                 ].map(({ label, count, icon, color }, i) => (
                     <motion.div
                         key={i}
-                        className="bg-white shadow rounded-xl px-6 py-8 flex items-center justify-between"
+                        className="bg-white dark:bg-gray-800 shadow rounded-xl px-6 py-8 flex items-center justify-between"
                         variants={cardVariants}
                         whileHover={{
                             scale: 1.03,
@@ -333,24 +333,24 @@ const AppliedTrainers = () => {
                         transition={{ duration: 0.2 }}
                     >
                         <div>
-                            <h3 className="text-3xl font-bold text-gray-800">{count}</h3>
-                            <p className="text-lg text-gray-600">{label}</p>
+                            <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{count}</h3>
+                            <p className="text-lg text-gray-600 dark:text-gray-400">{label}</p>
                         </div>
-                        {React.cloneElement(icon, { className: `h-10 w-10 text-${color}-600` })}
+                        {React.cloneElement(icon, { className: `h-10 w-10 text-${color}-600 dark:text-${color}-500` })}
                     </motion.div>
                 ))}
             </motion.div>
 
             <section className="mb-10">
-                <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Pending Applications</motion.h2>
+                <motion.h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4" variants={cardVariants}>Pending Applications</motion.h2>
                 {pendingTrainers.length === 0 ? (
                     <motion.div
-                        className="text-center bg-white py-20 rounded-xl shadow"
+                        className="text-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-20 rounded-xl shadow"
                         variants={cardVariants}
                         initial="hidden"
                         animate="visible"
                     >
-                        <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <User className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                         <p className="text-xl font-semibold">No pending applications</p>
                     </motion.div>
                 ) : (
@@ -366,15 +366,15 @@ const AppliedTrainers = () => {
             </section>
 
             <section className="mb-10">
-                <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Accepted Trainers</motion.h2>
+                <motion.h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4" variants={cardVariants}>Accepted Trainers</motion.h2>
                 {acceptedTrainers.length === 0 ? (
                     <motion.div
-                        className="text-center bg-white py-20 rounded-xl shadow"
+                        className="text-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-20 rounded-xl shadow"
                         variants={cardVariants}
                         initial="hidden"
                         animate="visible"
                     >
-                        <Check className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <Check className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                         <p className="text-xl font-semibold">No accepted trainers</p>
                     </motion.div>
                 ) : (
@@ -390,15 +390,15 @@ const AppliedTrainers = () => {
             </section>
 
             <section className="mb-10">
-                <motion.h2 className="text-2xl font-semibold mb-4" variants={cardVariants}>Rejected Trainers</motion.h2>
+                <motion.h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4" variants={cardVariants}>Rejected Trainers</motion.h2>
                 {rejectedTrainers.length === 0 ? (
                     <motion.div
-                        className="text-center bg-white py-20 rounded-xl shadow"
+                        className="text-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-20 rounded-xl shadow"
                         variants={cardVariants}
                         initial="hidden"
                         animate="visible"
                     >
-                        <X className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <X className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                         <p className="text-xl font-semibold">No rejected trainers</p>
                     </motion.div>
                 ) : (
@@ -426,11 +426,11 @@ const AppliedTrainers = () => {
                             initial="hidden"
                             animate="visible"
                             exit="exit"
-                            className="bg-white rounded-xl max-w-lg w-full p-6 relative overflow-y-auto max-h-[80vh] shadow-2xl"
+                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 rounded-xl max-w-lg w-full p-6 relative overflow-y-auto max-h-[80vh] shadow-2xl"
                         >
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition duration-200"
+                                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition duration-200"
                             >
                                 <X className="h-6 w-6" />
                             </button>
@@ -441,15 +441,15 @@ const AppliedTrainers = () => {
                                         <img
                                             src={selectedTrainer.photoURL}
                                             alt={selectedTrainer.name}
-                                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                                         />
                                         <div>
-                                            <h3 className="text-xl font-bold text-gray-800">{selectedTrainer.name}</h3>
-                                            <p className="text-sm text-gray-600">{selectedTrainer.email}</p>
+                                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{selectedTrainer.name}</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">{selectedTrainer.email}</p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2 text-gray-700 text-sm md:text-base">
+                                    <div className="space-y-2 text-gray-700 dark:text-gray-300 text-sm md:text-base">
                                         <p><strong>Bio:</strong> {selectedTrainer.description}</p>
                                         <p><strong>Age:</strong> {selectedTrainer.age}</p>
                                         <p><strong>Experience:</strong> {selectedTrainer.experience}</p>
@@ -470,7 +470,7 @@ const AppliedTrainers = () => {
                                     </div>
 
                                     {selectedTrainer.status === 'rejected' && selectedTrainer.adminFeedback && (
-                                        <p className="text-red-700 italic mt-4 mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                                        <p className="text-red-700 dark:text-red-400 italic mt-4 mb-4 p-3 bg-red-50 dark:bg-red-900 rounded-lg border border-red-200 dark:border-red-800">
                                             <strong>Rejection Feedback:</strong> {selectedTrainer.adminFeedback}
                                         </p>
                                     )}
@@ -496,7 +496,7 @@ const AppliedTrainers = () => {
                                         )}
                                         <button
                                             onClick={() => setShowModal(false)}
-                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition duration-200"
+                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition duration-200 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500"
                                         >
                                             Close
                                         </button>
@@ -504,9 +504,9 @@ const AppliedTrainers = () => {
                                 </>
                             ) : (
                                 <>
-                                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Provide Rejection Feedback</h2>
+                                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Provide Rejection Feedback</h2>
                                     <textarea
-                                        className="w-full p-3 border border-gray-300 shadow-inner rounded-md mb-4 resize-y outline-none focus:ring-2 focus:ring-red-400"
+                                        className="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-inner rounded-md mb-4 resize-y outline-none focus:ring-2 focus:ring-red-400"
                                         rows={6}
                                         value={rejectFeedback}
                                         onChange={(e) => setRejectFeedback(e.target.value)}
@@ -522,7 +522,7 @@ const AppliedTrainers = () => {
                                         </button>
                                         <button
                                             onClick={() => setShowModal(false)}
-                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition duration-200"
+                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition duration-200 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500"
                                         >
                                             Cancel
                                         </button>

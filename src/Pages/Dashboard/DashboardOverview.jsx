@@ -121,7 +121,7 @@ const DashboardOverview = () => {
             return [
                 { icon: Users, label: 'Total Trainers', value: trainers.length, color: 'blue' },
                 { icon: Users, label: 'Total Members', value: members.length, color: 'green' },
-                { icon: DollarSign, label: 'Total Revenue', value: `$${(bookingsData.totalRevenue || 0).toFixed(2)}`, color: 'indigo' },
+                { icon: DollarSign, label: 'Total Revenue', value: `$${(bookingsData.totalRevenue || 0).toFixed(2)}`, color: 'red' }, // Changed color to 'red'
                 { icon: MessageSquare, label: 'Community Posts', value: community.length, color: 'orange' },
             ];
         }
@@ -137,7 +137,7 @@ const DashboardOverview = () => {
         return [
             { icon: Calendar, label: 'Sessions Booked', value: bookingsData.bookings.filter(booking => booking.userEmail === user.email).length, color: 'blue' },
             { icon: DollarSign, label: 'Total Spent', value: `$${memberTotalSpent.toFixed(2)}`, color: 'green' },
-            { icon: FileText, label: 'Applications Submitted', value: memberApplicationsSubmitted, color: 'indigo' }, // Used the pre-calculated value
+            { icon: FileText, label: 'Applications Submitted', value: memberApplicationsSubmitted, color: 'indigo' },
             { icon: MessageSquare, label: 'Community Posts', value: community.length, color: 'orange' },
         ];
 
@@ -205,7 +205,7 @@ const DashboardOverview = () => {
 
     if (error) {
         return (
-            <div className="p-8 text-center text-red-500 text-lg font-medium">
+            <div className="p-8 text-center text-red-500 text-lg font-medium dark:text-red-400">
                 Error loading dashboard data: {error.message || 'An unexpected error occurred.'}
             </div>
         );
@@ -213,17 +213,17 @@ const DashboardOverview = () => {
 
     return (
         <motion.div
-            className="md:px-8 py-8 bg-gray-50 min-h-screen"
+            className="md:px-8 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
         >
             {/* Welcome Header */}
             <motion.div className="mb-12 text-center md:text-left" variants={itemVariants}>
-                <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Welcome back, {user?.displayName || user?.name || 'User'}!</h1>
-                <p className="text-lg text-gray-600">
+                <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-4">Welcome back, {user?.displayName || user?.name || 'User'}!</h1>
+                <p className="text-lg text-gray-600 dark:text-gray-400">
                     Here's what's happening with your{' '}
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">
                         {user?.role === 'admin'
                             ? 'platform'
                             : user?.role === 'trainer'
@@ -242,20 +242,20 @@ const DashboardOverview = () => {
                 {stats.map((stat, index) => (
                     <motion.div
                         key={index}
-                        className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100 flex flex-col justify-between"
+                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-7 border border-gray-100 dark:border-gray-700 flex flex-col justify-between"
                         variants={cardVariants}
                         whileHover="hover"
                     >
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-4xl font-bold text-gray-900 leading-tight">{stat.value}</h3>
-                                <p className="text-lg text-gray-600">{stat.label}</p>
+                                <h3 className="text-4xl font-bold text-gray-900 dark:text-gray-100 leading-tight">{stat.value}</h3>
+                                <p className="text-lg text-gray-600 dark:text-gray-400">{stat.label}</p>
                             </div>
-                            <div className={`p-4 bg-${stat.color}-50 rounded-full`}>
-                                <stat.icon className={`h-10 w-10 text-${stat.color}-600`} />
+                            <div className={`p-4 bg-${stat.color}-50 dark:bg-${stat.color}-900 rounded-full`}>
+                                <stat.icon className={`h-10 w-10 text-${stat.color}-600 dark:text-${stat.color}-400`} />
                             </div>
                         </div>
-                        <p className="text-sm text-gray-500 mt-2">Insights for {stat.label.toLowerCase()}.</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Insights for {stat.label.toLowerCase()}.</p>
                     </motion.div>
                 ))}
             </motion.div>
@@ -263,8 +263,8 @@ const DashboardOverview = () => {
             {/* Quick Actions & Recent Updates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 {/* Quick Actions */}
-                <motion.div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100" variants={cardVariants}>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-6">Quick Actions</h2>
+                <motion.div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700" variants={cardVariants}>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">Quick Actions</h2>
                     <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
                         {user?.role === 'admin' && (
                             <>
@@ -452,28 +452,28 @@ const DashboardOverview = () => {
                 </motion.div>
 
                 {/* Recent Updates */}
-                <motion.div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100" variants={cardVariants}>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-6">Recent Updates & News</h2>
+                <motion.div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700" variants={cardVariants}>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">Recent Updates & News</h2>
                     <div className="space-y-6">
                         {recentUpdates.length > 0 ? (
                             recentUpdates.map((item) => (
                                 <motion.div
                                     key={item._id}
-                                    className="p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200 border border-gray-100"
+                                    className="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-100 dark:border-gray-700"
                                     variants={updateItemVariants}
                                     whileHover={{ y: -5, boxShadow: '0 8px 12px rgba(0, 0, 0, 0.1)' }}
                                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                                 >
                                     <div className="mb-3">
-                                        <h3 className="font-bold text-lg text-gray-900">{item.title}</h3>
-                                        <span className="text-sm text-gray-500 block mt-1">
+                                        <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">{item.title}</h3>
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 block mt-1">
                                             {formatDistanceToNowStrict(new Date(item.createdAt), { addSuffix: true })}
                                         </span>
                                     </div>
-                                    <p className="text-base text-gray-700 line-clamp-3 mb-3">{item.content}</p>
+                                    <p className="text-base text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">{item.content}</p>
                                     <div className="flex items-center space-x-2">
                                         <span
-                                            className={`${getCategoryClass('bg', item.category, 100)} ${getCategoryClass('text', item.category, 700)} px-3 py-1.5 rounded-full text-xs font-medium`}
+                                            className={`${getCategoryClass('bg', item.category, 100)} ${getCategoryClass('text', item.category, 700)} dark:bg-${categoryColors[item.category]}-900 dark:text-${categoryColors[item.category]}-400 px-3 py-1.5 rounded-full text-xs font-medium`}
                                         >
                                             {item.category}
                                         </span>
@@ -482,10 +482,10 @@ const DashboardOverview = () => {
                             ))
                         ) : (
                             <motion.div
-                                className="text-center p-12 text-gray-500 text-lg flex flex-col items-center justify-center bg-gray-50 rounded-xl"
+                                className="text-center p-12 text-gray-500 dark:text-gray-400 text-lg flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-xl"
                                 variants={itemVariants}
                             >
-                                <MessageSquare className="h-12 w-12 mb-4 text-gray-400" />
+                                <MessageSquare className="h-12 w-12 mb-4 text-gray-400 dark:text-gray-500" />
                                 <p>No recent community posts yet.</p>
                             </motion.div>
                         )}

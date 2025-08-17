@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router'; // Changed import to react-router-dom for web compatibility
 import { Lock } from 'lucide-react';
-import { motion } from 'framer-motion'; // For animations
+import { motion } from 'framer-motion';
 
 const Forbidden = () => {
     // Framer Motion variants
@@ -27,22 +27,22 @@ const Forbidden = () => {
 
     return (
         <motion.div
-            className="flex items-center justify-center min-h-[calc(100vh-100px)] py-10 px-4 sm:px-6 lg:px-8 bg-gray-50"
+            className="flex items-center justify-center min-h-[calc(100vh-100px)] py-10 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
         >
-            <div className="max-w-md w-full p-8 rounded-xl  text-center">
+            <div className="max-w-md w-full p-8 rounded-xl bg-white dark:bg-gray-800 shadow-lg text-center border border-gray-100 dark:border-gray-700">
                 <motion.div variants={itemVariants}>
-                    <Lock className="mx-auto h-20 w-20 text-red-500 mb-6 animate-pulse" />
+                    <Lock className="mx-auto h-20 w-20 text-red-500 dark:text-red-400 mb-6 animate-pulse" />
                 </motion.div>
-                <motion.h2 className="mt-6 text-4xl font-extrabold text-gray-900" variants={itemVariants}>
+                <motion.h2 className="mt-6 text-4xl font-extrabold text-gray-900 dark:text-gray-100" variants={itemVariants}>
                     403 - Access Denied
                 </motion.h2>
-                <motion.p className="mt-2 text-lg text-gray-600" variants={itemVariants}>
+                <motion.p className="mt-2 text-lg text-gray-600 dark:text-gray-400" variants={itemVariants}>
                     You don't have the necessary permissions to view this page.
                 </motion.p>
-                <motion.p className="mt-2 text-sm text-gray-500" variants={itemVariants}>
+                <motion.p className="mt-2 text-sm text-gray-500 dark:text-gray-500" variants={itemVariants}>
                     Please contact an administrator if you believe this is an error.
                 </motion.p>
                 <motion.div className="mt-8" variants={itemVariants}>

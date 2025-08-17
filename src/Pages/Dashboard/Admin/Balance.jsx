@@ -56,14 +56,14 @@ const Balance = () => {
     }
 
     if (isError) {
-        return <div className="text-center py-12 text-red-600 text-lg">Error: {error.message}</div>;
+        return <div className="text-center py-12 text-red-600 dark:text-red-400 text-lg">Error: {error.message}</div>;
     }
 
     return (
-        <div className="p-6">
+        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">Financial Overview</h1>
-                <p className="text-gray-600">Track your platform's financial performance and transactions.</p>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Financial Overview</h1>
+                <p className="text-gray-600 dark:text-gray-400">Track your platform's financial performance and transactions.</p>
             </div>
 
             <motion.div
@@ -80,7 +80,7 @@ const Balance = () => {
                 ].map(({ label, count, icon, color }, i) => (
                     <motion.div
                         key={i}
-                        className="bg-white shadow rounded-xl px-6 py-8 flex items-center justify-between"
+                        className="bg-white dark:bg-gray-800 shadow rounded-xl px-6 py-8 flex items-center justify-between"
                         variants={cardVariants}
                         whileHover={{
                             scale: 1.03,
@@ -89,21 +89,21 @@ const Balance = () => {
                         transition={{ duration: 0.2 }}
                     >
                         <div>
-                            <h3 className="text-3xl font-bold text-gray-800">{count}</h3>
-                            <p className="text-lg text-gray-600">{label}</p>
+                            <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{count}</h3>
+                            <p className="text-lg text-gray-600 dark:text-gray-400">{label}</p>
                         </div>
-                        {React.cloneElement(icon, { className: `h-10 w-10 text-${color}-600` })}
+                        {React.cloneElement(icon, { className: `h-10 w-10 text-${color}-600 dark:text-${color}-400` })}
                     </motion.div>
                 ))}
             </motion.div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Transactions</h2>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Recent Transactions</h2>
                     <div className="space-y-4">
                         {recentTransactions.length > 0 ? (
                             recentTransactions.map((transaction) => (
-                                <div key={transaction._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div key={transaction._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border dark:border-gray-600 border-gray-200">
                                     <div className="flex items-center space-x-4">
                                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 overflow-hidden">
                                             {transaction.userPhotoURL ? (
@@ -120,15 +120,15 @@ const Balance = () => {
                                         </div>
                                         <div className='space-y-1'>
                                             <div className="flex items-center gap-2">
-                                                <div className="font-semibold text-gray-900">{transaction.userName || 'Unknown'}</div>
+                                                <div className="font-semibold text-gray-900 dark:text-gray-100">{transaction.userName || 'Unknown'}</div>
                                                 <div
                                                     className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium select-none ${transaction.userRole === 'admin'
-                                                        ? 'bg-gray-100 text-gray-700'
-                                                        : 'bg-gray-100 text-gray-700'
+                                                        ? 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
                                                         }`}
                                                 >
                                                     {transaction.userRole === 'admin' && (
-                                                        <Shield className="w-3.5 h-3.5 text-red-700" />
+                                                        <Shield className="w-3.5 h-3.5 text-red-700 dark:text-red-400" />
                                                     )}
                                                     <span>
                                                         {transaction.userRole
@@ -137,53 +137,53 @@ const Balance = () => {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="text-sm text-gray-600">{transaction.packageName}</div>
-                                            <div className="text-xs text-gray-500">with {transaction.trainerName}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">{transaction.packageName}</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-500">with {transaction.trainerName}</div>
                                         </div>
                                     </div>
                                     <div className="text-right space-y-1">
-                                        <div className="font-bold text-green-600">${transaction.price.toFixed(2)}</div>
-                                        <div className="text-xs text-gray-500">
+                                        <div className="font-bold text-green-600 dark:text-green-400">${transaction.price.toFixed(2)}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-500">
                                             {new Date(transaction.createdAt).toLocaleDateString()}
                                         </div>
                                         <span className={`inline-block px-2 py-1 rounded-full text-xs mt-1
-                                            ${transaction.paymentStatus === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                            ${transaction.paymentStatus === 'Completed' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300'}`}>
                                             {transaction.paymentStatus}
                                         </span>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-gray-500">No recent transactions found.</p>
+                            <p className="text-gray-500 dark:text-gray-500">No recent transactions found.</p>
                         )}
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-6">Bookings by Package Type</h2>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Bookings by Package Type</h2>
                     <div className="space-y-4">
                         {totalPackagesBooked > 0 ? (
                             Object.entries(packageTypeCounts).map(([packageName, count]) => (
                                 <div key={packageName}>
                                     <div className="flex justify-between items-center mb-1">
-                                        <span className="text-sm font-medium text-gray-700">{packageName}</span>
-                                        <span className="text-sm font-bold text-indigo-600">{count} bookings</span>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{packageName}</span>
+                                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{count} bookings</span>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-4">
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
                                         <div
-                                            className="bg-indigo-600 h-4 rounded-full transition-all duration-500"
+                                            className="bg-indigo-600 dark:bg-indigo-400 h-4 rounded-full transition-all duration-500"
                                             style={{ width: `${(count / totalPackagesBooked) * 100}%` }}
                                         ></div>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-gray-500">No package booking data available.</p>
+                            <p className="text-gray-500 dark:text-gray-500">No package booking data available.</p>
                         )}
                     </div>
-                    <div className="mt-6 p-4 bg-blue-50 rounded-lg text-center">
-                        <div className="text-xl font-bold text-blue-800">{totalPackagesBooked}</div>
-                        <div className="text-sm text-gray-600">Total Packages Booked</div>
+                    <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg text-center">
+                        <div className="text-xl font-bold text-blue-800 dark:text-blue-300">{totalPackagesBooked}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Total Packages Booked</div>
                     </div>
                 </div>
             </div>
