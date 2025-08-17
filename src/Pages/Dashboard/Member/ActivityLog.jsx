@@ -5,7 +5,7 @@ import useAxiosSecure from '../../../Provider/UseAxiosSecure';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../../../Provider/AuthProvider';
 import Loader from '../../Loader';
-import { Link } from 'react-router';
+import { Link } from 'react-router'; // Using react-router-dom for Link
 
 const ActivityLog = () => {
     const [showModal, setShowModal] = useState(false);
@@ -61,13 +61,13 @@ const ActivityLog = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
             case 'approved':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
             case 'rejected':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
         }
     };
 
@@ -109,8 +109,8 @@ const ActivityLog = () => {
 
     if (!user) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen text-gray-700 p-4">
-                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="flex flex-col justify-center items-center h-screen text-gray-700 dark:text-gray-300 p-4">
+                <AlertCircle className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <p className="text-lg mb-4 text-center">Please log in to view your activity log.</p>
                 <Link to="/login">
                     <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg transition-colors duration-200">
@@ -129,75 +129,75 @@ const ActivityLog = () => {
 
     if (isError) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen text-red-600 p-4">
-                <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <div className="flex flex-col justify-center items-center h-screen text-red-600 dark:text-red-400 p-4">
+                <XCircle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
                 <p className="text-lg text-center">Error loading applications: {error.message}</p>
-                <p className="text-md text-gray-600 mt-2">Please try refreshing the page.</p>
+                <p className="text-md text-gray-600 dark:text-gray-400 mt-2">Please try refreshing the page.</p>
             </div>
         );
     }
 
     return (
         <motion.div
-            className="p-8 mx-auto bg-gray-50 min-h-screen"
+            className="p-8 mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100"
             initial="hidden"
             animate="visible"
             variants={pageVariants}
         >
             <motion.div variants={itemVariants} className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">Activity Log</h1>
-                <p className="text-gray-600">Track your trainer application status and feedback.</p>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Activity Log</h1>
+                <p className="text-gray-600 dark:text-gray-400">Track your trainer application status and feedback.</p>
             </motion.div>
 
             <motion.div variants={sectionVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+                <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{applications.length}</h3>
-                            <p className="text-gray-600">Total Relevant Applications</p>
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{applications.length}</h3>
+                            <p className="text-gray-600 dark:text-gray-400">Total Relevant Applications</p>
                         </div>
-                        <AlertCircle className="h-8 w-8 text-blue-600" />
+                        <AlertCircle className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                     </div>
                 </motion.div>
-                <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+                <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{applications.filter(a => a.status === 'pending').length}</h3>
-                            <p className="text-gray-600">Pending Review</p>
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{applications.filter(a => a.status === 'pending').length}</h3>
+                            <p className="text-gray-600 dark:text-gray-400">Pending Review</p>
                         </div>
-                        <Clock className="h-8 w-8 text-yellow-500" />
+                        <Clock className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
                     </div>
                 </motion.div>
-                <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+                <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{applications.filter(a => a.status === 'rejected').length}</h3>
-                            <p className="text-gray-600">Rejected</p>
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{applications.filter(a => a.status === 'rejected').length}</h3>
+                            <p className="text-gray-600 dark:text-gray-400">Rejected</p>
                         </div>
-                        <XCircle className="h-8 w-8 text-red-500" />
+                        <XCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
                     </div>
                 </motion.div>
             </motion.div>
 
-            <motion.div variants={sectionVariants} className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-800">Trainer Applications</h2>
+            <motion.div variants={sectionVariants} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">Trainer Applications</h2>
                 </div>
 
                 {applications.length > 0 ? (
-                    <motion.div variants={sectionVariants} initial="hidden" animate="visible" className="divide-y divide-gray-200">
+                    <motion.div variants={sectionVariants} initial="hidden" animate="visible" className="divide-y divide-gray-200 dark:divide-gray-700">
                         {applications.map((application) => (
                             <motion.div
-                                key={application._id} // Using _id as the unique key
+                                key={application._id}
                                 variants={itemVariants}
-                                className="p-6 hover:bg-gray-50 transition-colors duration-200"
+                                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-4">
                                         {getStatusIcon(application.status)}
                                         <div>
-                                            <h3 className="font-semibold text-gray-800">Trainer Application {application.name ? `for ${application.name}` : `ID: ${application._id}`}</h3>
-                                            <p className="text-sm text-gray-600">
+                                            <h3 className="font-semibold text-gray-800 dark:text-white">Trainer Application {application.name ? `for ${application.name}` : `ID: ${application._id}`}</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
                                                 Applied on {application.appliedAt ? new Date(application.appliedAt).toLocaleDateString() : 'N/A'}
                                             </p>
                                         </div>
@@ -213,7 +213,7 @@ const ActivityLog = () => {
                                                 onClick={() => handleViewFeedback(application.adminFeedback)}
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
-                                                className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors duration-200"
                                             >
                                                 <Eye className="h-4 w-4" />
                                                 <span className="text-sm">View Feedback</span>
@@ -227,11 +227,11 @@ const ActivityLog = () => {
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         transition={{ duration: 0.4, ease: "easeOut" }}
-                                        className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+                                        className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg"
                                     >
                                         <div className="flex items-center space-x-2">
-                                            <Clock className="h-4 w-4 text-yellow-600" />
-                                            <span className="text-sm text-yellow-800">
+                                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                                            <span className="text-sm text-yellow-800 dark:text-yellow-200">
                                                 Your application is currently under review. We'll notify you once a decision has been made.
                                             </span>
                                         </div>
@@ -242,9 +242,9 @@ const ActivityLog = () => {
                     </motion.div>
                 ) : (
                     <motion.div variants={itemVariants} className="p-12 text-center">
-                        <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">No Relevant Applications Found</h3>
-                        <p className="text-gray-600 mb-6">You haven't submitted any pending or rejected trainer applications yet.</p>
+                        <AlertCircle className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">No Relevant Applications Found</h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">You haven't submitted any pending or rejected trainer applications yet.</p>
                         <Link to={'/be-trainer'}>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
@@ -261,13 +261,13 @@ const ActivityLog = () => {
             <AnimatePresence>
                 {showModal && (
                     <motion.div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
                         <motion.div
-                            className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+                            className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
                             variants={modalVariants}
                             initial="hidden"
                             animate="visible"
@@ -275,23 +275,23 @@ const ActivityLog = () => {
                         >
                             <div className="p-6">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold text-gray-800">Application Feedback</h2>
+                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">Application Feedback</h2>
                                     <motion.button
                                         onClick={() => setShowModal(false)}
                                         whileHover={{ scale: 1.1, rotate: 90 }}
                                         whileTap={{ scale: 0.9 }}
-                                        className="text-gray-500 hover:text-gray-700 text-2xl"
+                                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl"
                                     >
                                         &times;
                                     </motion.button>
                                 </div>
 
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                                <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6">
                                     <div className="flex items-start space-x-3">
-                                        <XCircle className="h-6 w-6 text-red-600 mt-1 flex-shrink-0" />
+                                        <XCircle className="h-6 w-6 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
                                         <div>
-                                            <h3 className="font-semibold text-red-800 mb-2">Application Rejected</h3>
-                                            <p className="text-red-700 leading-relaxed">{selectedFeedback}</p>
+                                            <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">Application Rejected</h3>
+                                            <p className="text-red-700 dark:text-red-300 leading-relaxed">{selectedFeedback}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -301,7 +301,7 @@ const ActivityLog = () => {
                                         onClick={() => setShowModal(false)}
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                                        className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                                     >
                                         Close
                                     </motion.button>
@@ -309,7 +309,7 @@ const ActivityLog = () => {
                                         <motion.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            className="px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors duration-200"
+                                            className="px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200"
                                         >
                                             Apply Again
                                         </motion.button>

@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router'; // Using react-router-dom for Link
 import { User, Mail, Calendar, Camera, Save } from 'lucide-react';
 import { AuthContext } from '../../../Provider/AuthProvider';
 import { getAuth, updateProfile } from 'firebase/auth';
@@ -118,25 +118,25 @@ const Profile = () => {
     };
 
     return (
-        <div className='p-6 md:p-8'>
+        <div className='p-6 md:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100'>
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">My Profile</h1>
-                <p className="text-gray-600">Manage your account information and preferences.</p>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">My Profile</h1>
+                <p className="text-gray-600 dark:text-gray-400">Manage your account information and preferences.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Profile Card */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
                         <div className="relative inline-block">
                             {formData.avatar ? (
                                 <img
                                     src={formData.avatar}
                                     alt={formData.name}
-                                    className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
+                                    className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white dark:border-gray-700 shadow-lg"
                                 />
                             ) : (
-                                <div className="w-32 h-32 flex items-center justify-center mx-auto rounded-full bg-gradient-to-r from-blue-400 to-orange-400 text-white text-4xl font-bold border-4 border-white shadow-lg">
+                                <div className="w-32 h-32 flex items-center justify-center mx-auto rounded-full bg-gradient-to-r from-blue-400 to-orange-400 text-white text-4xl font-bold border-4 border-white dark:border-gray-700 shadow-lg">
                                     {formData.name?.charAt(0).toUpperCase() || 'U'}
                                 </div>
                             )}
@@ -147,16 +147,16 @@ const Profile = () => {
                             )}
                         </div>
 
-                        <h2 className="text-2xl font-bold text-gray-800 mt-4">{formData.name}</h2>
-                        <p className="text-gray-600 capitalize">{user?.role || 'member'}</p>
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mt-4">{formData.name}</h2>
+                        <p className="text-gray-600 dark:text-gray-400 capitalize">{user?.role || 'member'}</p>
 
-                        <div className="mt-6 space-y-3 text-sm text-gray-600">
+                        <div className="mt-6 space-y-3 text-sm text-gray-600 dark:text-gray-400">
                             <div className="flex justify-center items-center gap-2">
-                                <Mail className="w-4 h-4" />
+                                <Mail className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                 <span>{user?.email}</span>
                             </div>
                             <div className="flex justify-center items-center gap-2">
-                                <User className="w-4 h-4" />
+                                <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                 <span>Last login: {user?.lastSignInTime ? new Date(user.lastSignInTime).toLocaleDateString() : 'Today'}</span>
                             </div>
                         </div>
@@ -164,7 +164,7 @@ const Profile = () => {
                         {!isEditing && (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="mt-6 w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
+                                className="mt-6 w-full bg-blue-700 hover:bg-blue-800 text-white dark:bg-blue-600 dark:hover:bg-blue-700 px-4 py-2 rounded-lg"
                             >
                                 Edit Profile
                             </button>
@@ -174,21 +174,21 @@ const Profile = () => {
 
                 {/* Profile Form */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-gray-800">Profile Information</h3>
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-white">Profile Information</h3>
                             {isEditing && (
                                 <div className="space-x-3 flex">
                                     <button
                                         onClick={handleSubmit}
-                                        className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
+                                        className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 text-white dark:bg-blue-600 dark:hover:bg-blue-700 px-4 py-2 rounded-lg"
                                     >
                                         <Save className="h-4 w-4" />
                                         <span>Save Changes</span>
                                     </button>
                                     <button
                                         onClick={handleCancel}
-                                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                        className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                                     >
                                         Cancel
                                     </button>
@@ -199,73 +199,73 @@ const Profile = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                                     <input
                                         type="text"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleChange}
                                         disabled={!isEditing}
-                                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
+                                        className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg ${!isEditing ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                                     <input
                                         type="email"
                                         value={user?.email}
                                         disabled
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                                     />
                                 </div>
-
                             </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
                                 <input
                                     type="text"
                                     name="location"
                                     value={formData.location}
                                     onChange={handleChange}
                                     disabled={!isEditing}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
+                                    className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg ${!isEditing ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture URL</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Profile Picture URL</label>
                                 <input
                                     type="url"
                                     name="avatar"
                                     value={formData.avatar}
                                     onChange={handleChange}
                                     disabled={!isEditing}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
+                                    className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg ${!isEditing ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
                                 <textarea
                                     name="bio"
                                     value={formData.bio}
                                     onChange={handleChange}
                                     disabled={!isEditing}
                                     rows={3}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
+                                    className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg ${!isEditing ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Fitness Goals</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fitness Goals</label>
                                 <textarea
                                     name="fitnessGoals"
                                     value={formData.fitnessGoals}
                                     onChange={handleChange}
                                     disabled={!isEditing}
                                     rows={3}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${!isEditing ? 'bg-gray-50 text-gray-600' : ''}`}
+                                    className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg ${!isEditing ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
                                 />
                             </div>
                         </form>
@@ -274,14 +274,14 @@ const Profile = () => {
             </div>
 
             {user?.role === 'member' && (
-                <div className="mt-8 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-xl p-8 text-white text-center">
+                <div className="mt-8 bg-gradient-to-r from-orange-500 to-yellow-500 dark:from-orange-700 dark:to-yellow-700 rounded-xl p-8 text-white text-center">
                     <h2 className="text-2xl font-bold mb-4">Ready to Take the Next Step?</h2>
-                    <p className="text-lg mb-6 text-orange-100">
+                    <p className="text-lg mb-6 text-orange-100 dark:text-orange-200">
                         Share your fitness expertise and help others while earning extra income as a certified trainer.
                     </p>
                     <Link
                         to="/be-trainer"
-                        className="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50"
+                        className="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 dark:bg-gray-900 dark:text-orange-400 dark:hover:bg-gray-700"
                     >
                         Apply to Become a Trainer
                     </Link>
