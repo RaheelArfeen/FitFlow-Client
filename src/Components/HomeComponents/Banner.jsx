@@ -137,7 +137,7 @@ const Banner = () => {
                         ></motion.div>
                         <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
                             <img
-                                src="https://fitflow-raheel.netlify.app/assets/Banner-BNR6PyGs.jpeg"
+                                src="https://images.unsplash.com/photo-1513351974182-1f36b4d965d8?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                                 alt="Fitness Training"
                                 className="rounded-lg w-full h-[450px] object-cover"
                             />

@@ -88,13 +88,14 @@ const BeTrainer = () => {
         description: ''
     });
 
-    // ✅ Set name & email from user
     useEffect(() => {
         if (user) {
             setFormData((prev) => ({
                 ...prev,
                 name: user.displayName || '',
                 email: user.email || '',
+                // Set default image from user profile if available
+                image: user.photoURL || '',
             }));
         }
     }, [user]);
@@ -162,6 +163,7 @@ const BeTrainer = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // ⚠️ Updated validation to check for a valid image URL
         if (
             !formData.name.trim() ||
             !formData.email.trim() ||
@@ -169,9 +171,10 @@ const BeTrainer = () => {
             !formData.experience.trim() ||
             !formData.age ||
             !formData.bio.trim() ||
+            !formData.image || // ⚠️ This line now correctly validates the image field
             formData.slots.length === 0
         ) {
-            toast.error('Please fill in all required fields, including your general availability and at least one specific training slot.');
+            toast.error('Please fill in all required fields, including your profile image and at least one training slot.');
             return;
         }
         if (parseInt(formData.age) < 18) {
@@ -179,27 +182,16 @@ const BeTrainer = () => {
             return;
         }
 
+        // ⚠️ Removed the formatting logic. The specialization will now be an array of strings.
         const selectedSpecializationValues = formData.specialization.map(spec => spec.value);
-        let formattedSpecialization;
-
-        if (selectedSpecializationValues.length === 1) {
-            formattedSpecialization = selectedSpecializationValues[0];
-        } else if (selectedSpecializationValues.length === 2) {
-            formattedSpecialization = selectedSpecializationValues.join(' & ');
-        } else if (selectedSpecializationValues.length >= 3) {
-            const lastSpecialization = selectedSpecializationValues.pop();
-            formattedSpecialization = selectedSpecializationValues.join(', ') + ' & ' + lastSpecialization;
-        } else {
-            formattedSpecialization = '';
-        }
 
         const payload = {
             email: user?.email,
             name: formData.name,
             age: formData.age,
             experience: formData.experience,
-            photoURL: formData.image || user?.photoURL || '',
-            specialization: formattedSpecialization,
+            photoURL: formData.image, // ⚠️ Sending the image URL as is
+            specialization: selectedSpecializationValues, // ⚠️ Sending the array of values
             description: formData.bio,
             certifications: formData.certifications || [],
             sessions: formData.sessions,
@@ -217,6 +209,8 @@ const BeTrainer = () => {
         } catch (err) {
             if (err.response?.status === 409) {
                 toast.error('A trainer profile (or application) already exists for this email.');
+            } else if (err.response?.status === 400) {
+                toast.error('Missing required fields: ' + err.response.data.message);
             } else {
                 toast.error('Something went wrong. Please try again.');
             }
@@ -364,6 +358,7 @@ const BeTrainer = () => {
                                 placeholder="https://example.com/image.jpg"
                                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white"
                                 whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
+                                required
                             />
                             {formData.image && (
                                 <motion.div
