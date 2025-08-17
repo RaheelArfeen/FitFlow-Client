@@ -30,18 +30,6 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // This function is mocked for demonstration purposes. In a real app,
-    // you would call your backend API here.
-    const sendUserToBackend = async (user) => {
-        console.log(`Mock: Sending user data to backend for user: ${user.email}`);
-        return new Promise(resolve => {
-            setTimeout(() => {
-                console.log("Mock: Backend successfully processed user.");
-                resolve(true);
-            }, 500);
-        });
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');

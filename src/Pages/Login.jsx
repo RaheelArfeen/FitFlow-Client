@@ -63,11 +63,11 @@ const Login = ({ onRegister }) => {
             role: 'member',
         };
         try {
-            const existingUser = await axios.get(`http://localhost:3000/users/${user.email}`);
+            const existingUser = await axios.get(`https://fitflow-server-red.vercel.app/users/${user.email}`);
             if (existingUser.status === 200 && existingUser.data?.email === user.email) return true;
         } catch {
             try {
-                const res = await axios.post('http://localhost:3000/users', userData);
+                const res = await axios.post('https://fitflow-server-red.vercel.app/users', userData);
                 if (res.status === 200 || res.status === 201) return true;
                 throw new Error('Backend rejected user');
             } catch {
@@ -82,12 +82,12 @@ const Login = ({ onRegister }) => {
     const backendLoginAndFetchRole = async (email) => {
         try {
             await axios.post(
-                'http://localhost:3000/login',
+                'https://fitflow-server-red.vercel.app/login',
                 { email },
                 { withCredentials: true }
             );
 
-            const roleRes = await axios.get(`http://localhost:3000/role/${email}`);
+            const roleRes = await axios.get(`https://fitflow-server-red.vercel.app/role/${email}`);
             const fetchedRole = roleRes.data.role || 'member';
             setRole(fetchedRole);
         } catch (error) {
@@ -130,7 +130,7 @@ const Login = ({ onRegister }) => {
 
             await sendUserToBackend(user);
 
-            await axios.patch('http://localhost:3000/users', {
+            await axios.patch('https://fitflow-server-red.vercel.app/users', {
                 email,
                 lastSignInTime: user.metadata?.lastSignInTime,
             });
