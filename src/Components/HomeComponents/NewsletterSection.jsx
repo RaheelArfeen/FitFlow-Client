@@ -4,32 +4,12 @@ import useAxiosSecure from '../../Provider/UseAxiosSecure';
 
 const NewsletterSection = () => {
     const [email, setEmail] = useState('');
+    const axiosSecure = useAxiosSecure()
     const [name, setName] = useState('');
     const [formStatus, setFormStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
     const [showUnsubscribeForm, setShowUnsubscribeForm] = useState(false);
     const [unsubscribeEmail, setUnsubscribeEmail] = useState('');
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            return true;
-        } else {
-            document.documentElement.classList.remove('dark');
-            return false;
-        }
-    });
-
-    const axiosSecure = useAxiosSecure();
-
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-            localStorage.theme = 'dark';
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.theme = 'light';
-        }
-    }, [isDarkMode]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -180,12 +160,6 @@ const NewsletterSection = () => {
     return (
         <section className="py-20 bg-gradient-to-br from-blue-700 to-orange-600 dark:from-blue-950 dark:to-orange-900 text-white dark:text-gray-100">
             <div className="max-w-6xl mx-auto px-6">
-                <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/20 dark:bg-black/20"
-                >
-                    {isDarkMode ? <span className="text-orange-400">☀️</span> : <span className="text-blue-300">🌙</span>}
-                </button>
 
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold mb-4">

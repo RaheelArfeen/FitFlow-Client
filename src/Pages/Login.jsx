@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Eye, EyeOff, Activity, Mail, Lock } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router';
-import { motion } from 'framer-motion'; // Import motion
+import { motion } from 'framer-motion';
 import {
     deleteUser,
     GoogleAuthProvider,
-    sendPasswordResetEmail, // Not used in this component, but kept from original
+    sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
 } from 'firebase/auth';
@@ -15,14 +15,14 @@ import axios from 'axios';
 import { AuthContext } from '../Provider/AuthProvider';
 import { Title } from 'react-head';
 
-const Login = ({ onRegister }) => { // onRegister prop is not used in this component
+const Login = ({ onRegister }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState(''); // single error string
+    const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [role, setRole] = useState('member'); // store role if needed
-    const { user } = useContext(AuthContext)
+    const [role, setRole] = useState('member');
+    const { user } = useContext(AuthContext);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -71,7 +71,7 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                 if (res.status === 200 || res.status === 201) return true;
                 throw new Error('Backend rejected user');
             } catch {
-                if (user && typeof deleteUser === 'function') { // Check if deleteUser is available
+                if (user && typeof deleteUser === 'function') {
                     await deleteUser(user);
                 }
                 throw new Error('Something went wrong while setting up your account. Please try again.');
@@ -140,10 +140,10 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
             toast.success('Successfully logged in.');
             navigate(from, { replace: true });
         } catch (error) {
-            if (error.code === 'auth/user-not-found') { // Corrected Firebase error code
+            if (error.code === 'auth/user-not-found') {
                 setError('No member found with this email');
                 toast.error('No member found with this email');
-            } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') { // Added invalid-credential for general incorrect password/email
+            } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 setError('Incorrect email or password');
                 toast.error('Incorrect email or password');
             } else {
@@ -174,7 +174,7 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
     };
 
     return (
-        <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-orange-600 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-600 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-screen">
             <motion.div
                 className="max-w-md w-full space-y-8"
                 variants={containerVariants}
@@ -182,20 +182,20 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                 animate="visible"
             >
                 <Title>Login | FitFlow</Title>
-                <motion.div className="bg-white rounded-2xl shadow-2xl p-8" variants={itemVariants}>
+                <motion.div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}
                     <div className="text-center mb-8">
                         <motion.div
                             className="flex items-center justify-center space-x-2 mb-4"
                             variants={itemVariants}
                         >
-                            <Activity className="h-10 w-10 text-blue-700" />
-                            <span className="text-3xl font-bold text-gray-800">FitFlow</span>
+                            <Activity className="h-10 w-10 text-blue-700 dark:text-blue-500" />
+                            <span className="text-3xl font-bold text-gray-800 dark:text-white">FitFlow</span>
                         </motion.div>
-                        <motion.h2 className="text-2xl font-bold text-gray-800" variants={itemVariants}>
+                        <motion.h2 className="text-2xl font-bold text-gray-800 dark:text-white" variants={itemVariants}>
                             Welcome Back
                         </motion.h2>
-                        <motion.p className="text-gray-600 mt-2" variants={itemVariants}>
+                        <motion.p className="text-gray-600 dark:text-gray-400 mt-2" variants={itemVariants}>
                             Sign in to continue your fitness journey
                         </motion.p>
                     </div>
@@ -203,30 +203,30 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                     {/* Error Message */}
                     {error && (
                         <motion.div
-                            className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4"
+                            className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4"
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <p className="text-red-700 text-sm">{error}</p>
+                            <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
                         </motion.div>
                     )}
 
                     {/* Login Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <motion.div variants={itemVariants}>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Email Address
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                                 <input
                                     id="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Enter your email"
                                     required
                                 />
@@ -234,24 +234,24 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                         </motion.div>
 
                         <motion.div variants={itemVariants}>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Password
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                                 <input
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Enter your password"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
@@ -261,7 +261,7 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                         <motion.button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                            className="w-full bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             variants={itemVariants}
@@ -274,17 +274,17 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
                     <motion.div className="mt-6" variants={itemVariants}>
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300" />
+                                <div className="w-full border-t border-gray-300 dark:border-gray-700" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
                             </div>
                         </div>
 
                         <div className="mt-6">
                             <motion.button
                                 onClick={() => handleSocialLogin('google')}
-                                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                             >
@@ -301,9 +301,9 @@ const Login = ({ onRegister }) => { // onRegister prop is not used in this compo
 
                     {/* Register Link */}
                     <motion.div className="mt-6 text-center" variants={itemVariants}>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                             Don't have an account?{' '}
-                            <Link to="/register" className="font-medium text-blue-700 hover:text-blue-800">
+                            <Link to="/register" className="font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-600">
                                 Sign up here
                             </Link>
                         </p>
