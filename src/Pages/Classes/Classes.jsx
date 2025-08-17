@@ -42,22 +42,25 @@ const Classes = () => {
         const itemVariants = {
             hidden: { opacity: 0, y: -10 },
             visible: { opacity: 1, y: 0 },
-            hover: { backgroundColor: '#e0f2fe', scale: 1.02 },
+            hover: { scale: 1.02 },
             tap: { scale: 0.98 }
         };
 
         return (
             <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
-                <motion.button
-                    type="button"
-                    className="inline-flex justify-between items-center w-full rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-w-[150px]"
-                    onClick={() => setIsOpen(!isOpen)}
+                <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                 >
-                    {selectedOption.label}
-                    <ChevronDown className={`-mr-1 ml-2 h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
-                </motion.button>
+                    <button
+                        type="button"
+                        className="inline-flex justify-between items-center w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-w-[150px]"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        {selectedOption.label}
+                        <ChevronDown className={`-mr-1 ml-2 h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
+                    </button>
+                </motion.div>
 
                 <AnimatePresence>
                     {isOpen && (
@@ -67,21 +70,24 @@ const Classes = () => {
                             exit="closed"
                             variants={dropdownVariants}
                             style={{ originY: 0 }}
-                            className="absolute z-10 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            className="absolute z-10 mt-2 w-full rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
                         >
                             <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                                 {options.map((option) => (
-                                    <motion.button
+                                    <motion.div
                                         key={option.value}
-                                        onClick={() => handleSelect(option.value)}
-                                        className={`block w-full text-left px-4 py-2 text-sm ${option.value === value ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}
-                                        role="menuitem"
                                         variants={itemVariants}
                                         whileHover="hover"
                                         whileTap="tap"
                                     >
-                                        {option.label}
-                                    </motion.button>
+                                        <button
+                                            onClick={() => handleSelect(option.value)}
+                                            className={`block w-full text-left px-4 py-2 text-sm ${option.value === value ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-semibold' : 'text-gray-700 dark:text-gray-200'}`}
+                                            role="menuitem"
+                                        >
+                                            {option.label}
+                                        </button>
+                                    </motion.div>
                                 ))}
                             </div>
                         </motion.div>
@@ -184,7 +190,6 @@ const Classes = () => {
         }
 
         const assignedTrainersDetails = classItemTrainers.map(assignedTrainer => {
-            // Ensure that allTrainers is not empty before attempting to find
             if (!allTrainers || allTrainers.length === 0) {
                 console.warn("allTrainers array is empty or null, cannot find trainer.");
                 return null;
@@ -210,7 +215,7 @@ const Classes = () => {
                 name: fullTrainer.name,
                 image: imageUrl,
             };
-        }).filter(Boolean); // Filter out any nulls
+        }).filter(Boolean);
 
         return assignedTrainersDetails.slice(0, 5);
     }, [allTrainers]);
@@ -257,8 +262,8 @@ const Classes = () => {
     };
 
     const viewModeButtonVariants = {
-        active: { backgroundColor: '#1d4ed8', color: '#ffffff', scale: 1 },
-        inactive: { backgroundColor: '#ffffff', color: '#4b5563', scale: 1 },
+        active: { scale: 1 },
+        inactive: { scale: 1 },
         hover: { scale: 1.05 },
         tap: { scale: 0.95 },
     };
@@ -293,18 +298,18 @@ const Classes = () => {
     };
 
     const paginationButtonVariants = {
-        rest: { scale: 1, backgroundColor: '#ffffff', color: '#4b5563', borderColor: '#d1d5db', transition: { duration: 0.1 } },
-        hover: { scale: 1.05, backgroundColor: '#f3f4f6', borderColor: '#9ca3af', transition: { duration: 0.1 } },
+        rest: { scale: 1, transition: { duration: 0.1 } },
+        hover: { scale: 1.05, transition: { duration: 0.1 } },
         tap: { scale: 0.95, transition: { duration: 0.05 } },
-        active: { scale: 1, backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb', transition: { duration: 0.1 } },
-        disabled: { backgroundColor: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed', scale: 1, transition: { duration: 0.1 } }
+        active: { scale: 1, transition: { duration: 0.1 } },
+        disabled: { cursor: 'not-allowed', scale: 1, transition: { duration: 0.1 } }
     };
 
     const paginationIconButtonVariants = {
-        rest: { scale: 1, backgroundColor: '#ffffff', color: '#4b5563', borderColor: '#d1d5db', transition: { duration: 0.1 } },
-        hover: { scale: 1.05, backgroundColor: '#f3f4f6', borderColor: '#9ca3af', transition: { duration: 0.1 } },
+        rest: { scale: 1, transition: { duration: 0.1 } },
+        hover: { scale: 1.05, transition: { duration: 0.1 } },
         tap: { scale: 0.95, transition: { duration: 0.05 } },
-        disabled: { backgroundColor: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed', scale: 1, transition: { duration: 0.1 } }
+        disabled: { cursor: 'not-allowed', scale: 1, transition: { duration: 0.1 } }
     };
 
     const getVisiblePageNumbers = useCallback(() => {
@@ -351,9 +356,9 @@ const Classes = () => {
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+                className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 py-12"
             >
-                <motion.div variants={textVariants} className="text-center text-red-600">
+                <motion.div variants={textVariants} className="text-center text-red-600 dark:text-red-400">
                     <AlertCircle className="h-16 w-16 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold mb-2">Error Loading Data</h2>
                     <p>There was an issue fetching classes or trainers. Please try again later.</p>
@@ -368,9 +373,9 @@ const Classes = () => {
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+                className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 py-12"
             >
-                <motion.div variants={textVariants} className="text-center text-gray-600">
+                <motion.div variants={textVariants} className="text-center text-gray-600 dark:text-gray-400">
                     <AlertCircle className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                     <h2 className="text-2xl font-bold mb-2">No Classes Available</h2>
                     <p>It looks like there are no fitness classes added yet. Please check back later!</p>
@@ -384,45 +389,44 @@ const Classes = () => {
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="min-h-screen bg-gray-50 py-12"
+            className="min-h-screen bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-200 py-12"
         >
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <Title>Classes | FitFlow</Title>
                 <div className="text-center mb-12">
-                    <motion.h1 variants={textVariants} className="text-4xl font-bold text-gray-800 mb-4">
+                    <motion.h1 variants={textVariants} className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                         Fitness Classes
                     </motion.h1>
-                    <motion.p variants={textVariants} className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                    <motion.p variants={textVariants} className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
                         Discover our comprehensive range of fitness classes designed for all levels and interests. Join thousands of members on their fitness journey.
                     </motion.p>
                     <motion.div variants={controlsContainerVariants} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
+                        <motion.div variants={statBoxVariants} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-blue-700">{filteredAndSortedClasses.length}</div>
-                            <div className="text-sm text-gray-600">Active Classes</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Active Classes</div>
                         </motion.div>
-                        <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
+                        <motion.div variants={statBoxVariants} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-green-700">{categories.length}</div>
-                            <div className="text-sm text-gray-600">Categories</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Categories</div>
                         </motion.div>
-                        <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
+                        <motion.div variants={statBoxVariants} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-orange-700">{classesData.reduce((sum, c) => sum + c.bookings, 0)}</div>
-                            <div className="text-sm text-gray-600">Total Bookings</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Total Bookings</div>
                         </motion.div>
-                        <motion.div variants={statBoxVariants} className="bg-white rounded-lg p-6 shadow-sm">
+                        <motion.div variants={statBoxVariants} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
                             <div className="text-2xl font-bold text-purple-700">
                                 {allTrainers.length}
                             </div>
-                            <div className="text-sm text-gray-600">Active Trainers</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Active Trainers</div>
                         </motion.div>
                     </motion.div>
                 </div>
 
                 <motion.div
                     variants={controlsContainerVariants}
-                    className="bg-white rounded-xl shadow-lg p-6 mb-8"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8"
                 >
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        {/* Search Input */}
                         <motion.div variants={controlItemVariants} className="w-full lg:max-w-md">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -431,7 +435,7 @@ const Classes = () => {
                                     placeholder="Search classes..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
                                     variants={inputFocusVariants}
                                     whileFocus="focus"
                                     initial="rest"
@@ -439,9 +443,7 @@ const Classes = () => {
                             </div>
                         </motion.div>
 
-                        {/* Filter Controls */}
                         <div className="flex flex-wrap gap-3 items-center justify-start">
-                            {/* Category Filter */}
                             <motion.div
                                 variants={controlItemVariants}
                                 className="flex items-center space-x-2 w-full sm:w-auto"
@@ -462,7 +464,6 @@ const Classes = () => {
                                 />
                             </motion.div>
 
-                            {/* Difficulty Filter */}
                             <div className="w-full sm:w-36">
                                 <CustomDropdown
                                     options={[
@@ -479,7 +480,6 @@ const Classes = () => {
                                 />
                             </div>
 
-                            {/* Sort Filter */}
                             <div className="w-full sm:w-36">
                                 <CustomDropdown
                                     options={[
@@ -494,36 +494,40 @@ const Classes = () => {
                                 />
                             </div>
 
-                            {/* View Mode Toggle */}
                             <motion.div
                                 variants={controlItemVariants}
-                                className="flex border border-gray-300 rounded-lg overflow-hidden"
+                                className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden"
                             >
-                                <motion.button
-                                    onClick={() => setViewMode('grid')}
+                                <motion.div
                                     variants={viewModeButtonVariants}
                                     animate={viewMode === 'grid' ? 'active' : 'inactive'}
                                     whileHover="hover"
                                     whileTap="tap"
-                                    className="p-2"
                                 >
-                                    <Grid className="h-4 w-4" />
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => setViewMode('list')}
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        className={`p-2 transition-colors duration-300 ${viewMode === 'grid' ? 'bg-blue-600 dark:bg-blue-800 text-white' : 'bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    >
+                                        <Grid className="h-4 w-4" />
+                                    </button>
+                                </motion.div>
+                                <motion.div
                                     variants={viewModeButtonVariants}
                                     animate={viewMode === 'list' ? 'active' : 'inactive'}
                                     whileHover="hover"
                                     whileTap="tap"
-                                    className="p-2"
                                 >
-                                    <List className="h-4 w-4" />
-                                </motion.button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-2 transition-colors duration-300 ${viewMode === 'list' ? 'bg-blue-600 dark:bg-blue-800 text-white' : 'bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    >
+                                        <List className="h-4 w-4" />
+                                    </button>
+                                </motion.div>
                             </motion.div>
                         </div>
                     </div>
 
-                    {/* Active Filters Display */}
                     <AnimatePresence>
                         {(selectedCategory || selectedDifficulty || searchTerm) && (
                             <motion.div
@@ -533,27 +537,30 @@ const Classes = () => {
                                 variants={controlItemVariants}
                                 className="mt-4 flex flex-wrap gap-2 items-center"
                             >
-                                <span className="text-sm text-gray-600">Active filters:</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
                                 {selectedCategory && (
                                     <motion.span
                                         variants={badgeVariants}
                                         initial="hidden"
                                         animate="visible"
                                         exit="exit"
-                                        className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                                        className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
                                     >
                                         <span>
                                             {categories.find((cat) => cat.id === selectedCategory)?.name ||
                                                 selectedCategory}
                                         </span>
-                                        <motion.button
-                                            onClick={() => setSelectedCategory('')}
+                                        <motion.div
                                             whileHover={{ scale: 1.2 }}
                                             whileTap={{ scale: 0.8 }}
-                                            className="text-blue-600 hover:text-blue-800"
                                         >
-                                            ×
-                                        </motion.button>
+                                            <button
+                                                onClick={() => setSelectedCategory('')}
+                                                className="text-blue-600 hover:text-blue-800 dark:hover:text-blue-300"
+                                            >
+                                                ×
+                                            </button>
+                                        </motion.div>
                                     </motion.span>
                                 )}
                                 {selectedDifficulty && (
@@ -562,17 +569,20 @@ const Classes = () => {
                                         initial="hidden"
                                         animate="visible"
                                         exit="exit"
-                                        className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                                        className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
                                     >
                                         <span>{selectedDifficulty}</span>
-                                        <motion.button
-                                            onClick={() => setSelectedDifficulty('')}
+                                        <motion.div
                                             whileHover={{ scale: 1.2 }}
                                             whileTap={{ scale: 0.8 }}
-                                            className="text-green-600 hover:text-green-800"
                                         >
-                                            ×
-                                        </motion.button>
+                                            <button
+                                                onClick={() => setSelectedDifficulty('')}
+                                                className="text-green-600 hover:text-green-800 dark:hover:text-green-300"
+                                            >
+                                                ×
+                                            </button>
+                                        </motion.div>
                                     </motion.span>
                                 )}
                                 {searchTerm && (
@@ -581,32 +591,38 @@ const Classes = () => {
                                         initial="hidden"
                                         animate="visible"
                                         exit="exit"
-                                        className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                                        className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
                                     >
                                         <span>"{searchTerm}"</span>
-                                        <motion.button
-                                            onClick={() => setSearchTerm('')}
+                                        <motion.div
                                             whileHover={{ scale: 1.2 }}
                                             whileTap={{ scale: 0.8 }}
-                                            className="text-orange-600 hover:text-orange-800"
                                         >
-                                            ×
-                                        </motion.button>
+                                            <button
+                                                onClick={() => setSearchTerm('')}
+                                                className="text-orange-600 hover:text-orange-800 dark:hover:text-orange-300"
+                                            >
+                                                ×
+                                            </button>
+                                        </motion.div>
                                     </motion.span>
                                 )}
-                                <motion.button
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        setSelectedCategory('');
-                                        setSelectedDifficulty('');
-                                        setSortBy('popular');
-                                    }}
+                                <motion.div
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="text-sm text-gray-500 hover:text-gray-700 underline ml-2"
                                 >
-                                    Clear all
-                                </motion.button>
+                                    <button
+                                        onClick={() => {
+                                            setSearchTerm('');
+                                            setSelectedCategory('');
+                                            setSelectedDifficulty('');
+                                            setSortBy('popular');
+                                        }}
+                                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline ml-2"
+                                    >
+                                        Clear all
+                                    </button>
+                                </motion.div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -614,7 +630,7 @@ const Classes = () => {
 
                 {!isLoading && (
                     <motion.div
-                        key={viewMode} // Key change will re-animate children on view mode change
+                        key={viewMode}
                         initial="hidden"
                         animate="visible"
                         variants={{
@@ -641,7 +657,7 @@ const Classes = () => {
                                             variants={classCardVariants}
                                             custom={index}
                                             whileHover="hover"
-                                            className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 group"
+                                            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 group"
                                         >
                                             <div className="relative">
                                                 <motion.img
@@ -661,11 +677,10 @@ const Classes = () => {
                                             </div>
 
                                             <div className="p-6">
-                                                <h3 className="text-xl font-semibold text-gray-800 mb-2">{classItem.name}</h3>
+                                                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{classItem.name}</h3>
 
-                                                {/* Trainer Position for Grid View - Moved Up */}
                                                 <div className="mb-4">
-                                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Trainers:</h4>
+                                                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trainers:</h4>
                                                     <div className="flex -space-x-2">
                                                         {getTrainersForClass(classItem.trainers).map((trainer) => (
                                                             <Link
@@ -674,32 +689,32 @@ const Classes = () => {
                                                                 className="relative"
                                                             >
                                                                 <motion.img
-                                                                    src={trainer.image} // Use trainer.image from getTrainersForClass
+                                                                    src={trainer.image}
                                                                     alt={trainer.name}
-                                                                    className="w-8 h-8 rounded-full border-2 object-cover border-white"
+                                                                    className="w-8 h-8 rounded-full border-2 object-cover border-white dark:border-gray-800"
                                                                     title={trainer.name}
                                                                     variants={trainerImageVariants}
                                                                     whileHover="hover"
                                                                     onError={(e) => {
                                                                         console.error("Failed to load trainer image:", trainer.image, e);
-                                                                        e.target.src = "https://via.placeholder.com/40?text=No+Img"; // Fallback placeholder
+                                                                        e.target.src = "https://via.placeholder.com/40?text=No+Img";
                                                                     }}
                                                                 />
                                                             </Link>
                                                         ))}
                                                         {classItem.trainers.length > 5 && (
-                                                            <span className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
+                                                            <span className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-400">
                                                                 +{classItem.trainers.length - 5}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-3">
+                                                <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm leading-relaxed line-clamp-3">
                                                     {classItem.description}
                                                 </p>
 
-                                                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                                                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
                                                     <div className="flex items-center space-x-1">
                                                         <Users className="h-4 w-4" />
                                                         <span>{classItem.bookings} joined</span>
@@ -717,7 +732,7 @@ const Classes = () => {
                                             variants={classCardVariants}
                                             custom={index}
                                             whileHover="hover"
-                                            className="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 transition-shadow duration-300"
+                                            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 transition-shadow duration-300"
                                         >
                                             <motion.img
                                                 src={classItem.image}
@@ -727,50 +742,49 @@ const Classes = () => {
                                                 whileHover="hover"
                                             />
                                             <div className="flex-1">
-                                                <h3 className="text-xl font-semibold text-gray-800 mb-2">{classItem.name}</h3>
-                                                <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium mb-3">
+                                                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{classItem.name}</h3>
+                                                <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium mb-3">
                                                     {categories.find(cat => cat.id === classItem.category)?.name || classItem.category}
                                                 </span>
 
-                                                {/* Trainer Position for List View - Moved Up */}
                                                 <div className="mb-3">
-                                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Trainers:</h4>
-                                                    <div className="flex space-x-2">
+                                                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trainers:</h4>
+                                                    <div className="flex flex-wrap gap-2">
                                                         {getTrainersForClass(classItem.trainers).map((trainer) => (
                                                             <Link
                                                                 key={trainer.id}
                                                                 to={`/trainer/${trainer.id}`}
                                                                 className="relative"
                                                             >
-                                                                <div className='flex items-center gap-2 bg-gray-100 pr-2.5 pl-1 py-1 rounded-lg'>
+                                                                <div className='flex items-center gap-2 bg-gray-100 dark:bg-gray-700 pr-2.5 pl-1 py-1 rounded-lg'>
                                                                     <motion.img
-                                                                        src={trainer.image} // Use trainer.image from getTrainersForClass
+                                                                        src={trainer.image}
                                                                         alt={trainer.name}
-                                                                        className="w-8 h-8 rounded-full border-2 object-cover border-white"
+                                                                        className="w-8 h-8 rounded-full border-2 object-cover border-white dark:border-gray-800"
                                                                         title={trainer.name}
                                                                         variants={trainerImageVariants}
                                                                         whileHover="hover"
                                                                         onError={(e) => {
                                                                             console.error("Failed to load trainer image:", trainer.image, e);
-                                                                            e.target.src = "https://via.placeholder.com/40?text=No+Img"; // Fallback placeholder
+                                                                            e.target.src = "https://via.placeholder.com/40?text=No+Img";
                                                                         }}
                                                                     />
-                                                                    <span>{trainer.name}</span>
+                                                                    <span className="text-gray-800 dark:text-gray-100">{trainer.name}</span>
                                                                 </div>
                                                             </Link>
                                                         ))}
                                                         {classItem.trainers.length > 5 && (
-                                                            <span className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
+                                                            <span className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-400">
                                                                 +{classItem.trainers.length - 5}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <p className="text-gray-600 mb-3 text-sm line-clamp-2">
+                                                <p className="text-gray-600 dark:text-gray-400 mb-3 text-sm line-clamp-2">
                                                     {classItem.description}
                                                 </p>
-                                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
                                                     <div className="flex items-center space-x-1">
                                                         <Users className="h-4 w-4" />
                                                         <span>{classItem.bookings} joined</span>
@@ -780,9 +794,9 @@ const Classes = () => {
                                                         <span>{classItem.duration}</span>
                                                     </div>
                                                     <div className="flex items-center space-x-1">
-                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${classItem.difficulty === 'Beginner' ? 'bg-green-100 text-green-800' :
-                                                            classItem.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                                                                classItem.difficulty === 'Advanced' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${classItem.difficulty === 'Beginner' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                            classItem.difficulty === 'Intermediate' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                                classItem.difficulty === 'Advanced' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                                                             }`}>
                                                             {classItem.difficulty}
                                                         </span>
@@ -797,23 +811,26 @@ const Classes = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -20 }}
-                                    className="col-span-full text-center py-12 text-gray-600 text-lg"
+                                    className="col-span-full text-center py-12 text-gray-600 dark:text-gray-400 text-lg"
                                 >
                                     <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                                     No classes found matching your criteria.
-                                    <motion.button
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            setSelectedCategory('');
-                                            setSelectedDifficulty('');
-                                            setSortBy('popular');
-                                        }}
+                                    <motion.div
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition duration-300"
                                     >
-                                        Clear All Filters
-                                    </motion.button>
+                                        <button
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setSelectedCategory('');
+                                                setSelectedDifficulty('');
+                                                setSortBy('popular');
+                                            }}
+                                            className="mt-6 px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-800 transition duration-300"
+                                        >
+                                            Clear All Filters
+                                        </button>
+                                    </motion.div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -822,51 +839,60 @@ const Classes = () => {
 
                 {totalPages > 1 && (
                     <div className="flex justify-between items-center space-x-2 mt-8">
-                        <motion.button
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
+                        <motion.div
                             variants={paginationIconButtonVariants}
                             initial="rest"
                             whileHover="hover"
                             whileTap="tap"
                             animate={currentPage === 1 ? 'disabled' : 'rest'}
-                            className="p-2 border rounded-lg"
                         >
-                            <ChevronLeft className="h-5 w-5" />
-                        </motion.button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                        </motion.div>
 
                         <AnimatePresence mode="wait">
                             <div className="flex space-x-2">
                                 {getVisiblePageNumbers().map((pageNumber, index) => (
-                                    <motion.button
+                                    <motion.div
                                         key={pageNumber === '...' ? `dots-${index}` : pageNumber}
-                                        onClick={() => pageNumber !== '...' && setCurrentPage(pageNumber)}
-                                        disabled={pageNumber === '...'}
                                         variants={paginationButtonVariants}
                                         initial="rest"
                                         whileHover={pageNumber === '...' ? 'disabled' : 'hover'}
                                         whileTap={pageNumber === '...' ? 'disabled' : 'tap'}
                                         animate={currentPage === pageNumber ? 'active' : 'rest'}
-                                        className="px-4 py-2 border rounded-lg text-sm font-medium"
                                     >
-                                        {pageNumber}
-                                    </motion.button>
+                                        <button
+                                            onClick={() => pageNumber !== '...' && setCurrentPage(pageNumber)}
+                                            disabled={pageNumber === '...'}
+                                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors duration-300 ${currentPage === pageNumber ? 'bg-blue-600 dark:bg-blue-800 border-blue-600 dark:border-blue-800 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                        >
+                                            {pageNumber}
+                                        </button>
+                                    </motion.div>
                                 ))}
                             </div>
                         </AnimatePresence>
 
-                        <motion.button
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
+                        <motion.div
                             variants={paginationIconButtonVariants}
                             initial="rest"
                             whileHover="hover"
                             whileTap="tap"
                             animate={currentPage === totalPages ? 'disabled' : 'rest'}
-                            className="p-2 border rounded-lg"
                         >
-                            <ChevronRight className="h-5 w-5" />
-                        </motion.button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </motion.div>
                     </div>
                 )}
             </div>
