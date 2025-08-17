@@ -226,7 +226,7 @@ const BeTrainer = () => {
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-gray-700">
+            <div className="min-h-screen flex items-center justify-center text-gray-700 dark:text-gray-300">
                 <Loader />
             </div>
         );
@@ -237,14 +237,14 @@ const BeTrainer = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="min-h-screen py-12"
+            className="min-h-screen py-12 bg-gray-100 dark:bg-gray-900"
         >
             <Title>Be A Trainer | FitFlow</Title>
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
-                <motion.div variants={childVariants} className="bg-white rounded-xl shadow-lg p-8">
+                <motion.div variants={childVariants} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
                     <motion.div variants={childVariants} className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-4">Become a Trainer</h1>
-                        <p className="text-xl text-gray-600">
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">Become a Trainer</h1>
+                        <p className="text-xl text-gray-600 dark:text-gray-400">
                             Join our team of expert trainers and help others achieve their fitness goals.
                         </p>
                     </motion.div>
@@ -253,29 +253,29 @@ const BeTrainer = () => {
                         {/* Name and Email */}
                         <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <motion.div variants={childVariants}>
-                                <label className="block text-sm font-medium mb-2">Full Name</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                                 <motion.input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white"
                                     required
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                 />
                             </motion.div>
 
                             <motion.div variants={childVariants}>
-                                <label className="block text-sm font-medium mb-2">Email</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                                 <input
                                     type="email"
                                     value={formData.email}
                                     readOnly
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-gray-400"
                                 />
                             </motion.div>
 
                             <motion.div variants={childVariants}>
-                                <label className="block text-sm font-medium mb-2">Age</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Age</label>
                                 <motion.input
                                     type="number"
                                     value={formData.age}
@@ -283,15 +283,15 @@ const BeTrainer = () => {
                                         setFormData({ ...formData, age: Number(e.target.value) })
                                     }
                                     placeholder="Your Age"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield]"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield] dark:bg-gray-900 dark:text-white"
                                     required
                                     min={18}
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                 />
                             </motion.div>
 
                             <motion.div variants={childVariants}>
-                                <label className="block text-sm font-medium mb-2">Sessions Completed</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sessions Completed</label>
                                 <motion.input
                                     type="number"
                                     value={formData.sessions}
@@ -299,16 +299,16 @@ const BeTrainer = () => {
                                         setFormData({ ...formData, sessions: Number(e.target.value) })
                                     }
                                     placeholder="e.g., 10"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield]"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield] dark:bg-gray-900 dark:text-white"
                                     required
                                     min={0}
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                 />
                             </motion.div>
 
                             {/* React Select for Specialization (Multi-select) */}
                             <motion.div variants={childVariants}>
-                                <label className="block text-sm font-medium mb-2">Specializations</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Specializations</label>
                                 <Select
                                     options={specializationOptions}
                                     value={formData.specialization}
@@ -321,56 +321,56 @@ const BeTrainer = () => {
                                     isSearchable={true}
                                     classNames={{
                                         control: (state) =>
-                                            `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 !rounded-lg !shadow-none ${state.isFocused ? '!border-blue-600 !ring-0' : ''}`,
-                                        placeholder: () => '!text-gray-500',
-                                        multiValue: () => '!bg-blue-100 !rounded-md',
-                                        multiValueLabel: () => '!text-blue-800 !py-1 !px-2',
-                                        multiValueRemove: () => '!text-blue-500 hover:!bg-blue-200 !rounded-r-md',
+                                            `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 dark:!border-gray-700 !rounded-lg !shadow-none !bg-white dark:!bg-gray-900 !text-gray-900 dark:!text-white ${state.isFocused ? '!border-blue-600 dark:!border-blue-500 !ring-0' : ''}`,
+                                        placeholder: () => '!text-gray-500 dark:!text-gray-400',
+                                        multiValue: () => '!bg-blue-100 dark:!bg-blue-900 !rounded-md',
+                                        multiValueLabel: () => '!text-blue-800 dark:!text-blue-200 !py-1 !px-2',
+                                        multiValueRemove: () => '!text-blue-500 dark:!text-blue-300 hover:!bg-blue-200 dark:hover:!bg-blue-800 !rounded-r-md',
                                         indicatorSeparator: () => '!hidden',
-                                        dropdownIndicator: () => '!text-gray-500',
-                                        menu: () => '!border !border-gray-200 !rounded-lg !shadow-lg !mt-1 !overflow-hidden',
+                                        dropdownIndicator: () => '!text-gray-500 dark:!text-gray-400',
+                                        menu: () => '!border !border-gray-200 dark:!border-gray-700 !rounded-lg !shadow-lg !mt-1 !overflow-hidden dark:!bg-gray-800',
                                         option: (state) =>
                                             `!px-4 !py-3 !cursor-pointer ${state.isSelected
-                                                ? '!bg-blue-600 !text-white'
+                                                ? '!bg-blue-600 dark:!bg-blue-600 !text-white'
                                                 : state.isFocused
-                                                    ? '!bg-blue-100 !text-gray-900'
-                                                    : '!bg-white !text-gray-900'
+                                                    ? '!bg-blue-100 dark:!bg-gray-700 !text-gray-900 dark:!text-white'
+                                                    : '!bg-white dark:!bg-gray-800 !text-gray-900 dark:!text-white'
                                             }`,
                                     }}
                                 />
                             </motion.div>
 
                             <motion.div variants={childVariants}>
-                                <label className="block text-sm font-medium mb-2">Experience</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Experience</label>
                                 <motion.input
                                     type="text"
                                     value={formData.experience}
                                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                                     placeholder="e.g., 5 years"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white"
                                     required
-                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                    whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                 />
                             </motion.div>
                         </motion.div>
 
                         {/* Profile Image */}
                         <motion.div variants={childVariants}>
-                            <label className="block text-sm font-medium mb-2">Profile Image URL</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Profile Image URL</label>
                             <motion.input
                                 type="url"
                                 value={formData.image}
                                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                                 placeholder="https://example.com/image.jpg"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white"
+                                whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                             />
                             {formData.image && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
-                                    className="relative mt-3 w-32 h-32 rounded-lg overflow-hidden border"
+                                    className="relative mt-3 w-32 h-32 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700"
                                 >
                                     <img
                                         src={formData.image}
@@ -380,7 +380,7 @@ const BeTrainer = () => {
                                     <button
                                         type="button"
                                         onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
-                                        className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                                        className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-opacity-75"
                                         aria-label="Remove image"
                                     >
                                         &times;
@@ -391,21 +391,21 @@ const BeTrainer = () => {
 
                         {/* Bio */}
                         <motion.div variants={childVariants}>
-                            <label className="block text-sm font-medium mb-2">Bio</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
                             <motion.textarea
                                 value={formData.bio}
                                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                 rows={4}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white"
                                 placeholder="Tell us about yourself"
                                 required
-                                whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                             />
                         </motion.div>
 
                         {/* Certifications */}
                         <motion.div variants={childVariants}>
-                            <label className="block text-sm font-medium mb-2">Certifications</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Certifications</label>
                             <motion.div className="flex flex-wrap gap-2">
                                 {certificationOptions.map((cert) => {
                                     const selected = formData.certifications.includes(cert);
@@ -416,8 +416,8 @@ const BeTrainer = () => {
                                             onClick={() => toggleCertification(cert)}
                                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition
                                                 ${selected
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-blue-100'
+                                                    ? 'bg-blue-600 dark:bg-blue-600 text-white'
+                                                    : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-gray-700'
                                                 }`}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
@@ -430,69 +430,69 @@ const BeTrainer = () => {
                         </motion.div>
 
                         {/* --- Add New Specific Slot Section --- */}
-                        <motion.div variants={fadeSlideUp} className="p-6 bg-blue-50 rounded-lg border border-blue-200">
-                            <h2 className="text-2xl font-semibold text-blue-800 mb-4">Add Specific Training Slots</h2>
-                            <p className="text-base text-gray-600 mb-4">Define individual session times and details.</p>
+                        <motion.div variants={fadeSlideUp} className="p-6 bg-blue-50 dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-gray-700">
+                            <h2 className="text-2xl font-semibold text-blue-800 dark:text-blue-500 mb-4">Add Specific Training Slots</h2>
+                            <p className="text-base text-gray-600 dark:text-gray-400 mb-4">Define individual session times and details.</p>
 
                             <div className="grid gap-4 items-center">
                                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                     {/* Slot Name */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Slot Name</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Slot Name</label>
                                         <motion.input
                                             type="text"
                                             placeholder="Ex: Morning Yoga"
                                             value={newSlot.slotName}
                                             onChange={(e) => setNewSlot({ ...newSlot, slotName: e.target.value })}
-                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
-                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white"
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                         />
                                     </div>
 
                                     {/* Slot Time (Specific Time) */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Slot Time</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Slot Time</label>
                                         <motion.input
                                             type="text"
                                             placeholder="Ex: 9:00 AM - 10:00 AM"
                                             value={newSlot.slotTime}
                                             onChange={(e) => setNewSlot({ ...newSlot, slotTime: e.target.value })}
-                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
-                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white"
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                         />
                                     </div>
 
                                     {/* Duration */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Duration</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
                                         <motion.input
                                             type="text"
                                             placeholder="Ex: 1 hour, 45 minutes"
                                             value={newSlot.duration}
                                             onChange={(e) => setNewSlot({ ...newSlot, duration: e.target.value })}
-                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
-                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white"
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                         />
                                     </div>
 
 
                                     {/* Max Participants */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Max Participants</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Participants</label>
                                         <motion.input
                                             type="number"
                                             placeholder="Ex: 10"
                                             value={newSlot.maxParticipants}
                                             onChange={(e) => setNewSlot({ ...newSlot, maxParticipants: Math.max(1, Number(e.target.value)) })}
-                                            className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield]"
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 [-moz-appearance:textfield] text-gray-900 dark:text-white"
                                             min={1}
-                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB' }}
+                                            whileFocus={{ scale: 1.03, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                         />
                                     </div>
                                 </div>
                                 {/* Select Days for this Slot */}
                                 <div>
-                                    <label className="block w-full text-sm font-medium mb-1">Days for this Slot</label>
+                                    <label className="block w-full text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Days for this Slot</label>
                                     <Select
                                         options={slotDayOptions}
                                         value={newSlot.selectedDays}
@@ -502,20 +502,20 @@ const BeTrainer = () => {
                                         isClearable
                                         classNames={{
                                             control: (state) =>
-                                                `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 !rounded-lg !shadow-none ${state.isFocused ? '!border-blue-600 !ring-0' : ''}`,
-                                            placeholder: () => '!text-gray-500',
-                                            multiValue: () => '!bg-blue-100 !rounded-md',
-                                            multiValueLabel: () => '!text-blue-800 !py-1 !px-2',
-                                            multiValueRemove: () => '!text-blue-500 hover:!bg-blue-200 !rounded-r-md',
+                                                `!min-h-[48px] !px-2 !py-1 !border !border-gray-300 dark:!border-gray-700 !rounded-lg !shadow-none !bg-white dark:!bg-gray-900 !text-gray-900 dark:!text-white ${state.isFocused ? '!border-blue-600 dark:!border-blue-500 !ring-0' : ''}`,
+                                            placeholder: () => '!text-gray-500 dark:!text-gray-400',
+                                            multiValue: () => '!bg-blue-100 dark:!bg-blue-900 !rounded-md',
+                                            multiValueLabel: () => '!text-blue-800 dark:!text-blue-200 !py-1 !px-2',
+                                            multiValueRemove: () => '!text-blue-500 dark:!text-blue-300 hover:!bg-blue-200 dark:hover:!bg-blue-800 !rounded-r-md',
                                             indicatorSeparator: () => '!hidden',
-                                            dropdownIndicator: () => '!text-gray-500',
-                                            menu: () => '!border !border-gray-200 !rounded-lg !shadow-lg !mt-1 !overflow-hidden',
+                                            dropdownIndicator: () => '!text-gray-500 dark:!text-gray-400',
+                                            menu: () => '!border !border-gray-200 dark:!border-gray-700 !rounded-lg !shadow-lg !mt-1 !overflow-hidden dark:!bg-gray-800',
                                             option: (state) =>
                                                 `!px-4 !py-3 !cursor-pointer ${state.isSelected
-                                                    ? '!bg-blue-600 !text-white'
+                                                    ? '!bg-blue-600 dark:!bg-blue-600 !text-white'
                                                     : state.isFocused
-                                                        ? '!bg-blue-100 !text-gray-900'
-                                                        : '!bg-white !text-gray-900'
+                                                        ? '!bg-blue-100 dark:!bg-gray-700 !text-gray-900 dark:!text-white'
+                                                        : '!bg-white dark:!bg-gray-800 !text-gray-900 dark:!text-white'
                                                 }`,
                                         }}
                                     />
@@ -523,29 +523,29 @@ const BeTrainer = () => {
                             </div>
 
                             {/* Slot Description (New Field) */}
-                            <motion.div className="mt-4"> {/* Use mt-4 for spacing */}
-                                <label className="block text-sm font-medium mb-1">Slot Description (Optional)</label>
+                            <motion.div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Slot Description (Optional)</label>
                                 <motion.textarea
                                     value={newSlot.description}
                                     onChange={(e) => setNewSlot({ ...newSlot, description: e.target.value })}
                                     rows={6}
-                                    className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white"
                                     placeholder="Provide details about this specific slot, e.g., 'Focuses on core strength and flexibility.'"
-                                    whileFocus={{ scale: 1.01, borderColor: '#2563EB' }}
+                                    whileFocus={{ scale: 1.01, borderColor: '#2563EB', dark: { borderColor: '#F97316' } }}
                                 />
                             </motion.div>
 
                             <motion.button
                                 type="button"
                                 onClick={addSlot}
-                                className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold"
+                                className="mt-4 px-6 py-3 bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-700 rounded-lg text-white font-semibold"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                             >
                                 Add Slot
                             </motion.button>
 
-                            <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">Added Slots</h3>
+                            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mt-6 mb-3">Added Slots</h3>
                             <motion.ul className="space-y-2">
                                 <AnimatePresence>
                                     {formData.slots.map((slot) => (
@@ -555,18 +555,18 @@ const BeTrainer = () => {
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, x: -50 }}
                                             layout
-                                            className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-100 rounded-lg px-4 py-3 shadow-sm border border-gray-200"
+                                            className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-600"
                                         >
                                             <div>
-                                                <p className="font-semibold text-gray-800">{slot.slotName}</p>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="font-semibold text-gray-800 dark:text-white">{slot.slotName}</p>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400">
                                                     {slot.days?.join(', ')} | {slot.slotTime} ({slot.duration}) | Max: {slot.maxParticipants}
                                                 </p>
-                                                {slot.description && <p className="text-xs text-gray-500 mt-1">Description: {slot.description}</p>}
+                                                {slot.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Description: {slot.description}</p>}
                                             </div>
                                             <motion.button
                                                 onClick={() => removeSlot(slot.id)}
-                                                className="mt-2 sm:mt-0 text-red-600 hover:text-red-800 font-bold text-lg"
+                                                className="mt-2 sm:mt-0 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600 font-bold text-lg"
                                                 whileHover={{ scale: 1.2 }}
                                                 whileTap={{ scale: 0.9 }}
                                                 aria-label={`Remove slot ${slot.slotName}`}
@@ -584,7 +584,7 @@ const BeTrainer = () => {
                         <motion.div variants={childVariants} className="text-center mt-8">
                             <motion.button
                                 type="submit"
-                                className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105"
+                                className="px-8 py-4 bg-blue-600 dark:bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 dark:hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
