@@ -1,9 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, User, Image, Activity, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import {  toast } from 'sonner';
 import { AuthContext } from '../Provider/AuthProvider';
-import { useNavigate } from 'react-router';
+import { deleteUser } from 'firebase/auth';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { Title } from 'react-head';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -17,7 +20,7 @@ const Register = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const { register, loading: isLoading } = useContext(AuthContext);
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -30,15 +33,42 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const sendUserToBackend = async (user) => {
+        const userData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || formData.name,
+            photoURL: user.photoURL || formData.photoURL,
+            lastSignInTime: user.metadata?.lastSignInTime || '',
+            role: 'member',
+        };
+
+        try {
+            const existingUser = await axios.get(`https://fitflow-server-red.vercel.app/users/${user.email}`);
+            if (existingUser.status === 200 && existingUser.data?.email === user.email) return true;
+        } catch {
+            try {
+                const res = await axios.post('https://fitflow-server-red.vercel.app/users', userData);
+                if (res.status === 200 || res.status === 201) return true;
+                throw new Error('Backend rejected user');
+            } catch {
+                if (user && typeof deleteUser === 'function') {
+                    await deleteUser(user);
+                }
+                throw new Error('Something went wrong while setting up your account. Please try again.');
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
         if (formData.password !== formData.confirmPassword) {
-            return toast.error('Passwords do not match');
+            return setError('Passwords do not match');
         }
         if (formData.password.length < 6) {
-            return toast.error('Password must be at least 6 characters');
+            return setError('Password must be at least 6 characters');
         }
 
         try {
@@ -49,17 +79,16 @@ const Register = () => {
                 formData.photoURL
             );
 
-            // Mocking token and backend call
             const token = await user.getIdToken();
-            console.log(`Mock: Received token: ${token}`);
+            localStorage.setItem('FitFlow-token', token);
+
             await sendUserToBackend(user);
 
             toast.success('Account created successfully!');
-            // You can replace 'dashboard' with your desired route/page name
             navigate('/');
         } catch (err) {
             console.error(err);
-            toast.error(err.message || 'Registration failed. Please try again.');
+            setError('Registration failed. Please try again.');
         }
     };
 
@@ -78,7 +107,8 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-blue-600 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-orange-600 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <Title>Register | FitFlow</Title>
             <motion.div className="max-w-md w-full space-y-8" variants={containerVariants} initial="hidden" animate="visible">
                 <motion.div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}
@@ -112,7 +142,7 @@ const Register = () => {
                                 Full Name
                             </label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <input id="name" name="name" type="text" value={formData.name} onChange={handleChange}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Enter your full name" required />
@@ -123,7 +153,7 @@ const Register = () => {
                         <motion.div variants={itemVariants}>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <input id="email" name="email" type="email" value={formData.email} onChange={handleChange}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Enter your email" required />
@@ -134,7 +164,7 @@ const Register = () => {
                         <motion.div variants={itemVariants}>
                             <label htmlFor="photoURL" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Photo URL (Optional)</label>
                             <div className="relative">
-                                <Image className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                                <Image className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <input id="photoURL" name="photoURL" type="url" value={formData.photoURL} onChange={handleChange}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Enter photo URL" />
@@ -145,12 +175,12 @@ const Register = () => {
                         <motion.div variants={itemVariants}>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <input id="password" name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleChange}
                                     className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Enter your password" required />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
@@ -160,12 +190,12 @@ const Register = () => {
                         <motion.div variants={itemVariants}>
                             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={formData.confirmPassword} onChange={handleChange}
                                     className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     placeholder="Confirm your password" required />
                                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
@@ -189,9 +219,9 @@ const Register = () => {
                     <motion.div className="mt-6 text-center" variants={itemVariants}>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             Already have an account?{' '}
-                            <button onClick={() => navigate('/login')} className="font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-600">
+                            <Link to="/login" className="font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-600">
                                 Sign in here
-                            </button>
+                            </Link>
                         </p>
                     </motion.div>
                 </motion.div>

@@ -174,7 +174,7 @@ const Login = ({ onRegister }) => {
     };
 
     return (
-        <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-600 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="bg-gradient-to-br from-blue-700 via-blue-500 to-orange-600 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-screen">
             <motion.div
                 className="max-w-md w-full space-y-8"
                 variants={containerVariants}
