@@ -1,33 +1,51 @@
-import React, { useState } from 'react';
-import { Mail, CheckCircle, XCircle } from 'lucide-react'; // Import XCircle for unsubscribe icon
-import useAxiosSecure from '../../Provider/UseAxiosSecure'; // Assuming this hook is correctly set up for your API calls
+import React, { useState, useEffect } from 'react';
+import { Mail, CheckCircle, XCircle } from 'lucide-react';
+import useAxiosSecure from '../../Provider/UseAxiosSecure';
 
 const NewsletterSection = () => {
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
-    const [formStatus, setFormStatus] = useState(null); // 'subscribed', 'unsubscribed', 'error', null
+    const [formStatus, setFormStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
     const [showUnsubscribeForm, setShowUnsubscribeForm] = useState(false);
     const [unsubscribeEmail, setUnsubscribeEmail] = useState('');
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            return true;
+        } else {
+            document.documentElement.classList.remove('dark');
+            return false;
+        }
+    });
 
-    const axiosSecure = useAxiosSecure(); // Your custom axios instance
+    const axiosSecure = useAxiosSecure();
 
-    // Handles the newsletter subscription
+    useEffect(() => {
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.theme = 'dark';
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.theme = 'light';
+        }
+    }, [isDarkMode]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFormStatus(null); // Clear previous status
-        setErrorMessage(null); // Clear previous error
+        setFormStatus(null);
+        setErrorMessage(null);
 
         try {
             const res = await axiosSecure.post('/newsletter/subscribe', { name, email });
 
-            if (res.status === 201 || res.status === 200) { // 200 for re-subscription
+            if (res.status === 201 || res.status === 200) {
                 setFormStatus('subscribed');
                 setTimeout(() => {
                     setFormStatus(null);
                     setEmail('');
                     setName('');
-                }, 3000); // Clear message after 3 seconds
+                }, 3000);
             }
         } catch (err) {
             if (err.response?.status === 409) {
@@ -35,15 +53,14 @@ const NewsletterSection = () => {
             } else {
                 setErrorMessage(err.response?.data?.message || 'Something went wrong. Please try again.');
             }
-            setFormStatus('error'); // Set status to error
+            setFormStatus('error');
         }
     };
 
-    // Handles the newsletter unsubscription
     const handleUnsubscribe = async (e) => {
         e.preventDefault();
-        setFormStatus(null); // Clear previous status
-        setErrorMessage(null); // Clear previous error
+        setFormStatus(null);
+        setErrorMessage(null);
 
         try {
             const res = await axiosSecure.post('/newsletter/unsubscribe', { email: unsubscribeEmail });
@@ -53,8 +70,8 @@ const NewsletterSection = () => {
                 setTimeout(() => {
                     setFormStatus(null);
                     setUnsubscribeEmail('');
-                    setShowUnsubscribeForm(false); // Hide the form after successful unsubscribe
-                }, 3000); // Clear message after 3 seconds
+                    setShowUnsubscribeForm(false);
+                }, 3000);
             }
         } catch (err) {
             if (err.response?.status === 404) {
@@ -62,7 +79,7 @@ const NewsletterSection = () => {
             } else {
                 setErrorMessage(err.response?.data?.message || 'Something went wrong. Please try again.');
             }
-            setFormStatus('error'); // Set status to error
+            setFormStatus('error');
         }
     };
 
@@ -70,9 +87,9 @@ const NewsletterSection = () => {
         if (formStatus === 'subscribed') {
             return (
                 <div className="text-center py-10">
-                    <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                    <CheckCircle className="w-16 h-16 text-green-400 dark:text-green-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-semibold mb-2">Subscribed!</h3>
-                    <p className="text-blue-100">
+                    <p className="text-blue-100 dark:text-blue-200">
                         You've successfully subscribed to FitFlow. Welcome!
                     </p>
                 </div>
@@ -82,9 +99,9 @@ const NewsletterSection = () => {
         if (formStatus === 'unsubscribed') {
             return (
                 <div className="text-center py-10">
-                    <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" /> {/* Or a specific unsubscribe icon */}
+                    <CheckCircle className="w-16 h-16 text-green-400 dark:text-green-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-semibold mb-2">Unsubscribed!</h3>
-                    <p className="text-blue-100">
+                    <p className="text-blue-100 dark:text-blue-200">
                         You have successfully unsubscribed from FitFlow newsletters.
                     </p>
                 </div>
@@ -94,17 +111,17 @@ const NewsletterSection = () => {
         if (showUnsubscribeForm) {
             return (
                 <form onSubmit={handleUnsubscribe} className="space-y-5">
-                    <h3 className="text-2xl font-semibold mb-4 text-center text-white">Unsubscribe</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-center text-white dark:text-gray-200">Unsubscribe</h3>
                     <input
                         type="email"
                         placeholder="Your Email Address to Unsubscribe"
                         value={unsubscribeEmail}
                         onChange={(e) => setUnsubscribeEmail(e.target.value)}
                         required
-                        className="w-full px-5 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        className="w-full px-5 py-3 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-600"
                     />
                     {errorMessage && (
-                        <p className="text-sm text-red-200 text-center -mt-2">{errorMessage}</p>
+                        <p className="text-sm text-red-200 dark:text-red-400 text-center -mt-2">{errorMessage}</p>
                     )}
                     <button
                         type="submit"
@@ -117,10 +134,10 @@ const NewsletterSection = () => {
                         type="button"
                         onClick={() => {
                             setShowUnsubscribeForm(false);
-                            setErrorMessage(null); // Clear error when canceling
-                            setFormStatus(null); // Clear any pending status
+                            setErrorMessage(null);
+                            setFormStatus(null);
                         }}
-                        className="w-full mt-2 text-sm text-blue-100 hover:underline"
+                        className="w-full mt-2 text-sm text-blue-100 dark:text-blue-200 hover:underline"
                     >
                         Cancel
                     </button>
@@ -136,7 +153,7 @@ const NewsletterSection = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="w-full px-5 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-full px-5 py-3 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-600"
                 />
                 <input
                     type="email"
@@ -144,14 +161,14 @@ const NewsletterSection = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-5 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-full px-5 py-3 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-600"
                 />
                 {errorMessage && (
-                    <p className="text-sm text-red-200 text-center -mt-2">{errorMessage}</p>
+                    <p className="text-sm text-red-200 dark:text-red-400 text-center -mt-2">{errorMessage}</p>
                 )}
                 <button
                     type="submit"
-                    className="w-full bg-orange-500 hover:bg-orange-600 transition duration-200 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                    className="w-full bg-orange-500 hover:bg-orange-600 dark:bg-orange-700 dark:hover:bg-orange-800 transition duration-200 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
                 >
                     <Mail className="w-5 h-5" />
                     <span>Subscribe Now</span>
@@ -161,20 +178,27 @@ const NewsletterSection = () => {
     };
 
     return (
-        <section className="py-20 bg-gradient-to-br from-blue-700 to-orange-600 text-white">
+        <section className="py-20 bg-gradient-to-br from-blue-700 to-orange-600 dark:from-blue-950 dark:to-orange-900 text-white dark:text-gray-100">
             <div className="max-w-6xl mx-auto px-6">
+                <button
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    className="absolute top-4 right-4 p-2 rounded-full bg-white/20 dark:bg-black/20"
+                >
+                    {isDarkMode ? <span className="text-orange-400">☀️</span> : <span className="text-blue-300">🌙</span>}
+                </button>
+
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold mb-4">
-                        Stay Updated with <span className="text-orange-300">FitFlow</span>
+                        Stay Updated with <span className="text-orange-300 dark:text-orange-400">FitFlow</span>
                     </h2>
-                    <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+                    <p className="text-lg text-blue-100 dark:text-blue-200 max-w-2xl mx-auto">
                         Get the latest fitness tips, workout plans, and exclusive content delivered straight to your inbox.
                     </p>
                 </div>
 
-                <div className="max-w-xl mx-auto bg-white/10 p-8 rounded-2xl shadow-lg backdrop-blur">
+                <div className="max-w-xl mx-auto bg-white/10 dark:bg-gray-800/50 p-8 rounded-2xl shadow-lg backdrop-blur">
                     {renderFormContent()}
-                    <p className="text-sm text-blue-100 text-center mt-6">
+                    <p className="text-sm text-blue-100 dark:text-blue-200 text-center mt-6">
                         We respect your privacy.
                         {!showUnsubscribeForm && formStatus !== 'subscribed' && formStatus !== 'unsubscribed' && (
                             <>
@@ -182,10 +206,10 @@ const NewsletterSection = () => {
                                 <button
                                     onClick={() => {
                                         setShowUnsubscribeForm(true);
-                                        setErrorMessage(null); // Clear any previous errors when showing unsubscribe form
-                                        setFormStatus(null); // Clear any success/error message
+                                        setErrorMessage(null);
+                                        setFormStatus(null);
                                     }}
-                                    className="text-orange-300 hover:underline font-bold"
+                                    className="text-orange-300 dark:text-orange-400 hover:underline font-bold"
                                 >
                                     Unsubscribe here.
                                 </button>
@@ -194,7 +218,6 @@ const NewsletterSection = () => {
                     </p>
                 </div>
 
-                {/* Newsletter Perks */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 text-center">
                     {[
                         {
@@ -213,12 +236,12 @@ const NewsletterSection = () => {
                             desc: 'Be the first to know about discounts and promotions.',
                         },
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center bg-white/10 p-6 rounded-xl shadow-md">
-                            <div className="bg-white/20 p-4 rounded-full mb-4">
+                        <div key={i} className="flex flex-col items-center bg-white/10 dark:bg-gray-800/50 p-6 rounded-xl shadow-md">
+                            <div className="bg-white/20 dark:bg-gray-700/50 p-4 rounded-full mb-4">
                                 {item.icon}
                             </div>
                             <h4 className="font-semibold text-lg mb-2">{item.title}</h4>
-                            <p className="text-sm text-blue-100">{item.desc}</p>
+                            <p className="text-sm text-blue-100 dark:text-blue-200">{item.desc}</p>
                         </div>
                     ))}
                 </div>

@@ -63,8 +63,8 @@ const Community = () => {
 
     const getBadgeIcon = (role) => {
         switch (role) {
-            case 'admin': return <Shield className="h-4 w-4 text-red-600" />;
-            case 'trainer': return <Award className="h-4 w-4 text-blue-600" />;
+            case 'admin': return <Shield className="h-4 w-4 text-red-600 dark:text-red-400" />;
+            case 'trainer': return <Award className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
             default: return null;
         }
     };
@@ -101,21 +101,21 @@ const Community = () => {
 
     if (isError) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-red-600 text-lg">Error loading posts: {error.message}</p>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <p className="text-red-600 dark:text-red-400 text-lg">Error loading posts: {error.message}</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="text-4xl font-bold text-gray-800"
+                        className="text-4xl font-bold text-gray-800 dark:text-gray-200"
                     >
                         Community Forum
                     </motion.h1>
@@ -123,7 +123,7 @@ const Community = () => {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
-                        className="text-lg text-gray-600 mt-2"
+                        className="text-lg text-gray-600 dark:text-gray-400 mt-2"
                     >
                         See what people are talking about in our fitness community.
                     </motion.p>
@@ -142,7 +142,7 @@ const Community = () => {
                             <motion.article
                                 key={post._id}
                                 variants={itemVariants}
-                                className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col justify-between shadow hover:shadow-md transition"
+                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 flex flex-col justify-between shadow hover:shadow-md transition"
                             >
                                 <div className="flex items-center mb-4 space-x-4 min-w-0">
                                     <motion.img
@@ -156,36 +156,36 @@ const Community = () => {
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                            <h4 className="font-semibold text-sm text-gray-800 truncate">{post.author}</h4>
+                                            <h4 className="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate">{post.author}</h4>
                                             {post.authorRole !== 'member' && post.authorRole && (
-                                                <div className="flex items-center space-x-1 bg-gray-100 px-2 py-0.5 rounded-full text-xs text-gray-700">
+                                                <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full text-xs text-gray-700 dark:text-gray-300">
                                                     {getBadgeIcon(post.authorRole)}
                                                     <span>{getBadgeText(post.authorRole)}</span>
                                                 </div>
                                             )}
-                                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                 {post.createdAt
                                                     ? formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: true })
                                                     : 'just now'}
                                             </span>
                                         </div>
-                                        <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs mt-1">
+                                        <span className="inline-block bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs mt-1">
                                             {post.category}
                                         </span>
                                     </div>
                                 </div>
 
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3 line-clamp-2 hover:text-blue-700 transition">
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 line-clamp-2 hover:text-blue-700 dark:hover:text-blue-400 transition">
                                     <Link to={`/community/post/${post._id}`} title={post.title}>
                                         {post.title}
                                     </Link>
                                 </h3>
 
-                                <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-5">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed line-clamp-5">
                                     {post.content.length > 300 ? `${post.content.slice(0, 300)}...` : post.content}
                                 </p>
 
-                                <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200 gap-3">
+                                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700 gap-3">
                                     <div className="flex items-center space-x-4">
                                         <motion.button
                                             onClick={() => handleVote(post._id, userVote === 'like' ? null : 'like')}
@@ -194,8 +194,8 @@ const Community = () => {
                                             whileTap="tap"
                                             className={`flex items-center space-x-1 transition-colors focus:outline-none cursor-pointer
                                                 ${userVote === 'like'
-                                                    ? 'text-green-600'
-                                                    : 'hover:text-green-600'
+                                                    ? 'text-green-600 dark:text-green-400'
+                                                    : 'hover:text-green-600 dark:hover:text-green-400'
                                                 }`}
                                         >
                                             <ThumbsUp className="h-4 w-4" />
@@ -208,21 +208,21 @@ const Community = () => {
                                             whileTap="tap"
                                             className={`flex items-center space-x-1 transition-colors focus:outline-none cursor-pointer
                                                 ${userVote === 'dislike'
-                                                    ? 'text-red-600'
-                                                    : 'hover:text-red-600'
+                                                    ? 'text-red-600 dark:text-red-400'
+                                                    : 'hover:text-red-600 dark:hover:text-red-400'
                                                 }`}
                                         >
                                             <ThumbsDown className="h-4 w-4" />
                                             <span>{post.dislikes || 0}</span>
                                         </motion.button>
-                                        <div className="flex items-center space-x-1 hover:text-blue-500 transition-colors select-none cursor-pointer">
+                                        <div className="flex items-center space-x-1 hover:text-blue-500 dark:hover:text-blue-400 transition-colors select-none cursor-pointer">
                                             <MessageSquare className="h-4 w-4" />
                                             <span>{Array.isArray(post.comments) ? post.comments.length : 0}</span>
                                         </div>
                                     </div>
                                     <Link
                                         to={`/community/${post._id}`}
-                                        className="text-blue-700 hover:text-blue-800 font-medium transition whitespace-nowrap"
+                                        className="text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-500 font-medium transition whitespace-nowrap"
                                     >
                                         Read More
                                     </Link>

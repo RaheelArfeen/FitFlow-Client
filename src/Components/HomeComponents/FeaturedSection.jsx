@@ -51,7 +51,7 @@ const FeaturedSection = () => {
     ];
 
     return (
-        <section className="py-24 bg-gray-50">
+        <section className="py-24 bg-gray-50 dark:bg-gray-900">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     className="text-center mb-20"
@@ -60,10 +60,10 @@ const FeaturedSection = () => {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
-                    <h2 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-5">
+                    <h2 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white mb-5">
                         Why Choose FitFlow?
                     </h2>
-                    <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto">
+                    <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
                         Experience the future of fitness with our comprehensive platform designed to support your wellness journey.
                     </p>
                 </motion.div>
@@ -72,7 +72,7 @@ const FeaturedSection = () => {
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}
-                            className="bg-white p-10 rounded-2xl shadow-xl group hover:shadow-2xl transition-shadow duration-300"
+                            className="bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-xl group hover:shadow-2xl transition-shadow duration-300"
                             custom={index}
                             variants={cardVariants}
                             initial="hidden"
@@ -88,10 +88,10 @@ const FeaturedSection = () => {
                                     <feature.icon className="h-8 w-8 text-white" />
                                 </div>
                             </motion.div>
-                            <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+                            <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">
                                 {feature.title}
                             </h3>
-                            <p className="text-gray-600 leading-relaxed">
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                                 {feature.description}
                             </p>
                         </motion.div>
