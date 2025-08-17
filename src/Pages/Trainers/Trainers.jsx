@@ -36,7 +36,7 @@ const Trainers = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex justify-center items-center">
+            <div className="min-h-screen flex justify-center items-center bg-gray-50 dark:bg-gray-900">
                 <Loader />
             </div>
         );
@@ -44,14 +44,14 @@ const Trainers = () => {
 
     if (isError) {
         return (
-            <div className="min-h-screen flex justify-center items-center">
-                <p className="text-red-600 text-lg">Failed to load trainers: {error.message}</p>
+            <div className="min-h-screen flex justify-center items-center bg-gray-50 dark:bg-gray-900">
+                <p className="text-red-600 dark:text-red-400 text-lg">Failed to load trainers: {error.message}</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <Title>Trainers | FitFlow</Title>
                 {/* Header */}
@@ -61,10 +61,10 @@ const Trainers = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                    <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                         Our Expert Trainers
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
                         Meet our certified fitness professionals who are passionate about helping you achieve your goals.
                     </p>
                 </motion.header>
@@ -88,7 +88,7 @@ const Trainers = () => {
                         trainers.map((trainer, index) => (
                             <motion.article
                                 key={trainer.email}
-                                className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col"
+                                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col"
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -99,57 +99,64 @@ const Trainers = () => {
                                         alt={trainer.name || 'Trainer Profile'}
                                         className="w-full h-64 object-cover"
                                     />
-                                    <div className="absolute top-4 right-4 flex items-center bg-white/90 px-2 py-1 rounded-full">
-                                        <Star className="h-4 w-4 text-yellow-400" />
-                                        <span className="ml-1 text-sm font-medium">{trainer.rating?.toFixed(1) || 'N/A'}</span>
+                                    <div className="absolute top-4 right-4 flex items-center bg-white/90 dark:bg-gray-900/90 px-2 py-1 rounded-full">
+                                        <Star className="h-4 w-4 text-yellow-400 dark:text-yellow-300" />
+                                        <span className="ml-1 text-sm font-medium text-gray-800 dark:text-gray-200">{trainer.rating?.toFixed(1) || 'N/A'}</span>
                                     </div>
                                 </div>
 
-                                <div className="p-6 flex flex-col flex-grow">
+                                <div className="p-6 flex flex-col flex-grow text-gray-800 dark:text-gray-100">
                                     <div className="mb-4">
-                                        <h3 className="text-xl font-semibold text-gray-800 mb-1">{trainer.name}</h3>
-                                        <p className="text-orange-600 font-medium">{trainer.specialization || '-'}</p>
+                                        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-1">{trainer.name}</h3>
+                                        <p className="text-orange-600 dark:text-orange-400 font-medium">{trainer.specialization || '-'}</p>
                                     </div>
 
-                                    <p className="text-gray-600 text-sm mb-4 leading-relaxed flex-grow">
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 leading-relaxed flex-grow">
                                         {trainer.description && trainer.description.length > 80
                                             ? trainer.description.slice(0, 80) + '...'
                                             : trainer.description || 'No description available.'}
                                     </p>
 
                                     <div className="space-y-3 mb-6">
-                                        <div className="flex items-center text-sm text-gray-500">
+                                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                             <Calendar className="h-4 w-4 mr-2" />
                                             <span>{trainer.experience} years experience</span>
                                         </div>
-                                        <div className="flex items-center text-sm text-gray-500">
+                                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                             <Award className="h-4 w-4 mr-2" />
                                             <span>{trainer.sessions || 0}+ sessions completed</span>
                                         </div>
                                     </div>
 
                                     <div className="mb-4">
-                                        <div className="text-sm text-gray-600 mb-2">Available Slots:</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">Available Slots:</div>
                                         <div className="flex flex-wrap gap-2">
-                                            {(trainer.slots && trainer.slots.length > 0)
-                                                ? trainer.slots
-                                                    .map((slot) => (
+                                            {trainer.slots && trainer.slots.length > 0 ? (
+                                                <>
+                                                    {trainer.slots.slice(0, 2).map((slot, index) => (
                                                         <span
-                                                            key={slot.id}
-                                                            className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
+                                                            key={index}
+                                                            className="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs"
                                                         >
                                                             {`${slot.days}, ${slot.slotTime}`}
                                                         </span>
-                                                    ))
-                                                : <span className="text-gray-400 text-xs italic">No slots available</span>
-                                            }
+                                                    ))}
+                                                    {trainer.slots.length > 2 && (
+                                                        <span className="text-gray-500 text-xs">...</span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <span className="text-gray-400 dark:text-gray-500 text-xs italic">
+                                                    No slots available
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
                                     <motion.div whileHover={{ scale: 1.05 }} className="mt-auto text-right">
                                         <Link
                                             to={`/trainer/${trainer._id}`}
-                                            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                                            className="bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
                                         >
                                             Know More
                                         </Link>
@@ -159,18 +166,18 @@ const Trainers = () => {
                         ))
                     ) : (
                         <motion.div
-                            className="col-span-full flex flex-col items-center justify-center text-center py-20 bg-white rounded-xl shadow-inner border border-gray-200"
+                            className="col-span-full flex flex-col items-center justify-center text-center py-20 bg-white dark:bg-gray-800 rounded-xl shadow-inner border border-gray-200 dark:border-gray-700"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
-                                <Award className="text-blue-500 w-8 h-8" />
+                            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
+                                <Award className="text-blue-500 dark:text-blue-300 w-8 h-8" />
                             </div>
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                                 No Trainers Found
                             </h2>
-                            <p className="text-gray-600 max-w-md">
+                            <p className="text-gray-600 dark:text-gray-300 max-w-md">
                                 We currently have no trainers available. But don’t worry — our team is working on bringing top experts onboard.
                             </p>
 
@@ -178,7 +185,7 @@ const Trainers = () => {
                                 <div className="mt-6">
                                     <Link
                                         to={user ? "/be-trainer" : "/register"}
-                                        className="inline-block bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors duration-200"
+                                        className="inline-block bg-blue-700 dark:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 dark:hover:bg-blue-700 transition-colors duration-200"
                                     >
                                         {user ? "Become a Trainer" : "Join as a Trainer"}
                                     </Link>
@@ -191,14 +198,14 @@ const Trainers = () => {
                 {/* Become a Trainer CTA */}
                 {(user?.role === 'member' || !user) && (
                     <motion.section
-                        className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 rounded-xl p-8 text-white text-center"
+                        className="mt-16 bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-950 dark:to-orange-950 rounded-xl p-8 text-white text-center"
                         initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.5 }}
                         viewport={{ once: true }}
                     >
                         <h2 className="text-3xl font-bold mb-4">Want to Become a Trainer?</h2>
-                        <p className="text-xl mb-6 text-blue-100">
+                        <p className="text-xl mb-6 text-blue-100 dark:text-blue-200">
                             Join our team of expert trainers and help others achieve their fitness goals
                             {user?.role === 'member' ? ' while earning extra income.' : '.'}
                         </p>
@@ -208,13 +215,13 @@ const Trainers = () => {
                                 <>
                                     <Link
                                         to="/register"
-                                        className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
+                                        className="bg-white dark:bg-gray-200 text-blue-700 dark:text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-300 transition-colors duration-200 inline-block"
                                     >
                                         Sign Up First
                                     </Link>
                                     <Link
                                         to="/login"
-                                        className="bg-blue-800 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors duration-200 inline-block border border-white/30"
+                                        className="bg-blue-800 dark:bg-blue-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 dark:hover:bg-blue-950 transition-colors duration-200 inline-block border border-white/30"
                                     >
                                         Login
                                     </Link>
@@ -223,7 +230,7 @@ const Trainers = () => {
                             {user?.role === 'member' && (
                                 <Link
                                     to="/be-trainer"
-                                    className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 inline-block"
+                                    className="bg-white dark:bg-gray-200 text-blue-700 dark:text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-300 transition-colors duration-200 inline-block"
                                 >
                                     Become a Trainer
                                 </Link>

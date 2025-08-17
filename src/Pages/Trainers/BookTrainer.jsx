@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { ChartLine, Check, Dumbbell, HeartPulse, Star } from 'lucide-react';
 import Loader from '../Loader';
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { AuthContext } from '../../Provider/AuthProvider';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query'; // Import useQuery
+import { useQuery } from '@tanstack/react-query';
 import { Title } from 'react-head';
 
 const membershipPackages = [
@@ -45,66 +45,62 @@ const membershipPackages = [
 const BookTrainerPage = () => {
     const { trainerId, slotId } = useParams();
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext); // user is not directly used in this component's logic, but kept for context
+    const { user } = useContext(AuthContext);
 
     const axiosSecure = useAxiosSecure();
 
     const [selectedPackage, setSelectedPackage] = useState('');
 
-    // --- TanStack Query for fetching trainer data ---
     const { data: trainer, isLoading, isError, error } = useQuery({
-        queryKey: ['trainerDetails', trainerId], // Unique key for this trainer's details
+        queryKey: ['trainerDetails', trainerId],
         queryFn: async () => {
             const res = await axiosSecure.get(`/trainers/${trainerId}`);
             return res.data;
         },
-        enabled: !!trainerId, // Only run the query if trainerId is available
-        staleTime: 1000 * 60 * 5, // Data considered fresh for 5 minutes
+        enabled: !!trainerId,
+        staleTime: 1000 * 60 * 5,
         onError: (err) => {
             console.error('Error fetching trainer:', err);
-            toast.error('Failed to load trainer details.'); // Using toast for error notification
+            toast.error('Failed to load trainer details.');
         }
     });
 
     useEffect(() => {
-        // Scroll to top on component mount
         const timer = setTimeout(() => {
             window.scrollTo(0, 0);
         }, 300);
         return () => clearTimeout(timer);
     }, []);
 
-    // Loader based on TanStack Query's isLoading
     if (isLoading) {
         return (
-            <div className="min-h-screen flex justify-center items-center">
+            <div className="min-h-screen flex justify-center items-center dark:bg-gray-900">
                 <Loader />
             </div>
         );
     }
 
-    // Error state when data fetching fails
     if (isError) {
         return (
             <motion.div
-                className="min-h-screen bg-gray-50 flex items-center justify-center"
+                className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
                 <div className="text-center">
                     <motion.h2
-                        className="text-2xl font-bold text-red-600 mb-4"
+                        className="text-2xl font-bold text-red-600 mb-4 dark:text-red-400"
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
                         Error Loading Trainer Details
                     </motion.h2>
-                    <p className="text-gray-600 mb-4">{error?.message || 'An unexpected error occurred.'}</p>
+                    <p className="text-gray-600 mb-4 dark:text-gray-400">{error?.message || 'An unexpected error occurred.'}</p>
                     <motion.button
                         onClick={() => navigate('/trainers')}
-                        className="text-blue-700 hover:text-blue-800"
+                        className="text-blue-700 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
@@ -116,21 +112,19 @@ const BookTrainerPage = () => {
         );
     }
 
-    // Find the slot after trainer data is loaded
     const slot = trainer?.slots?.find(s => s.id === slotId);
 
-    // Case where trainer or slot is not found (after successful fetch)
     if (!trainer || !slot) {
         return (
             <motion.div
-                className="min-h-screen bg-gray-50 flex items-center justify-center"
+                className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
                 <div className="text-center">
                     <motion.h2
-                        className="text-2xl font-bold text-gray-800 mb-4"
+                        className="text-2xl font-bold text-gray-800 mb-4 dark:text-gray-200"
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
@@ -139,7 +133,7 @@ const BookTrainerPage = () => {
                     </motion.h2>
                     <motion.button
                         onClick={() => navigate('/trainers')}
-                        className="text-blue-700 hover:text-blue-800"
+                        className="text-blue-700 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
@@ -153,7 +147,7 @@ const BookTrainerPage = () => {
 
     const handleJoinNow = () => {
         if (!selectedPackage) {
-            toast.error('Please select a membership package'); // Using toast for validation error
+            toast.error('Please select a membership package');
             return;
         }
         navigate(`/payment/${trainerId}/${slotId}/${selectedPackage}`);
@@ -176,7 +170,7 @@ const BookTrainerPage = () => {
 
     return (
         <motion.div
-            className="min-h-screen bg-gray-50 py-12"
+            className="min-h-screen bg-gray-50 py-12 dark:bg-gray-900"
             initial="hidden"
             animate="visible"
             variants={containerVariants}
@@ -184,12 +178,12 @@ const BookTrainerPage = () => {
             <Title>{trainer?.name ? `Book ${trainer.name} | FitFlow` : 'Book Trainer | FitFlow'}</Title>
             <div className="md:container mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
-                    className="bg-white rounded-xl shadow-lg overflow-hidden"
+                    className="bg-white rounded-xl shadow-lg overflow-hidden dark:bg-gray-800 dark:shadow-2xl"
                     variants={itemVariants}
                 >
                     {/* Header */}
                     <motion.div
-                        className="bg-gradient-to-r from-blue-700 to-orange-600 text-white p-8"
+                        className="bg-gradient-to-r from-blue-700 to-orange-600 text-white p-8 dark:from-blue-900 dark:to-orange-800"
                         initial={{ y: -50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5 }}
@@ -202,55 +196,84 @@ const BookTrainerPage = () => {
                         {/* Booking Details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <motion.div variants={itemVariants}>
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">Session Details</h2>
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4 dark:text-gray-200">Session Details</h2>
                                 <div className="space-y-3">
                                     <motion.div className="flex gap-2" variants={itemVariants}>
-                                        <span className="text-gray-600">Trainer:</span>
-                                        <span className="font-medium">{trainer.name}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Trainer:</span>
+                                        <span className="font-medium dark:text-gray-100">{trainer.name}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
-                                        <span className="text-gray-600">Specialization:</span>
-                                        <span className="font-medium">{trainer.specialization}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Specialization:</span>
+                                        <span className="font-medium dark:text-gray-100">{trainer.specialization}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
-                                        <span className="text-gray-600">Selected Slot:</span>
-                                        <span className="font-medium">{slot.slotName}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Selected Slot:</span>
+                                        <span className="font-medium dark:text-gray-100">{slot.slotName}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
-                                        <span className="text-gray-600">Time:</span>
-                                        <span className="font-medium">{slot.slotTime}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Time:</span>
+                                        <span className="font-medium dark:text-gray-100">{slot.slotTime}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
-                                        <span className="text-gray-600">Duration:</span>
-                                        <span className="font-medium">{slot.duration}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Duration:</span>
+                                        <span className="font-medium dark:text-gray-100">{slot.duration}</span>
                                     </motion.div>
                                     <motion.div className="flex gap-2" variants={itemVariants}>
-                                        <span className="text-gray-600">Day:</span>
-                                        <span className="font-medium">{slot.days}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Day:</span>
+                                        <span className="font-medium dark:text-gray-100">{slot.days}</span>
                                     </motion.div>
                                 </div>
                             </motion.div>
 
                             <motion.div variants={itemVariants}>
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">Classes Included</h2>
-                                <div className="space-y-2">
-                                    <motion.div className="bg-blue-50 p-3 rounded-lg" whileHover={{ scale: 1.03 }}>
-                                        <span className="font-medium text-blue-800">{trainer.specialization}</span>
-                                    </motion.div>
-                                    <motion.div className="bg-green-50 p-3 rounded-lg" whileHover={{ scale: 1.03 }}>
-                                        <span className="font-medium text-green-800">Personal Training</span>
-                                    </motion.div>
-                                    <motion.div className="bg-orange-50 p-3 rounded-lg" whileHover={{ scale: 1.03 }}>
-                                        <span className="font-medium text-orange-800">Progress Tracking</span>
-                                    </motion.div>
-                                </div>
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4 dark:text-gray-200">Classes Included</h2>
+                                <ul className="space-y-4">
+                                    <motion.li className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-950" whileHover={{ scale: 1.03 }}>
+                                        <motion.div className="flex-shrink-0">
+                                            <Dumbbell size={24} className="text-blue-800 dark:text-blue-400" />
+                                        </motion.div>
+                                        <div className="flex-grow">
+                                            <h3 className="font-semibold text-blue-800 dark:text-blue-400">Personal Training</h3>
+                                            <p className="text-sm text-blue-600 dark:text-blue-300">Get one-on-one sessions with your trainer.</p>
+                                        </div>
+                                    </motion.li>
+                                    <motion.li className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-950" whileHover={{ scale: 1.03 }}>
+                                        <motion.div className="flex-shrink-0">
+                                            <HeartPulse size={24} className="text-green-800 dark:text-green-400" />
+                                        </motion.div>
+                                        <div className="flex-grow">
+                                            <h3 className="font-semibold text-green-800 dark:text-green-400">Cardio & Strength</h3>
+                                            <p className="text-sm text-green-600 dark:text-green-300">Access to all cardio and strength equipment.</p>
+                                        </div>
+                                    </motion.li>
+                                    <motion.li className="flex items-center gap-3 p-4 rounded-lg bg-orange-50 dark:bg-orange-950" whileHover={{ scale: 1.03 }}>
+                                        <motion.div className="flex-shrink-0">
+                                            <ChartLine size={24} className="text-orange-800 dark:text-orange-400" />
+                                        </motion.div>
+                                        <div className="flex-grow">
+                                            <h3 className="font-semibold text-orange-800 dark:text-orange-400">Progress Tracking</h3>
+                                            <p className="text-sm text-orange-600 dark:text-orange-300">Monitor your fitness journey and results.</p>
+                                        </div>
+                                    </motion.li>
+                                    {trainer?.specialization && (
+                                        <motion.li className="flex items-center gap-3 p-4 rounded-lg bg-purple-50 dark:bg-purple-950" whileHover={{ scale: 1.03 }}>
+                                            <motion.div className="flex-shrink-0">
+                                                <Star size={24} className="text-purple-800 dark:text-purple-400" />
+                                            </motion.div>
+                                            <div className="flex-grow">
+                                                <h3 className="font-semibold text-purple-800 dark:text-purple-400">Specialization: {trainer.specialization}</h3>
+                                                <p className="text-sm text-purple-600 dark:text-purple-300">Focus on specialized training and techniques.</p>
+                                            </div>
+                                        </motion.li>
+                                    )}
+                                </ul>
                             </motion.div>
                         </div>
 
                         {/* Membership Packages */}
                         <div className="mb-8">
                             <motion.h2
-                                className="text-xl font-semibold text-gray-800 mb-6"
+                                className="text-xl font-semibold text-gray-800 mb-6 dark:text-gray-200"
                                 variants={itemVariants}
                             >
                                 Choose Your Membership Package
@@ -260,25 +283,25 @@ const BookTrainerPage = () => {
                                     <motion.div
                                         key={pkg.id}
                                         className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 ${selectedPackage === pkg.id
-                                            ? 'border-blue-500 bg-blue-50'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                            }`}
+                                            ? 'border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-950'
+                                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-500'
+                                            } dark:bg-gray-800 `}
                                         onClick={() => setSelectedPackage(pkg.id)}
                                         whileHover={{ scale: 1.05, boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.1)' }}
                                         whileTap={{ scale: 0.98 }}
                                         variants={itemVariants}
                                     >
                                         <div className="text-center mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-800 mb-2">{pkg.name}</h3>
-                                            <div className="text-3xl font-bold text-blue-700">${pkg.price}</div>
-                                            <div className="text-sm text-gray-500">per month</div>
+                                            <h3 className="text-lg font-semibold text-gray-800 mb-2 dark:text-gray-200">{pkg.name}</h3>
+                                            <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">${pkg.price}</div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400">per month</div>
                                         </div>
 
                                         <ul className="space-y-2">
                                             {pkg.features.map((feature, index) => (
                                                 <li key={index} className="flex items-start space-x-2 text-sm">
-                                                    <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                                    <span className="text-gray-600">{feature}</span>
+                                                    <Check className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                                                    <span className="text-gray-600 dark:text-gray-400">{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -289,7 +312,7 @@ const BookTrainerPage = () => {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                             >
-                                                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium dark:bg-blue-400 dark:text-gray-800">
                                                     Selected
                                                 </span>
                                             </motion.div>
@@ -304,7 +327,7 @@ const BookTrainerPage = () => {
                             <motion.button
                                 onClick={handleJoinNow}
                                 disabled={!selectedPackage}
-                                className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
+                                className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 dark:bg-blue-500 dark:hover:bg-blue-600 dark:disabled:bg-gray-600 dark:text-gray-900"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >

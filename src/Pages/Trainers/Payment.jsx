@@ -10,7 +10,7 @@ import {
     useStripe,
 } from "@stripe/react-stripe-js";
 import { AuthContext } from "../../Provider/AuthProvider";
-import { CreditCard, Lock } from "lucide-react"; // <-- CORRECTED: Lock is now explicitly imported
+import { CreditCard, Lock } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import useAxiosSecure from '../../Provider/UseAxiosSecure'
@@ -56,8 +56,8 @@ const CARD_OPTIONS = {
     style: {
         base: {
             fontSize: "16px",
-            color: "#32325d",
-            "::placeholder": { color: "#a0aec0" },
+            color: "#4a5568", // Default text color
+            "::placeholder": { color: "#718096" },
         },
         invalid: { color: "#e53e3e" },
     },
@@ -198,7 +198,7 @@ const PaymentForm = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-xl font-semibold">
+            <div className="min-h-screen flex items-center justify-center text-xl font-semibold dark:bg-gray-900 dark:text-gray-100">
                 <Loading />
             </div>
         );
@@ -206,16 +206,16 @@ const PaymentForm = () => {
 
     if (fetchError || !trainer || !slot || !selectedPackage) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
-                <h2 className="text-xl font-semibold text-red-600 mb-4">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <h2 className="text-xl font-semibold text-red-600 mb-4 dark:text-red-400">
                     Error loading booking details.
                 </h2>
-                <p className="text-gray-700 mb-4">
+                <p className="text-gray-700 mb-4 dark:text-gray-300">
                     Trainer, slot, or package information could not be found.
                 </p>
                 <button
                     onClick={() => navigate(-1)}
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
                 >
                     Go Back
                 </button>
@@ -224,66 +224,66 @@ const PaymentForm = () => {
     }
 
     return (
-        <motion.div className="bg-gray-50 py-12" initial="hidden" animate="visible">
+        <motion.div className="bg-gray-50 py-12 dark:bg-gray-900" initial="hidden" animate="visible">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Payment Form */}
-                    <motion.div className="bg-white rounded-xl shadow-lg p-8">
+                    <motion.div className="bg-white rounded-xl shadow-lg p-8 dark:bg-gray-800 dark:shadow-2xl">
                         <div className="flex items-center mb-6">
-                            <CreditCard className="h-6 w-6 text-blue-700 mr-2" />
-                            <h2 className="text-2xl font-bold text-gray-800">Payment Details</h2>
+                            <CreditCard className="h-6 w-6 text-blue-700 mr-2 dark:text-blue-500" />
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Payment Details</h2>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-medium mb-2">Card Info</label>
-                                <div className="border border-gray-300 rounded-lg p-4">
+                                <label className="block text-sm font-medium mb-2 dark:text-gray-400">Card Info</label>
+                                <div className="border border-gray-300 rounded-lg p-4 dark:border-gray-600">
                                     <CardElement options={CARD_OPTIONS} />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-2">Email</label>
+                                <label className="block text-sm font-medium mb-2 dark:text-gray-400">Email</label>
                                 <input
                                     type="email"
                                     readOnly
                                     value={user?.email || ""}
-                                    className="w-full px-4 py-3 border rounded-lg bg-gray-100"
+                                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={!stripe || isProcessing || !clientSecret}
-                                className={`w-full py-3 rounded-lg font-semibold ${!stripe || isProcessing || !clientSecret
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-blue-700 text-white hover:bg-blue-800"
+                                className={`w-full py-3 rounded-lg font-semibold transition-colors duration-200 ${!stripe || isProcessing || !clientSecret
+                                    ? "bg-gray-400 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
+                                    : "bg-blue-700 text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700"
                                     }`}
                             >
                                 {isProcessing ? "Processing..." : `Pay $${selectedPackage.price}`}
                             </button>
                         </form>
-                        <p className="mt-4 text-center text-sm text-gray-500">
-                            <Lock className="inline-block h-4 w-4 mr-1 mb-1 text-gray-400" /> {/* This is where <Lock> is used */}
+                        <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <Lock className="inline-block h-4 w-4 mr-1 mb-1 text-gray-400 dark:text-gray-500" />
                             Your payment is secured with Stripe.
                         </p>
                     </motion.div>
 
                     {/* Order Summary */}
-                    <motion.div className="bg-white rounded-xl shadow-lg p-8">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
-                        <div className="space-y-2 mb-4">
-                            <div className="flex justify-between"><span>Trainer:</span><span>{trainer.name}</span></div>
-                            <div className="flex justify-between"><span>Slot:</span><span>{slot.slotName}</span></div>
-                            <div className="flex justify-between"><span>Time:</span><span>{slot.slotTime}</span></div>
-                            <div className="flex justify-between"><span>Duration:</span><span>{slot.duration}</span></div>
-                            <div className="flex justify-between"><span>Day:</span><span>{Array.isArray(slot.days) ? slot.days.join(', ') : slot.days}</span></div>
-                            <div className="flex justify-between"><span>Package:</span><span>{selectedPackage.name}</span></div>
+                    <motion.div className="bg-white rounded-xl shadow-lg p-8 dark:bg-gray-800 dark:shadow-2xl">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6 dark:text-gray-200">Order Summary</h2>
+                        <div className="space-y-2 mb-4 dark:text-gray-400">
+                            <div className="flex justify-between"><span>Trainer:</span><span className="font-semibold text-gray-700 dark:text-gray-300">{trainer.name}</span></div>
+                            <div className="flex justify-between"><span>Slot:</span><span className="font-semibold text-gray-700 dark:text-gray-300">{slot.slotName}</span></div>
+                            <div className="flex justify-between"><span>Time:</span><span className="font-semibold text-gray-700 dark:text-gray-300">{slot.slotTime}</span></div>
+                            <div className="flex justify-between"><span>Duration:</span><span className="font-semibold text-gray-700 dark:text-gray-300">{slot.duration}</span></div>
+                            <div className="flex justify-between"><span>Day:</span><span className="font-semibold text-gray-700 dark:text-gray-300">{Array.isArray(slot.days) ? slot.days.join(', ') : slot.days}</span></div>
+                            <div className="flex justify-between"><span>Package:</span><span className="font-semibold text-gray-700 dark:text-gray-300">{selectedPackage.name}</span></div>
                         </div>
-                        <div className="flex justify-between text-lg font-semibold border-t pt-4">
-                            <span>Total:</span>
-                            <span className="text-blue-700">${selectedPackage.price}</span>
+                        <div className="flex justify-between text-lg font-semibold border-t pt-4 dark:border-gray-600">
+                            <span className="dark:text-gray-200">Total:</span>
+                            <span className="text-blue-700 dark:text-blue-500">${selectedPackage.price}</span>
                         </div>
-                        <div className="bg-blue-50 mt-6 p-4 rounded-lg">
-                            <h3 className="font-semibold mb-2 text-blue-800">Package Includes:</h3>
-                            <ul className="list-disc list-inside text-blue-700 text-sm">
+                        <div className="bg-blue-50 mt-6 p-4 rounded-lg dark:bg-blue-950">
+                            <h3 className="font-semibold mb-2 text-blue-800 dark:text-blue-400">Package Includes:</h3>
+                            <ul className="list-disc list-inside text-blue-700 text-sm dark:text-blue-300">
                                 {selectedPackage.features.map((f, i) => (
                                     <li key={i}>{f}</li>
                                 ))}
@@ -299,7 +299,6 @@ const PaymentForm = () => {
 const Payment = () => (
     <Elements stripe={stripePromise}>
         <Title>Payment | FitFlow</Title>
-
         <PaymentForm />
     </Elements>
 );
