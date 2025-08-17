@@ -204,8 +204,8 @@ const CommunityDetails = () => {
 
 
     const getBadgeIcon = (role) => {
-        if (role === 'admin') return <Shield className="h-4 w-4 text-red-600" />;
-        if (role === 'trainer') return <Award className="h-4 w-4 text-blue-600" />;
+        if (role === 'admin') return <Shield className="h-4 w-4 text-red-600 dark:text-red-400" />;
+        if (role === 'trainer') return <Award className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
         return null;
     };
 
@@ -239,13 +239,13 @@ const CommunityDetails = () => {
 
     if (isLoading) return <Loader />;
     if (isError) return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <p className="text-red-600 text-lg">Error loading post: {error.message}</p>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+            <p className="text-red-600 dark:text-red-400 text-lg">Error loading post: {error.message}</p>
         </div>
     );
     if (!post) return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <p className="text-gray-600 text-lg">No post found.</p>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+            <p className="text-gray-600 dark:text-gray-400 text-lg">No post found.</p>
         </div>
     );
 
@@ -287,7 +287,7 @@ const CommunityDetails = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8">
             <motion.div
                 className="md:container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"
                 variants={containerVariants}
@@ -297,7 +297,7 @@ const CommunityDetails = () => {
                 <Title>Community Post | FitFlow</Title>
                 <motion.button
                     onClick={() => navigate('/community')}
-                    className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                    className="flex items-center space-x-2 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-500 mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
                     whileHover={{ x: -5 }}
                     whileTap={{ scale: 0.95 }}
                     variants={itemVariants}
@@ -307,10 +307,10 @@ const CommunityDetails = () => {
                 </motion.button>
 
                 <motion.article
-                    className="bg-white rounded-xl shadow-lg overflow-hidden mb-8"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8"
                     variants={itemVariants}
                 >
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex flex-col sm:flex-row sm:items-center mb-4 space-y-3 sm:space-y-0 sm:space-x-4">
                             <motion.img
                                 src={post.authorPhoto}
@@ -321,11 +321,11 @@ const CommunityDetails = () => {
                                 transition={{ duration: 0.3 }}
                             />
                             <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-800">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-800 dark:text-gray-100">
                                     <h4 className="font-semibold text-lg truncate">{post.author}</h4>
                                     {post.authorRole !== 'member' && (
                                         <motion.div
-                                            className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium text-gray-700 select-none"
+                                            className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 select-none"
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: 0.1 }}
@@ -334,15 +334,15 @@ const CommunityDetails = () => {
                                             <span>{getBadgeText(post.authorRole)}</span>
                                         </motion.div>
                                     )}
-                                    <span className="text-sm text-gray-500">•</span>
-                                    <span className="text-sm text-gray-500 whitespace-nowrap">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">•</span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                         {post.createdAt
                                             ? formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: true })
                                             : 'just now'}
                                     </span>
                                 </div>
                                 <motion.span
-                                    className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm mt-1 select-none"
+                                    className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-3 py-1 rounded-full text-sm mt-1 select-none"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.2 }}
@@ -354,24 +354,17 @@ const CommunityDetails = () => {
                             <div className="flex items-center space-x-2 mt-3 sm:mt-0">
                                 <motion.button
                                     onClick={handleShare}
-                                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg"
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                 >
                                     <Share2 className="h-5 w-5" />
                                 </motion.button>
-                                <motion.button
-                                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                >
-                                    <Flag className="h-5 w-5" />
-                                </motion.button>
                             </div>
                         </div>
 
                         <motion.h1
-                            className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 break-words"
+                            className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4 break-words"
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
@@ -381,13 +374,13 @@ const CommunityDetails = () => {
                     </div>
 
                     <div className="p-6">
-                        <div className="prose max-w-none text-gray-700 leading-relaxed">
+                        <div className="prose max-w-none text-gray-700 dark:text-gray-300 leading-relaxed">
                             {post.content.split('\n').map((paragraph, index) => {
                                 if (paragraph.startsWith('## ')) {
                                     return (
                                         <motion.h2
                                             key={index}
-                                            className="text-xl font-semibold mt-6 mb-3"
+                                            className="text-xl font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-100"
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: 0.1 * index }}
@@ -412,11 +405,11 @@ const CommunityDetails = () => {
                         </div>
                     </div>
 
-                    <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                         <div className="flex flex-wrap items-center space-x-6">
                             <motion.button
                                 onClick={() => handleVote('like')}
-                                className={`flex items-center space-x-2 ${userVote === 'like' ? 'text-green-600 ring-green-400' : 'text-gray-500 hover:text-green-600'
+                                className={`flex items-center space-x-2 ${userVote === 'like' ? 'text-green-600 dark:text-green-400 ring-green-400' : 'text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400'
                                     } focus:outline-none focus-visible:ring-2 rounded`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -428,7 +421,7 @@ const CommunityDetails = () => {
 
                             <motion.button
                                 onClick={() => handleVote('dislike')}
-                                className={`flex items-center space-x-2 ${userVote === 'dislike' ? 'text-red-600 ring-red-400' : 'text-gray-500 hover:text-red-600'
+                                className={`flex items-center space-x-2 ${userVote === 'dislike' ? 'text-red-600 dark:text-red-400 ring-red-400' : 'text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
                                     } focus:outline-none focus-visible:ring-2 rounded`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -438,7 +431,7 @@ const CommunityDetails = () => {
                                 <span>{post.dislikes || 0}</span>
                             </motion.button>
 
-                            <div className="flex items-center space-x-2 text-gray-500 select-none">
+                            <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 select-none">
                                 <MessageSquare className="h-5 w-5" />
                                 <span>{(post.comments || []).length}</span>
                             </div>
@@ -448,15 +441,15 @@ const CommunityDetails = () => {
 
                 {/* Comments Section */}
                 <motion.section
-                    className="bg-white rounded-xl shadow-lg p-6"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
                     variants={itemVariants}
                 >
-                    <h2 className="text-xl font-bold text-gray-800 mb-6">Comments</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Comments</h2>
 
                     {user ? (
                         user.email === post.email ? (
                             <motion.div
-                                className="mb-8 p-4 bg-yellow-50 border border-yellow-300 rounded-lg text-center text-yellow-800"
+                                className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-300 dark:border-yellow-900 rounded-lg text-center text-yellow-800 dark:text-yellow-200"
                                 initial={{ opacity: 0, y: -20 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
@@ -488,14 +481,14 @@ const CommunityDetails = () => {
                                             onChange={(e) => setNewComment(e.target.value)}
                                             placeholder="Share your thoughts..."
                                             rows={3}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none resize-none"
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg outline-none resize-none bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             disabled={addCommentMutation.isPending} // Disable while commenting
                                         />
                                         <div className="flex justify-end mt-3">
                                             <motion.button
                                                 type="submit"
                                                 disabled={!newComment.trim() || addCommentMutation.isPending}
-                                                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
+                                                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-900 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white px-4 py-2 rounded-lg"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -513,21 +506,21 @@ const CommunityDetails = () => {
                         )
                     ) : (
                         <motion.div
-                            className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center"
+                            className="mb-8 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 rounded-lg text-center"
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            <p className="text-blue-800 mb-3">Join the conversation!</p>
+                            <p className="text-blue-800 dark:text-blue-200 mb-3">Join the conversation!</p>
                             <div className="space-x-3 flex justify-center">
                                 <Link
                                     to="/login"
-                                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
+                                    className="bg-blue-700 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-900 text-white px-4 py-2 rounded-lg"
                                 >
                                     Login
                                 </Link>
                                 <Link
                                     to="/register"
-                                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                                    className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg"
                                 >
                                     Sign Up
                                 </Link>
@@ -542,7 +535,7 @@ const CommunityDetails = () => {
                         {(post.comments || []).map((comment) => (
                             <motion.div
                                 key={comment._id}
-                                className="border-b border-gray-200 pb-6 px-6 relative"
+                                className="border-b border-gray-200 dark:border-gray-700 pb-6 px-6 relative"
                                 variants={commentItemVariants}
                             >
                                 <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
@@ -566,22 +559,22 @@ const CommunityDetails = () => {
                                         </motion.div>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2 text-gray-800">
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2 text-gray-800 dark:text-gray-100">
                                             <h4 className="font-semibold truncate">{comment.author}</h4>
                                             {comment.authorRole !== 'member' && (
-                                                <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium text-gray-700">
+                                                <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300">
                                                     {getBadgeIcon(comment.authorRole)}
                                                     <span>{getBadgeText(comment.authorRole)}</span>
                                                 </div>
                                             )}
-                                            <span className="text-sm text-gray-500">•</span>
-                                            <span className="text-sm text-gray-500 whitespace-nowrap">
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">•</span>
+                                            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                 {comment.createdAt && differenceInSeconds(new Date(), new Date(comment.createdAt)) < 60
                                                     ? "just now"
                                                     : formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })}
                                             </span>
                                         </div>
-                                        <p className="text-gray-700 whitespace-pre-line">
+                                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
                                             {comment.text || comment.content}
                                         </p>
                                     </div>
@@ -591,16 +584,16 @@ const CommunityDetails = () => {
                                         <div className="relative z-10">
                                             <motion.button
                                                 onClick={() => setOpenCommentMenuId(openCommentMenuId === comment._id ? null : comment._id)}
-                                                className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
                                             >
-                                                <MoreVertical className="h-5 w-5 text-gray-500" />
+                                                <MoreVertical className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                                             </motion.button>
 
                                             {openCommentMenuId === comment._id && (
                                                 <motion.div
-                                                    className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg overflow-hidden"
+                                                    className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-900 rounded-md shadow-lg overflow-hidden"
                                                     initial={{ opacity: 0, scale: 0.9 }}
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     exit={{ opacity: 0, scale: 0.9 }}
@@ -608,7 +601,7 @@ const CommunityDetails = () => {
                                                 >
                                                     <button
                                                         onClick={() => handleDeleteComment(comment._id)}
-                                                        className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        className="flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-500"
                                                         disabled={deleteCommentMutation.isPending} // Disable while deleting
                                                     >
                                                         {deleteCommentMutation.isPending ? (
