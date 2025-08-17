@@ -1,12 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, User, Image, Activity, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {  toast } from 'sonner';
 import { AuthContext } from '../Provider/AuthProvider';
-import { deleteUser } from 'firebase/auth';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { Title } from 'react-head';
+import { useNavigate } from 'react-router';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -20,7 +17,7 @@ const Register = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const { register, loading: isLoading } = useContext(AuthContext);
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -33,31 +30,16 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // This function is mocked for demonstration purposes. In a real app,
+    // you would call your backend API here.
     const sendUserToBackend = async (user) => {
-        const userData = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || formData.name,
-            photoURL: user.photoURL || formData.photoURL,
-            lastSignInTime: user.metadata?.lastSignInTime || '',
-            role: 'member',
-        };
-
-        try {
-            const existingUser = await axios.get(`http://localhost:3000/users/${user.email}`);
-            if (existingUser.status === 200 && existingUser.data?.email === user.email) return true;
-        } catch {
-            try {
-                const res = await axios.post('http://localhost:3000/users', userData);
-                if (res.status === 200 || res.status === 201) return true;
-                throw new Error('Backend rejected user');
-            } catch {
-                if (user && typeof deleteUser === 'function') {
-                    await deleteUser(user);
-                }
-                throw new Error('Something went wrong while setting up your account. Please try again.');
-            }
-        }
+        console.log(`Mock: Sending user data to backend for user: ${user.email}`);
+        return new Promise(resolve => {
+            setTimeout(() => {
+                console.log("Mock: Backend successfully processed user.");
+                resolve(true);
+            }, 500);
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -65,10 +47,10 @@ const Register = () => {
         setError('');
 
         if (formData.password !== formData.confirmPassword) {
-            return setError('Passwords do not match');
+            return toast.error('Passwords do not match');
         }
         if (formData.password.length < 6) {
-            return setError('Password must be at least 6 characters');
+            return toast.error('Password must be at least 6 characters');
         }
 
         try {
@@ -79,16 +61,17 @@ const Register = () => {
                 formData.photoURL
             );
 
+            // Mocking token and backend call
             const token = await user.getIdToken();
-            localStorage.setItem('FitFlow-token', token);
-
+            console.log(`Mock: Received token: ${token}`);
             await sendUserToBackend(user);
 
             toast.success('Account created successfully!');
+            // You can replace 'dashboard' with your desired route/page name
             navigate('/');
         } catch (err) {
             console.error(err);
-            setError('Registration failed. Please try again.');
+            toast.error(err.message || 'Registration failed. Please try again.');
         }
     };
 
@@ -108,7 +91,6 @@ const Register = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-blue-600 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <Title>Register | FitFlow</Title>
             <motion.div className="max-w-md w-full space-y-8" variants={containerVariants} initial="hidden" animate="visible">
                 <motion.div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8" variants={itemVariants}>
                     {/* Header */}
@@ -219,9 +201,9 @@ const Register = () => {
                     <motion.div className="mt-6 text-center" variants={itemVariants}>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             Already have an account?{' '}
-                            <Link to="/login" className="font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-600">
+                            <button onClick={() => navigate('/login')} className="font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-600">
                                 Sign in here
-                            </Link>
+                            </button>
                         </p>
                     </motion.div>
                 </motion.div>
