@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import useUserRole from '../hooks/useUserRole';
+import useUserRole from '../Hooks/UseUserRole';
 import { AuthContext } from './AuthProvider';
 import { Navigate } from 'react-router';
 import Loader from '../Pages/Loader';
