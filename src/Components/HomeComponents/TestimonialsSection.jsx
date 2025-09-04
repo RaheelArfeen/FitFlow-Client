@@ -9,7 +9,7 @@ import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import useAxiosSecure from '../../Provider/UseAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
-import Loader from '../../pages/Loader';
+import Loader from '../../Pages/Loader';
 
 const TestimonialsSection = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
